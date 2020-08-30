@@ -1,0 +1,8 @@
+[workspace]
+
+members = [
+  "owllang-cli",
+  "owllang-lexer",
+  "owllang-parser",
+  "owllang-llvm-codegen",
+]
