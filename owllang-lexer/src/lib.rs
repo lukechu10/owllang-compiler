@@ -1,7 +1,5 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+mod lexer;
+mod token;
+
+pub use crate::lexer::Lexer;
+pub use crate::token::{Token, TokenVal};
