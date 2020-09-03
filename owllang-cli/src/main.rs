@@ -1,5 +1,6 @@
 fn main() {
     use owllang_lexer::Lexer;
+    use owllang_parser::parser::Parser;
     use std::io;
     use std::io::prelude::*;
 
@@ -19,9 +20,15 @@ fn main() {
         let res = stdin.read_line(&mut input);
         match res {
             Ok(_) => {
-                let lexer = Lexer::with_string(input.as_str());
-                for token in lexer {
-                    println!("{:?}", token);
+                let mut lexer = Lexer::with_string(input.as_str());
+                // for token in &mut lexer {
+                //     println!("{:?}", token);
+                // }
+                let mut parser = Parser::new(&mut lexer);
+                let ast_result = parser.parse_compilation_unit();
+                match ast_result {
+                    Ok(ast) => println!("{:#?}", ast),
+                    Err(err) => eprintln!("Error at {}({}:{}). Message = {}", err.file_name, err.row, err.col, err.message),
                 }
             }
             Err(err) => println!("Error: {}", err),

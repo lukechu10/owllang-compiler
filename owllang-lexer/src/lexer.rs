@@ -2,6 +2,7 @@ use crate::{Token, TokenVal};
 use std::iter::{Iterator, Peekable};
 use std::str::Chars;
 
+#[allow(dead_code)] // TODO remove allow
 pub struct Lexer<'a> {
     /// The string to read from.
     input: &'a str,
@@ -169,6 +170,9 @@ impl<'a> Iterator for Lexer<'a> {
                 // check if iden_str is a keyword
                 match iden_str {
                     s if s == "fn" => Some(self.create_token(TokenVal::KeywordFn, iden_str_len)),
+                    s if s == "extern" => {
+                        Some(self.create_token(TokenVal::KeywordExtern, iden_str_len))
+                    }
                     s if s == "let" => Some(self.create_token(TokenVal::KeywordLet, iden_str_len)),
                     s if s == "if" => Some(self.create_token(TokenVal::KeywordIf, iden_str_len)),
                     s if s == "else" => {
@@ -178,6 +182,7 @@ impl<'a> Iterator for Lexer<'a> {
                         Some(self.create_token(TokenVal::KeywordWhile, iden_str_len))
                     }
                     s if s == "for" => Some(self.create_token(TokenVal::KeywordFor, iden_str_len)),
+                    s if s == "return" => Some(self.create_token(TokenVal::KeywordReturn, iden_str_len)),
                     _ => Some(self.create_token(TokenVal::Identifier(iden_str), iden_str_len)),
                 }
             }

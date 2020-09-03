@@ -11,6 +11,22 @@ pub struct Token {
     pub len: u32,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
+#[repr(i8)]
+pub enum OpPrecedence {
+    /// `OpPrecedence` for non operator `TokenVal`s.
+    Error = -1,
+    /// Used to except all operator.
+    Expression = 0,
+    Assignment,
+    Equality,
+    Relational,
+    /// `+`, and `-`
+    Additive,
+    /// `*`, `/` and `%`
+    Multiplicative,
+}
+
 /// Represents the value of a token.
 #[derive(Debug, Clone, PartialEq)]
 #[repr(u8)]
@@ -37,14 +53,39 @@ pub enum TokenVal {
     OpEqualsLessThan,    // '<='
     // keywords
     KeywordFn,
+    KeywordExtern,
     KeywordLet,
     KeywordIf,
     KeywordElse,
     KeywordWhile,
     KeywordFor,
+    KeywordReturn,
     // identifiers
     Identifier(String),
     // literals
     LiteralInt(i32),
     LiteralDouble(f32),
+    // miscaleneous
+    EndOfFile,
+}
+
+impl TokenVal {
+    /// Returns the precedence of the current `TokenVal`. If the current `TokenVal` is not an operator, returns the `Error` variant of the `OPPrecedence` enum.
+    /// # Panics
+    /// This method cannot panic.
+    pub fn precedence(&self) -> OpPrecedence {
+        match self {
+            TokenVal::OpEquals => OpPrecedence::Assignment,
+            TokenVal::OpEqualsEquals => OpPrecedence::Equality,
+            TokenVal::OpGreaterThan
+            | TokenVal::OpEqualsGreaterThan
+            | TokenVal::OpLessThan
+            | TokenVal::OpEqualsLessThan => OpPrecedence::Relational,
+            TokenVal::OpPlus | TokenVal::OpMinus => OpPrecedence::Additive,
+            TokenVal::OpAsterix | TokenVal::OpSlash | TokenVal::OpPercent => {
+                OpPrecedence::Multiplicative
+            }
+            _ => OpPrecedence::Error,
+        }
+    }
 }

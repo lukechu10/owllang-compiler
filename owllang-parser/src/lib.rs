@@ -1,7 +1,8 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+#![allow(dead_code)]
+
+pub mod ast;
+pub mod parser;
+mod syntax_error;
+mod traits;
+
+pub use syntax_error::SyntaxError;
