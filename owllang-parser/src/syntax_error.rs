@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct SyntaxError {
     /// The name of the file the error occurred in.
     pub file_name: String,

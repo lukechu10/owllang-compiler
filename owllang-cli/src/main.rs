@@ -27,7 +27,7 @@ fn main() {
                 let mut parser = Parser::new(&mut lexer);
                 let ast_result = parser.parse_compilation_unit();
                 match ast_result {
-                    Ok(ast) => println!("{:#?}", ast),
+                    Ok(ast) => println!("{:?}", ast),
                     Err(err) => eprintln!("Error at {}({}:{}). Message = {}", err.file_name, err.row, err.col, err.message),
                 }
             }
