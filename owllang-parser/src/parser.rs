@@ -76,17 +76,49 @@ impl<'a> Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
+    /// User can input both fn definitions and statements in the repl prompt.
+    pub fn parse_repl_input(&mut self) -> Result<Box<dyn StatementAST>, SyntaxError> {
+        match self.current_token.value {
+            TokenVal::KeywordFn => {
+                let func = self.parse_fn_declaration()?;
+                Ok(Box::new(func))
+            }
+            TokenVal::KeywordLet => {
+                let let_statement = self.parse_let_statement()?;
+                if self.current_token.value == TokenVal::PuncSemi {
+                    self.expect_and_eat_tok(TokenVal::PuncSemi)?;
+                }
+                Ok(Box::new(let_statement))
+            }
+            _ => {
+                // try to parse expression statement
+                let expression = self.parse_expression()?;
+                // semi colon is optional in repl
+                if self.current_token.value == TokenVal::PuncSemi {
+                    self.expect_and_eat_tok(TokenVal::PuncSemi)?;
+                }
+                let expr_statement = ExpressionStatementAST::new(expression);
+                Ok(Box::new(expr_statement))
+            }
+        }
+    }
+
     pub fn parse_compilation_unit(&mut self) -> Result<CompilationUnitAST, SyntaxError> {
         let func = self.parse_fn_declaration()?;
         Ok(CompilationUnitAST::new("entry".to_string(), vec![func]))
     }
 
-    pub fn parse_statement(&mut self) -> Result<Box<dyn StatementAST>, SyntaxError> {
+    fn parse_statement(&mut self) -> Result<Box<dyn StatementAST>, SyntaxError> {
         match self.current_token.value {
             TokenVal::KeywordReturn => {
                 let ret_statement = self.parse_return_statement()?;
                 self.expect_and_eat_tok(TokenVal::PuncSemi)?;
                 Ok(Box::new(ret_statement))
+            }
+            TokenVal::KeywordLet => {
+                let let_statement = self.parse_let_statement()?;
+                self.expect_and_eat_tok(TokenVal::PuncSemi)?;
+                Ok(Box::new(let_statement))
             }
             _ => {
                 // try to parse expression statement
@@ -102,6 +134,14 @@ impl<'a> Parser<'a> {
         self.expect_and_eat_tok(TokenVal::KeywordReturn)?;
         let initializer = self.parse_expression()?;
         Ok(ReturnStatementAST::new(initializer))
+    }
+
+    fn parse_let_statement(&mut self) -> Result<LetStatementAST, SyntaxError> {
+        self.expect_and_eat_tok(TokenVal::KeywordLet)?;
+        let identifier = self.expect_and_eat_iden_tok()?;
+        self.expect_and_eat_tok(TokenVal::OpEquals)?;
+        let initializer_value = self.parse_expression()?;
+        Ok(LetStatementAST::new(identifier, initializer_value))
     }
 
     /// Parses any valid expression.

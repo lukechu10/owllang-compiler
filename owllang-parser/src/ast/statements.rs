@@ -83,6 +83,14 @@ pub struct LetStatementAST {
     identifier: String,
     initializer_value: Box<dyn ExprAST>,
 }
+impl LetStatementAST {
+    pub fn new(identifier: String, initializer_value: Box<dyn ExprAST>) -> Self {
+        Self {
+            identifier,
+            initializer_value,
+        }
+    }
+}
 impl StatementAST for LetStatementAST {}
 
 #[derive(Debug)]
