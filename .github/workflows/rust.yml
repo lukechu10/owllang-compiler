@@ -16,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Install LLVM 10
+      run: sudo apt-get install libllvm10 llvm-10 llvm-10-dev llvm-10-runtime
     - name: Build
       run: cargo build --verbose
     - name: Run tests
