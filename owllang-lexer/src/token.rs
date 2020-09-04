@@ -63,7 +63,7 @@ pub enum TokenVal {
     // identifiers
     Identifier(String),
     // literals
-    LiteralInt(i32),
+    LiteralInt(i64),
     LiteralDouble(f32),
     // miscaleneous
     EndOfFile,

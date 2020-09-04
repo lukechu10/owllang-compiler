@@ -152,7 +152,7 @@ impl<'a> Iterator for Lexer<'a> {
                     next_char = self.peek_char();
                 }
 
-                let int: i32 = int_str.parse().unwrap();
+                let int: i64 = int_str.parse().unwrap();
                 Some(self.create_token(TokenVal::LiteralInt(int), int_str.len() as u32))
             }
             c if Self::is_iden_start(c) => {

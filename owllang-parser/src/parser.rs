@@ -97,7 +97,7 @@ impl<'a> Parser<'a> {
                 if self.current_token.value == TokenVal::PuncSemi {
                     self.expect_and_eat_tok(TokenVal::PuncSemi)?;
                 }
-                let expr_statement = ExpressionStatementAST::new(expression);
+                let expr_statement = ExprStatementAST::new(expression);
                 Ok(Box::new(expr_statement))
             }
         }
@@ -124,7 +124,7 @@ impl<'a> Parser<'a> {
                 // try to parse expression statement
                 let expression = self.parse_expression()?;
                 self.expect_and_eat_tok(TokenVal::PuncSemi)?;
-                let expr_statement = ExpressionStatementAST::new(expression);
+                let expr_statement = ExprStatementAST::new(expression);
                 Ok(Box::new(expr_statement))
             }
         }
@@ -165,10 +165,10 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_int_literal(&mut self) -> Result<LiteralExprAST<i32>, SyntaxError> {
+    fn parse_int_literal(&mut self) -> Result<LiteralExprAST, SyntaxError> {
         if let TokenVal::LiteralInt(num) = self.current_token.value {
             self.eat_token()?; // eat int literal token
-            Ok(LiteralExprAST { value: num })
+            Ok(LiteralExprAST::new(num))
         } else {
             Err(self.new_syntax_error_at_current_token("Expected an int literal.".to_string()))
         }
@@ -258,9 +258,9 @@ impl<'a> Parser<'a> {
             let arg_iden = self.expect_and_eat_iden_tok()?;
             args.push(arg_iden);
 
-            if self.current_token.value == TokenVal::PuncCloseParen {
-                self.expect_and_eat_tok(TokenVal::PuncCloseParen)?;
-            } else if self.current_token.value != TokenVal::PuncComma {
+            if self.current_token.value == TokenVal::PuncComma {
+                self.expect_and_eat_tok(TokenVal::PuncComma)?;
+            } else if self.current_token.value != TokenVal::PuncCloseParen {
                 return Err(self.new_syntax_error_at_current_token(
                     "Expected a ',' or ')' token after identifier in argument list.".to_string(),
                 ));

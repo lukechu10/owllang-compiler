@@ -6,3 +6,4 @@ mod syntax_error;
 mod traits;
 
 pub use syntax_error::SyntaxError;
+pub use traits::{Visitable, Visitor};

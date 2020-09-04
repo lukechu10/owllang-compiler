@@ -1,16 +1,17 @@
 use crate::traits::ExprAST;
 use owllang_lexer::{OpPrecedence, TokenVal};
-use std::fmt;
 
 /// Represents a literal expression.
 #[derive(Debug)]
-pub struct LiteralExprAST<T>
-where
-    T: fmt::Debug,
-{
-    pub value: T,
+pub struct LiteralExprAST {
+    pub value: i64,
 }
-impl<T> ExprAST for LiteralExprAST<T> where T: fmt::Debug {}
+impl LiteralExprAST {
+    pub fn new(value: i64) -> Self {
+        Self { value }
+    }
+}
+impl ExprAST for LiteralExprAST {}
 
 /// Represents an identifier expression.
 #[derive(Debug)]

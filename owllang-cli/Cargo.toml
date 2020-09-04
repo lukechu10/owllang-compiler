@@ -8,4 +8,5 @@ version = "0.1.0"
 
 [dependencies]
 owllang-lexer = {path = "../owllang-lexer"}
+owllang-llvm-codegen = {path = "../owllang-llvm-codegen"}
 owllang-parser = {path = "../owllang-parser"}
