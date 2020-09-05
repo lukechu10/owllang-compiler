@@ -111,7 +111,7 @@ impl<'a> Iterator for Lexer<'a> {
             // operators
             '+' => Some(self.create_token(TokenVal::OpPlus, 1)),
             '-' => Some(self.create_token(TokenVal::OpMinus, 1)),
-            '*' => Some(self.create_token(TokenVal::OpAsterix, 1)),
+            '*' => Some(self.create_token(TokenVal::OpAsterisk, 1)),
             '/' => Some(self.create_token(TokenVal::OpSlash, 1)),
             '%' => Some(self.create_token(TokenVal::OpPercent, 1)),
             '=' => {

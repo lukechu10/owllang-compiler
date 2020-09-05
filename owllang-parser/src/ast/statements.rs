@@ -1,4 +1,5 @@
-use crate::traits::{ExprAST, StatementAST};
+use crate::ast::expressions::Expr;
+use crate::traits::StatementAST;
 
 #[derive(Debug)]
 pub struct CompilationUnitAST {
@@ -81,10 +82,10 @@ impl StatementAST for IfStatementAST {}
 #[derive(Debug)]
 pub struct LetStatementAST {
     pub identifier: String,
-    pub initializer_value: Box<dyn ExprAST>,
+    pub initializer_value: Expr,
 }
 impl LetStatementAST {
-    pub fn new(identifier: String, initializer_value: Box<dyn ExprAST>) -> Self {
+    pub fn new(identifier: String, initializer_value: Expr) -> Self {
         Self {
             identifier,
             initializer_value,
@@ -95,10 +96,10 @@ impl StatementAST for LetStatementAST {}
 
 #[derive(Debug)]
 pub struct ReturnStatementAST {
-    pub ret_value: Box<dyn ExprAST>,
+    pub ret_value: Expr,
 }
 impl ReturnStatementAST {
-    pub fn new(ret_value: Box<dyn ExprAST>) -> Self {
+    pub fn new(ret_value: Expr) -> Self {
         Self { ret_value }
     }
 }
@@ -106,10 +107,10 @@ impl StatementAST for ReturnStatementAST {}
 
 #[derive(Debug)]
 pub struct ExprStatementAST {
-    pub expression: Box<dyn ExprAST>,
+    pub expression: Expr,
 }
 impl ExprStatementAST {
-    pub fn new(expression: Box<dyn ExprAST>) -> Self {
+    pub fn new(expression: Expr) -> Self {
         Self { expression }
     }
 }

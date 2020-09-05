@@ -145,17 +145,24 @@ impl<'a> Parser<'a> {
     }
 
     /// Parses any valid expression.
-    fn parse_expression(&mut self) -> Result<Box<dyn ExprAST>, SyntaxError> {
+    fn parse_expression(&mut self) -> Result<Expr, SyntaxError> {
         let lhs = self.parse_primary_expression()?;
         self.parse_binary_expr_rhs(lhs, OpPrecedence::Expression as i8)
     }
 
     /// Atomic expression.
-    fn parse_primary_expression(&mut self) -> Result<Box<dyn ExprAST>, SyntaxError> {
+    fn parse_primary_expression(&mut self) -> Result<Expr, SyntaxError> {
         match self.current_token.value {
+            TokenVal::PuncOpenParen => {
+                self.expect_and_eat_tok(TokenVal::PuncOpenParen)?;
+                // parse expression inside parenthesis.
+                let expr_ast = self.parse_expression()?;
+                self.expect_and_eat_tok(TokenVal::PuncCloseParen)?;
+                Ok(expr_ast)
+            }
             TokenVal::LiteralInt(_) => {
                 let literal_ast = self.parse_int_literal()?;
-                Ok(Box::new(literal_ast))
+                Ok(literal_ast)
             }
             TokenVal::Identifier(_) => self.parse_identifier_or_call_expr(),
             _ => Err(self.new_syntax_error_at_current_token(format!(
@@ -165,17 +172,17 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_int_literal(&mut self) -> Result<LiteralExprAST, SyntaxError> {
+    fn parse_int_literal(&mut self) -> Result<Expr, SyntaxError> {
         if let TokenVal::LiteralInt(num) = self.current_token.value {
             self.eat_token()?; // eat int literal token
-            Ok(LiteralExprAST::new(num))
+            Ok(Expr::new(ExprKind::Literal(num)))
         } else {
             Err(self.new_syntax_error_at_current_token("Expected an int literal.".to_string()))
         }
     }
 
     /// Returns a `IdentifierExprAST` or `CallExprAST`, depending on the scenario.
-    fn parse_identifier_or_call_expr(&mut self) -> Result<Box<dyn ExprAST>, SyntaxError> {
+    fn parse_identifier_or_call_expr(&mut self) -> Result<Expr, SyntaxError> {
         let identifier: String = if let TokenVal::Identifier(iden) = &self.current_token.value {
             iden.clone()
         } else {
@@ -188,7 +195,7 @@ impl<'a> Parser<'a> {
         if self.current_token.value == TokenVal::PuncOpenParen {
             self.expect_and_eat_tok(TokenVal::PuncOpenParen)?;
             // parse function call expression
-            let mut args: Vec<Box<dyn ExprAST>> = Vec::new();
+            let mut args: Vec<Expr> = Vec::new();
             loop {
                 if self.current_token.value == TokenVal::PuncCloseParen {
                     self.expect_and_eat_tok(TokenVal::PuncCloseParen)?;
@@ -205,17 +212,21 @@ impl<'a> Parser<'a> {
                     ));
                 }
             }
-            Ok(Box::new(CallExprAST::new(identifier, args)))
+            // Ok(Box::new(CallExprAST::new(identifier, args)))
+            Ok(Expr::new(ExprKind::FuncCall {
+                callee: identifier,
+                args,
+            }))
         } else {
-            Ok(Box::new(IdentifierExprAST::new(identifier)))
+            Ok(Expr::new(ExprKind::Identifier(identifier)))
         }
     }
 
     fn parse_binary_expr_rhs(
         &mut self,
-        lhs: Box<dyn ExprAST>,
+        lhs: Expr,
         prev_precedence: i8,
-    ) -> Result<Box<dyn ExprAST>, SyntaxError> {
+    ) -> Result<Expr, SyntaxError> {
         let mut lhs_tmp = lhs;
         loop {
             let current_precedence = self.current_token.value.precedence() as i8;
@@ -238,7 +249,11 @@ impl<'a> Parser<'a> {
                 rhs = self.parse_binary_expr_rhs(rhs, prev_precedence + 1)?;
             }
 
-            lhs_tmp = Box::new(BinaryExprAST::new(lhs_tmp, rhs, binary_op_tok.value));
+            lhs_tmp = Expr::new(ExprKind::BinaryExpr {
+                lhs: Box::new(lhs_tmp),
+                rhs: Box::new(rhs),
+                op_type: binary_op_tok.value,
+            })
         }
     }
 

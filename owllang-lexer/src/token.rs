@@ -41,7 +41,7 @@ pub enum TokenVal {
     // operators
     OpPlus,    // '+'
     OpMinus,   // '-'
-    OpAsterix, // '*'
+    OpAsterisk, // '*'
     OpSlash,   // '/'
     OpPercent, // '%' (for modulo operator)
     OpEquals,  // '='
@@ -82,7 +82,7 @@ impl TokenVal {
             | TokenVal::OpLessThan
             | TokenVal::OpEqualsLessThan => OpPrecedence::Relational,
             TokenVal::OpPlus | TokenVal::OpMinus => OpPrecedence::Additive,
-            TokenVal::OpAsterix | TokenVal::OpSlash | TokenVal::OpPercent => {
+            TokenVal::OpAsterisk | TokenVal::OpSlash | TokenVal::OpPercent => {
                 OpPrecedence::Multiplicative
             }
             _ => OpPrecedence::Error,

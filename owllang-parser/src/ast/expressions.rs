@@ -1,57 +1,28 @@
-use crate::traits::ExprAST;
-use owllang_lexer::{OpPrecedence, TokenVal};
-
-/// Represents a literal expression.
-#[derive(Debug)]
-pub struct LiteralExprAST {
-    pub value: i64,
-}
-impl LiteralExprAST {
-    pub fn new(value: i64) -> Self {
-        Self { value }
-    }
-}
-impl ExprAST for LiteralExprAST {}
-
-/// Represents an identifier expression.
-#[derive(Debug)]
-pub struct IdentifierExprAST {
-    pub identifier: String,
-}
-impl IdentifierExprAST {
-    pub fn new(identifier: String) -> Self {
-        Self { identifier }
-    }
-}
-impl ExprAST for IdentifierExprAST {}
-
-/// Represents a call expression.
-#[derive(Debug)]
-pub struct CallExprAST {
-    pub callee: String,
-    pub arguments: Vec<Box<dyn ExprAST>>,
-}
-impl CallExprAST {
-    pub fn new(callee: String, arguments: Vec<Box<dyn ExprAST>>) -> Self {
-        Self { callee, arguments }
-    }
-}
-impl ExprAST for CallExprAST {}
+use owllang_lexer::TokenVal;
 
 #[derive(Debug)]
-pub struct BinaryExprAST {
-    pub lhs: Box<dyn ExprAST>,
-    pub rhs: Box<dyn ExprAST>,
-    /// The operator of the binary expression. Only enum variants starting with `Op` are allowed.
-    pub op_type: TokenVal,
+pub enum ExprKind {
+    /// Represnets an int literal (internally represented using `i64`).
+    Literal(i64),
+    /// Represents an identifier expression.
+    Identifier(String),
+    /// Represents a function call expression.
+    FuncCall { callee: String, args: Vec<Expr> },
+    BinaryExpr {
+        lhs: Box<Expr>,
+        rhs: Box<Expr>,
+        /// The operator type of the `BinaryExpr`. Represented with a `TokenVal`. The value of the field should only be valid operator variants of `TokenVal`.
+        op_type: TokenVal,
+    },
 }
-impl BinaryExprAST {
-    pub fn new(lhs: Box<dyn ExprAST>, rhs: Box<dyn ExprAST>, op_type: TokenVal) -> Self {
-        debug_assert!(
-            op_type.precedence() != OpPrecedence::Error,
-            "Token in BinaryExprAST should be a valid operator token."
-        );
-        Self { lhs, rhs, op_type }
+
+#[derive(Debug)]
+/// Represents an expression.
+pub struct Expr {
+    pub kind: ExprKind,
+}
+impl Expr {
+    pub fn new(kind: ExprKind) -> Self {
+        Self { kind }
     }
 }
-impl ExprAST for BinaryExprAST {}
