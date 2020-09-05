@@ -3,7 +3,7 @@ mod macros;
 use llvm_sys::core::*;
 use llvm_sys::prelude::*;
 use llvm_sys::transforms::util::*;
-use llvm_sys::{LLVMLinkage, LLVMTypeKind};
+use llvm_sys::{LLVMIntPredicate, LLVMLinkage, LLVMTypeKind};
 use owllang_lexer::TokenVal;
 use owllang_parser::ast::expressions::*;
 use owllang_parser::ast::statements::*;
@@ -203,6 +203,42 @@ impl LlvmCodeGenVisitor {
                                 TokenVal::OpPercent => {
                                     LLVMBuildSRem(self.builder, lhs, rhs, c_str!("srem_tmp"))
                                 }
+                                // relational and equality operators
+                                TokenVal::OpEqualsEquals => LLVMBuildICmp(
+                                    self.builder,
+                                    LLVMIntPredicate::LLVMIntEQ,
+                                    lhs,
+                                    rhs,
+                                    c_str!("eq_cmp_tmp"),
+                                ),
+                                TokenVal::OpGreaterThan => LLVMBuildICmp(
+                                    self.builder,
+                                    LLVMIntPredicate::LLVMIntSGT,
+                                    lhs,
+                                    rhs,
+                                    c_str!("sgt_cmp_tmp"),
+                                ),
+                                TokenVal::OpEqualsGreaterThan => LLVMBuildICmp(
+                                    self.builder,
+                                    LLVMIntPredicate::LLVMIntSGE,
+                                    lhs,
+                                    rhs,
+                                    c_str!("sge_cmp_tmp"),
+                                ),
+                                TokenVal::OpLessThan => LLVMBuildICmp(
+                                    self.builder,
+                                    LLVMIntPredicate::LLVMIntSLT,
+                                    lhs,
+                                    rhs,
+                                    c_str!("slt_cmp_tmp"),
+                                ),
+                                TokenVal::OpEqualsLessThan => LLVMBuildICmp(
+                                    self.builder,
+                                    LLVMIntPredicate::LLVMIntSLE,
+                                    lhs,
+                                    rhs,
+                                    c_str!("sle_cmp_tmp"),
+                                ),
                                 _ => unreachable!(
                                     "op_type should be a valid operator variant of TokenVal"
                                 ),
@@ -225,7 +261,11 @@ impl Visitor for LlvmCodeGenVisitor {
             ExprKind::Literal(_) => self.visit_literal_expr(node),
             ExprKind::Identifier(_) => self.visit_identifier_expr(node),
             ExprKind::FuncCall { callee: _, args: _ } => self.visit_call_expr(node),
-            ExprKind::BinaryExpr { lhs: _, rhs: _, op_type: _ } => self.visit_binary_expr(node),
+            ExprKind::BinaryExpr {
+                lhs: _,
+                rhs: _,
+                op_type: _,
+            } => self.visit_binary_expr(node),
         }
     }
 
