@@ -11,3 +11,4 @@ clap = "2"
 owllang-lexer = {path = "../owllang-lexer"}
 owllang-llvm-codegen = {path = "../owllang-llvm-codegen"}
 owllang-parser = {path = "../owllang-parser"}
+llvm-sys = "100"
