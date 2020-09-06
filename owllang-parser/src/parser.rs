@@ -120,6 +120,10 @@ impl<'a> Parser<'a> {
                 self.expect_and_eat_tok(TokenVal::PuncSemi)?;
                 Ok(Box::new(let_statement))
             }
+            TokenVal::PuncOpenBrace => {
+                let block = self.parse_block_statement()?;
+                Ok(Box::new(block))
+            }
             _ => {
                 // try to parse expression statement
                 let expression = self.parse_expression()?;
