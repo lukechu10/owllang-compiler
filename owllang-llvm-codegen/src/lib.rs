@@ -203,45 +203,41 @@ impl LlvmCodeGenVisitor {
                                 TokenVal::OpPercent => {
                                     LLVMBuildSRem(self.builder, lhs, rhs, c_str!("srem_tmp"))
                                 }
-                                // relational and equality operators
-                                TokenVal::OpEqualsEquals => LLVMBuildICmp(
-                                    self.builder,
-                                    LLVMIntPredicate::LLVMIntEQ,
-                                    lhs,
-                                    rhs,
-                                    c_str!("eq_cmp_tmp"),
-                                ),
-                                TokenVal::OpGreaterThan => LLVMBuildICmp(
-                                    self.builder,
-                                    LLVMIntPredicate::LLVMIntSGT,
-                                    lhs,
-                                    rhs,
-                                    c_str!("sgt_cmp_tmp"),
-                                ),
-                                TokenVal::OpEqualsGreaterThan => LLVMBuildICmp(
-                                    self.builder,
-                                    LLVMIntPredicate::LLVMIntSGE,
-                                    lhs,
-                                    rhs,
-                                    c_str!("sge_cmp_tmp"),
-                                ),
-                                TokenVal::OpLessThan => LLVMBuildICmp(
-                                    self.builder,
-                                    LLVMIntPredicate::LLVMIntSLT,
-                                    lhs,
-                                    rhs,
-                                    c_str!("slt_cmp_tmp"),
-                                ),
-                                TokenVal::OpEqualsLessThan => LLVMBuildICmp(
-                                    self.builder,
-                                    LLVMIntPredicate::LLVMIntSLE,
-                                    lhs,
-                                    rhs,
-                                    c_str!("sle_cmp_tmp"),
-                                ),
-                                _ => unreachable!(
-                                    "op_type should be a valid operator variant of TokenVal"
-                                ),
+                                _ => {
+                                    // codegen relational operators
+                                    let cmp_predicate = match &op_type {
+                                        TokenVal::OpEqualsEquals => {
+                                            (LLVMIntPredicate::LLVMIntEQ, "eq_cmp_tmp")
+                                        }
+                                        TokenVal::OpGreaterThan => {
+                                            (LLVMIntPredicate::LLVMIntSGT, "sgt_cmp_tmp")
+                                        }
+                                        TokenVal::OpEqualsGreaterThan => {
+                                            (LLVMIntPredicate::LLVMIntSGE, "sge_cmp_tmp")
+                                        }
+                                        TokenVal::OpLessThan => {
+                                            (LLVMIntPredicate::LLVMIntSLT, "slt_cmp_tmp")
+                                        }
+                                        TokenVal::OpEqualsLessThan => {
+                                            (LLVMIntPredicate::LLVMIntSLE, "sle_cmp_tmp")
+                                        }
+                                        _ => unreachable!(),
+                                    };
+
+                                    let cmp_tmp = LLVMBuildICmp(
+                                        self.builder,
+                                        cmp_predicate.0,
+                                        lhs,
+                                        rhs,
+                                        c_str!(cmp_predicate.1),
+                                    );
+                                    LLVMBuildIntCast(
+                                        self.builder,
+                                        cmp_tmp,
+                                        LLVMInt64Type(),
+                                        c_str!("cast_tmp"),
+                                    )
+                                }
                             };
                         }
                     }

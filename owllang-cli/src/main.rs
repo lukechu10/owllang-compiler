@@ -1,4 +1,4 @@
-use clap::{App, Arg, SubCommand};
+use clap::{App, Arg};
 use owllang_lexer::Lexer;
 use owllang_llvm_codegen::codegen_compilation_unit;
 use owllang_parser::parser::Parser;
@@ -46,7 +46,10 @@ fn main() {
                         if matches.is_present("show-ast") {
                             println!("{:#?}", ast);
                         }
-                        codegen_compilation_unit(&ast);
+                        match codegen_compilation_unit(&ast) {
+                            Err(err) => println!("{:?}", err),
+                            _ => {}
+                        }
                     }
                     Err(err) => eprintln!(
                         "Error at {}({}:{}). Message = {}",
