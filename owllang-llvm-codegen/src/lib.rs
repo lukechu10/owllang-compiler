@@ -126,13 +126,14 @@ impl LlvmCodeGenVisitor {
                         argv.push(self.value_stack.pop().unwrap()); // unwrap should not panic here because arg.accept pushes a value onto self.value_stack
                     }
 
-                    LLVMBuildCall(
+                    let res = LLVMBuildCall(
                         self.builder,
                         func,
                         argv.as_mut_ptr(),
                         arg_count as u32,
                         c_str!("calltmp"),
                     );
+                    self.value_stack.push(res);
 
                     Ok(())
                 }
