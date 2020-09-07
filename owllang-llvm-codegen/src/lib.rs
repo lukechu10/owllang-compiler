@@ -261,7 +261,7 @@ impl LlvmCodeGenVisitor {
             let mut func = LLVMGetNamedFunction(self.module, c_str!(node.iden));
 
             if !func.is_null() {
-                panic!("Error");
+                panic!("Error, function already exists.");
             }
 
             for _ in &node.args {
@@ -348,6 +348,34 @@ impl LlvmCodeGenVisitor {
         self.visit_expr(expr)?;
         self.value_stack.pop(); // make value is not accessible
         Ok(())
+    }
+
+    /// Custom codegen function for repl.
+    pub fn handle_repl_input(&mut self, stmt: Stmt) -> Result<(), SyntaxError> {
+        match stmt.kind {
+            StmtKind::Fn {
+                ref proto,
+                ref body,
+            } => self.codegen_fn_stmt(proto, body),
+            StmtKind::Let {
+                iden: _,
+                initializer: _,
+            } => unimplemented!(),
+            StmtKind::ExprSemi { expr } => {
+                // codegen anonymous function that returns value
+                // create fake return stmt.
+                let ret_stmt = Stmt::new(StmtKind::Return { value: expr });
+                let proto = FnProto {
+                    iden: "".to_string(),
+                    args: Vec::new(),
+                };
+                let body = Stmt::new(StmtKind::Block {
+                    statements: vec![ret_stmt],
+                });
+                self.codegen_fn_stmt(&proto, &Box::new(body))
+            }
+            _ => unreachable!(),
+        }
     }
 }
 

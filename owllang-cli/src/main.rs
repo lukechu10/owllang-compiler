@@ -1,16 +1,11 @@
 use clap::{App, Arg, ArgMatches};
-use llvm_sys::core::*;
-use llvm_sys::execution_engine::*;
-use llvm_sys::target::*;
-use llvm_sys::target_machine::*;
-use llvm_sys::transforms::util::*;
+use llvm_sys::{
+    analysis::*, core::*, execution_engine::*, target::*, target_machine::*, transforms::util::*,
+};
 use owllang_lexer::Lexer;
 use owllang_llvm_codegen::{c_str, codegen_compilation_unit, LlvmCodeGenVisitor};
-use owllang_parser::parser::Parser;
-use owllang_parser::Visitor;
-use std::fs;
-use std::io;
-use std::io::prelude::*;
+use owllang_parser::{ast::statements::StmtKind, parser::Parser};
+use std::{fs, io, io::prelude::*};
 
 fn repl_loop(matches: &ArgMatches) {
     unsafe {
@@ -49,7 +44,7 @@ fn repl_loop(matches: &ArgMatches) {
 
                     let mut lexer = Lexer::with_string(input.as_str());
                     let mut parser = Parser::new(&mut lexer);
-                    let ast_result = parser.parse_compilation_unit();
+                    let ast_result = parser.parse_repl_input();
 
                     match ast_result {
                         Ok(ast) => {
@@ -57,21 +52,39 @@ fn repl_loop(matches: &ArgMatches) {
                                 println!("{:#?}", ast);
                             }
                             let mut codegen_visitor = LlvmCodeGenVisitor::new(module, builder);
-                            codegen_visitor.visit_compilation_unit(&ast).unwrap();
+
+                            // True if repl should evaluate input.
+                            let evaluate_res = match ast.kind {
+                                StmtKind::ExprSemi { expr: _ } => true,
+                                // _ => false,
+                                _ => true,
+                            };
+
+                            codegen_visitor.handle_repl_input(ast).unwrap();
+
                             let last_func = LLVMGetLastFunction(module);
+                            LLVMVerifyFunction(
+                                last_func,
+                                LLVMVerifierFailureAction::LLVMPrintMessageAction,
+                            );
                             // optimization passes
                             let pm = LLVMCreatePassManager();
                             LLVMAddPromoteMemoryToRegisterPass(pm);
                             LLVMRunPassManager(pm, module);
                             LLVMDisposePassManager(pm);
 
-                            LLVMDumpModule(module);
+                            LLVMDumpValue(last_func);
 
-                            LLVMAddModule(engine, module);
-                            let mut args: Vec<LLVMGenericValueRef> = Vec::new();
-                            let res = LLVMRunFunction(engine, last_func, 0, args.as_mut_ptr());
-                            println!("Evaluated to: {}", LLVMGenericValueToInt(res, false as i32));
-                            LLVMRemoveModule(engine, module, &mut module, error);
+                            if evaluate_res {
+                                LLVMAddModule(engine, module);
+                                let mut args: Vec<LLVMGenericValueRef> = Vec::new(); // no arguments
+                                let res = LLVMRunFunction(engine, last_func, 0, args.as_mut_ptr());
+                                println!(
+                                    "Evaluated to: {}",
+                                    LLVMGenericValueToInt(res, true as i32)
+                                );
+                                LLVMRemoveModule(engine, module, &mut module, error);
+                            }
                         }
                         Err(err) => eprintln!(
                             "Error at {}({}:{}). Message = {}",

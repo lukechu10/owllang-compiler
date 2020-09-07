@@ -75,7 +75,7 @@ impl<'a> Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    /// User can input both fn definitions and statements in the repl prompt.
+    /// User can input both fn definitions and statements / expressions in the repl prompt.
     pub fn parse_repl_input(&mut self) -> Result<Stmt, SyntaxError> {
         match self.current_token.value {
             TokenVal::KeywordFn => {
