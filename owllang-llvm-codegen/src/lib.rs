@@ -252,6 +252,105 @@ impl LlvmCodeGenVisitor {
     }
 }
 
+impl LlvmCodeGenVisitor {
+    fn codegen_fn_proto(&mut self, node: &FnProto) -> Result<(), SyntaxError> {
+        unsafe {
+            let arg_count = node.args.len();
+            let mut argv: Vec<LLVMTypeRef> = Vec::with_capacity(arg_count);
+
+            let mut func = LLVMGetNamedFunction(self.module, c_str!(node.iden));
+
+            if !func.is_null() {
+                panic!("Error");
+            }
+
+            for _ in &node.args {
+                argv.push(LLVMInt64Type());
+            }
+
+            let func_type = LLVMFunctionType(
+                LLVMInt64Type(),
+                argv.as_mut_ptr(),
+                arg_count as u32,
+                false as i32,
+            );
+
+            func = LLVMAddFunction(self.module, c_str!(node.iden), func_type);
+            LLVMSetLinkage(func, LLVMLinkage::LLVMExternalLinkage);
+
+            self.value_stack.push(func);
+
+            Ok(())
+        }
+    }
+
+    /// # Arguments
+    /// * `statements` - The `statements` field in `SemiKind::Block`.
+    fn codegen_block_stmt(&mut self, statements: &Vec<Stmt>) -> Result<(), SyntaxError> {
+        for stmt in statements {
+            self.visit_stmt(stmt)?;
+        }
+        Ok(())
+    }
+
+    /// # Arguments
+    /// * `proto` - The function prototype.
+    /// * `body` - The function body.
+    fn codegen_fn_stmt(&mut self, proto: &FnProto, body: &Box<Stmt>) -> Result<(), SyntaxError> {
+        unsafe {
+            self.named_values.clear(); // clear symbols from previous function
+
+            self.codegen_fn_proto(proto)?;
+            let func = self.value_stack.pop().unwrap();
+
+            self.current_function = Some(func);
+
+            LLVMPositionBuilderAtEnd(self.builder, LLVMAppendBasicBlock(func, c_str!("entry")));
+
+            for (i, arg) in proto.args.iter().enumerate() {
+                let addr = self.build_entry_bb_alloca(arg);
+                // store value
+                LLVMBuildStore(self.builder, LLVMGetParam(func, i as u32), addr);
+                self.named_values.insert(arg.clone(), addr);
+            }
+
+            // codegen function body
+            match &body.kind {
+                StmtKind::Block { statements } => self.codegen_block_stmt(statements)?,
+                _ => unreachable!(),
+            }
+
+            // unset self.current_function
+            self.current_function = None;
+            Ok(())
+        }
+    }
+
+    fn codegen_let_stmt(&mut self, _iden: &String, _initializer: &Expr) -> Result<(), SyntaxError> {
+        unimplemented!()
+    }
+
+    /// # Arguments
+    /// * `value` - The return value expression of the `SemiKind::Return` node.
+    fn codegen_return_stmt(&mut self, value: &Expr) -> Result<(), SyntaxError> {
+        unsafe {
+            self.visit_expr(value)?; // codegen return value
+            let llvm_value = self.value_stack.pop().unwrap();
+            LLVMBuildRet(self.builder, llvm_value);
+
+            Ok(())
+        }
+    }
+
+    /// # Arguments
+    /// * `expr` - The expression of the `SemiKind::ExprSemi` node.
+    fn codegen_expr_semi_stmt(&mut self, expr: &Expr) -> Result<(), SyntaxError> {
+        self.visit_expr(expr)?;
+        self.value_stack.pop(); // make value is not accessible
+        Ok(())
+    }
+}
+
 impl Visitor for LlvmCodeGenVisitor {
     fn visit_expr(&mut self, node: &Expr) -> Result<(), SyntaxError> {
         match &node.kind {
@@ -266,108 +365,27 @@ impl Visitor for LlvmCodeGenVisitor {
         }
     }
 
-    fn visit_compilation_unit(&mut self, node: &CompilationUnitAST) -> Result<(), SyntaxError> {
+    fn visit_stmt(&mut self, node: &Stmt) -> Result<(), SyntaxError> {
+        match &node.kind {
+            StmtKind::Block { statements } => self.codegen_block_stmt(statements),
+            StmtKind::Fn { proto, body } => self.codegen_fn_stmt(proto, body),
+            StmtKind::Let { iden, initializer } => self.codegen_let_stmt(iden, initializer),
+            StmtKind::Return { value } => self.codegen_return_stmt(value),
+            StmtKind::ExprSemi { expr } => self.codegen_expr_semi_stmt(expr),
+            _ => unimplemented!(),
+        }
+    }
+
+    fn visit_compilation_unit(&mut self, node: &CompilationUnit) -> Result<(), SyntaxError> {
         // visit functions in compilation unit
         for function in &node.functions {
-            self.visit_fn_statement(function)?;
+            self.visit_stmt(function)?;
         }
         Ok(())
-    }
-
-    fn visit_block(&mut self, node: &BlockStatementAST) -> Result<(), SyntaxError> {
-        for statement in &node.statements {
-            statement.accept(self)?;
-        }
-
-        Ok(())
-    }
-
-    fn visit_prototype(&mut self, node: &PrototypeAST) -> Result<(), SyntaxError> {
-        unsafe {
-            let arg_count = node.arguments.len();
-            let mut argv: Vec<LLVMTypeRef> = Vec::with_capacity(arg_count);
-
-            let mut func = LLVMGetNamedFunction(self.module, c_str!(node.fn_identifier));
-
-            if !func.is_null() {
-                panic!("Error");
-            }
-
-            for _ in &node.arguments {
-                argv.push(LLVMInt64Type());
-            }
-
-            let func_type = LLVMFunctionType(
-                LLVMInt64Type(),
-                argv.as_mut_ptr(),
-                arg_count as u32,
-                false as i32,
-            );
-
-            func = LLVMAddFunction(self.module, c_str!(node.fn_identifier), func_type);
-            LLVMSetLinkage(func, LLVMLinkage::LLVMExternalLinkage);
-
-            self.value_stack.push(func);
-
-            Ok(())
-        }
-    }
-
-    fn visit_fn_statement(&mut self, node: &FnStatementAST) -> Result<(), SyntaxError> {
-        unsafe {
-            self.named_values.clear();
-
-            self.visit_prototype(&node.prototype)?;
-            let func = self.value_stack.pop().unwrap();
-
-            self.current_function = Some(func);
-
-            LLVMPositionBuilderAtEnd(self.builder, LLVMAppendBasicBlock(func, c_str!("entry")));
-
-            for (i, arg) in node.prototype.arguments.iter().enumerate() {
-                let addr = self.build_entry_bb_alloca(arg);
-                // store value
-                LLVMBuildStore(self.builder, LLVMGetParam(func, i as u32), addr);
-                self.named_values.insert(arg.clone(), addr);
-            }
-
-            // codegen function body
-            if !node.is_extern {
-                let body_option = &node.body;
-                if let Some(body) = body_option {
-                    self.visit_block(body)?;
-                } else {
-                    unreachable!("Extern function should not have a body.");
-                }
-            }
-
-            // unset self.current_function
-            self.current_function = None;
-            Ok(())
-        }
-    }
-
-    fn visit_let_statement(&mut self, _node: &LetStatementAST) -> Result<(), SyntaxError> {
-        unimplemented!()
-    }
-
-    fn visit_return_statement(&mut self, node: &ReturnStatementAST) -> Result<(), SyntaxError> {
-        unsafe {
-            // codegen return expression
-            self.visit_expr(&node.ret_value)?;
-            let val = self.value_stack.pop().unwrap();
-            LLVMBuildRet(self.builder, val);
-
-            Ok(())
-        }
-    }
-
-    fn visit_expr_statement(&mut self, node: &ExprStatementAST) -> Result<(), SyntaxError> {
-        self.visit_expr(&node.expression)
     }
 }
 
-pub fn codegen_compilation_unit(ast: &CompilationUnitAST) -> Result<LLVMModuleRef, SyntaxError> {
+pub fn codegen_compilation_unit(ast: &CompilationUnit) -> Result<LLVMModuleRef, SyntaxError> {
     unsafe {
         let context = LLVMGetGlobalContext();
         let module_name = ast.entry_file_name.as_str();

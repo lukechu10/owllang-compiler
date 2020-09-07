@@ -1,5 +1,4 @@
 use crate::ast::{expressions::*, statements::*};
-use crate::traits::*;
 use crate::SyntaxError;
 use owllang_lexer::{Lexer, OpPrecedence, Token, TokenVal};
 use std::iter::Peekable;
@@ -77,79 +76,79 @@ impl<'a> Parser<'a> {
 
 impl<'a> Parser<'a> {
     /// User can input both fn definitions and statements in the repl prompt.
-    pub fn parse_repl_input(&mut self) -> Result<Box<dyn StatementAST>, SyntaxError> {
+    pub fn parse_repl_input(&mut self) -> Result<Stmt, SyntaxError> {
         match self.current_token.value {
             TokenVal::KeywordFn => {
                 let func = self.parse_fn_declaration()?;
-                Ok(Box::new(func))
+                Ok(func)
             }
             TokenVal::KeywordLet => {
                 let let_statement = self.parse_let_statement()?;
                 if self.current_token.value == TokenVal::PuncSemi {
                     self.expect_and_eat_tok(TokenVal::PuncSemi)?;
                 }
-                Ok(Box::new(let_statement))
+                Ok(let_statement)
             }
             _ => {
                 // try to parse expression statement
-                let expression = self.parse_expression()?;
+                let expr = self.parse_expression()?;
                 // semi colon is optional in repl
                 if self.current_token.value == TokenVal::PuncSemi {
                     self.expect_and_eat_tok(TokenVal::PuncSemi)?;
                 }
-                let expr_statement = ExprStatementAST::new(expression);
-                Ok(Box::new(expr_statement))
+                let expr_statement = Stmt::new(StmtKind::ExprSemi { expr });
+                Ok(expr_statement)
             }
         }
     }
 
-    pub fn parse_compilation_unit(&mut self) -> Result<CompilationUnitAST, SyntaxError> {
-        let mut functions: Vec<FnStatementAST> = Vec::new();
+    pub fn parse_compilation_unit(&mut self) -> Result<CompilationUnit, SyntaxError> {
+        let mut functions: Vec<Stmt> = Vec::new();
         while self.current_token.value != TokenVal::EndOfFile {
             let func = self.parse_fn_declaration()?;
             functions.push(func);
         }
-        Ok(CompilationUnitAST::new("entry".to_string(), functions))
+        Ok(CompilationUnit::new("entry".to_string(), functions))
     }
 
-    fn parse_statement(&mut self) -> Result<Box<dyn StatementAST>, SyntaxError> {
+    fn parse_statement(&mut self) -> Result<Stmt, SyntaxError> {
         match self.current_token.value {
             TokenVal::KeywordReturn => {
                 let ret_statement = self.parse_return_statement()?;
                 self.expect_and_eat_tok(TokenVal::PuncSemi)?;
-                Ok(Box::new(ret_statement))
+                Ok(ret_statement)
             }
             TokenVal::KeywordLet => {
                 let let_statement = self.parse_let_statement()?;
                 self.expect_and_eat_tok(TokenVal::PuncSemi)?;
-                Ok(Box::new(let_statement))
+                Ok(let_statement)
             }
             TokenVal::PuncOpenBrace => {
                 let block = self.parse_block_statement()?;
-                Ok(Box::new(block))
+                Ok(block)
             }
             _ => {
                 // try to parse expression statement
-                let expression = self.parse_expression()?;
+                let expr = self.parse_expression()?;
                 self.expect_and_eat_tok(TokenVal::PuncSemi)?;
-                let expr_statement = ExprStatementAST::new(expression);
-                Ok(Box::new(expr_statement))
+                let expr_statement = Stmt::new(StmtKind::ExprSemi { expr });
+                Ok(expr_statement)
             }
         }
     }
 
-    fn parse_return_statement(&mut self) -> Result<ReturnStatementAST, SyntaxError> {
+    fn parse_return_statement(&mut self) -> Result<Stmt, SyntaxError> {
         self.expect_and_eat_tok(TokenVal::KeywordReturn)?;
-        let initializer = self.parse_expression()?;
-        Ok(ReturnStatementAST::new(initializer))
+        let value = self.parse_expression()?;
+        Ok(Stmt::new(StmtKind::Return { value }))
     }
 
-    fn parse_let_statement(&mut self) -> Result<LetStatementAST, SyntaxError> {
+    fn parse_let_statement(&mut self) -> Result<Stmt, SyntaxError> {
         self.expect_and_eat_tok(TokenVal::KeywordLet)?;
-        let identifier = self.expect_and_eat_iden_tok()?;
+        let iden = self.expect_and_eat_iden_tok()?;
         self.expect_and_eat_tok(TokenVal::OpEquals)?;
-        let initializer_value = self.parse_expression()?;
-        Ok(LetStatementAST::new(identifier, initializer_value))
+        let initializer = self.parse_expression()?;
+        Ok(Stmt::new(StmtKind::Let { iden, initializer }))
     }
 
     /// Parses any valid expression.
@@ -265,7 +264,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_fn_prototype(&mut self) -> Result<PrototypeAST, SyntaxError> {
+    fn parse_fn_prototype(&mut self) -> Result<FnProto, SyntaxError> {
         self.expect_and_eat_tok(TokenVal::KeywordFn)?;
         let iden = self.expect_and_eat_iden_tok()?;
         self.expect_and_eat_tok(TokenVal::PuncOpenParen)?;
@@ -290,21 +289,19 @@ impl<'a> Parser<'a> {
             }
         }
 
-        Ok(PrototypeAST::new(iden, args))
+        Ok(FnProto { args, iden })
     }
 
-    fn parse_fn_declaration(&mut self) -> Result<FnStatementAST, SyntaxError> {
-        let prototype = self.parse_fn_prototype()?;
-        // unimplemented!()
-        // Err(self.new_syntax_error_at_current_token("Not implemented!".to_string()))
-        let body = self.parse_block_statement()?;
+    fn parse_fn_declaration(&mut self) -> Result<Stmt, SyntaxError> {
+        let proto = self.parse_fn_prototype()?;
+        let body = Box::new(self.parse_block_statement()?);
 
-        Ok(FnStatementAST::new(prototype, body))
+        Ok(Stmt::new(StmtKind::Fn { proto, body }))
     }
 
-    fn parse_block_statement(&mut self) -> Result<BlockStatementAST, SyntaxError> {
+    fn parse_block_statement(&mut self) -> Result<Stmt, SyntaxError> {
         self.expect_and_eat_tok(TokenVal::PuncOpenBrace)?;
-        let mut statements: Vec<Box<dyn StatementAST>> = Vec::new();
+        let mut statements: Vec<Stmt> = Vec::new();
         loop {
             if self.current_token.value == TokenVal::PuncCloseBrace {
                 self.expect_and_eat_tok(TokenVal::PuncCloseBrace)?;
@@ -314,6 +311,6 @@ impl<'a> Parser<'a> {
             statements.push(statement);
         }
 
-        Ok(BlockStatementAST::new(statements))
+        Ok(Stmt::new(StmtKind::Block { statements }))
     }
 }
