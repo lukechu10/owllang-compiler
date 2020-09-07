@@ -3,6 +3,7 @@ use llvm_sys::core::*;
 use llvm_sys::execution_engine::*;
 use llvm_sys::target::*;
 use llvm_sys::target_machine::*;
+use llvm_sys::transforms::util::*;
 use owllang_lexer::Lexer;
 use owllang_llvm_codegen::{c_str, codegen_compilation_unit, LlvmCodeGenVisitor};
 use owllang_parser::parser::Parser;
@@ -55,14 +56,15 @@ fn repl_loop(matches: &ArgMatches) {
                             if matches.is_present("show-ast") {
                                 println!("{:#?}", ast);
                             }
-                            // match codegen_compilation_unit(&ast) {
-                            //     Err(err) => println!("{:?}", err),
-                            //     _ => {}
-                            // }
                             let mut codegen_visitor = LlvmCodeGenVisitor::new(module, builder);
                             codegen_visitor.visit_compilation_unit(&ast).unwrap();
                             let last_func = LLVMGetLastFunction(module);
-                            // LLVMDumpValue(last_func);
+                            // optimization passes
+                            let pm = LLVMCreatePassManager();
+                            LLVMAddPromoteMemoryToRegisterPass(pm);
+                            LLVMRunPassManager(pm, module);
+                            LLVMDisposePassManager(pm);
+
                             LLVMDumpModule(module);
 
                             LLVMAddModule(engine, module);

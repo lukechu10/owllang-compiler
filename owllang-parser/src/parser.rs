@@ -104,8 +104,12 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_compilation_unit(&mut self) -> Result<CompilationUnitAST, SyntaxError> {
-        let func = self.parse_fn_declaration()?;
-        Ok(CompilationUnitAST::new("entry".to_string(), vec![func]))
+        let mut functions: Vec<FnStatementAST> = Vec::new();
+        while self.current_token.value != TokenVal::EndOfFile {
+            let func = self.parse_fn_declaration()?;
+            functions.push(func);
+        }
+        Ok(CompilationUnitAST::new("entry".to_string(), functions))
     }
 
     fn parse_statement(&mut self) -> Result<Box<dyn StatementAST>, SyntaxError> {
