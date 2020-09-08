@@ -56,8 +56,7 @@ fn repl_loop(matches: &ArgMatches) {
                             // True if repl should evaluate input.
                             let evaluate_res = match ast.kind {
                                 StmtKind::ExprSemi { expr: _ } => true,
-                                // _ => false,
-                                _ => true,
+                                _ => false,
                             };
 
                             codegen_visitor.handle_repl_input(ast).unwrap();

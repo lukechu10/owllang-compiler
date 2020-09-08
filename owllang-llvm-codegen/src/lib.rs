@@ -4,6 +4,7 @@ use llvm_sys::core::*;
 use llvm_sys::prelude::*;
 use llvm_sys::transforms::util::*;
 use llvm_sys::{LLVMIntPredicate, LLVMLinkage, LLVMTypeKind};
+use llvm_sys::target_machine::*;
 use owllang_lexer::TokenVal;
 use owllang_parser::ast::expressions::*;
 use owllang_parser::ast::statements::*;
@@ -33,6 +34,14 @@ impl LlvmCodeGenVisitor {
             named_values: HashMap::new(),
             current_function: None,
         }
+    }
+
+    pub fn add_builtin_fns(&mut self) -> Result<(), SyntaxError>{
+        let printf_t = FnProto {
+            args: vec!["x".to_string()],
+            iden: "println".to_string(),
+        };
+        self.codegen_fn_proto(&printf_t)
     }
 
     /// Creates an `alloca` instruction in the `entry` block of the current function. Returns the memory address of the allocated variable.
@@ -113,7 +122,7 @@ impl LlvmCodeGenVisitor {
                     let func = LLVMGetNamedFunction(self.module, c_str!(callee));
 
                     if func.is_null() {
-                        panic!("Error");
+                        panic!("Error, function not defined");
                     }
                     if LLVMCountParams(func) != arg_count as u32 {
                         panic!("Invalid argument count");
@@ -420,7 +429,11 @@ pub fn codegen_compilation_unit(ast: &CompilationUnit) -> Result<LLVMModuleRef, 
         let module = LLVMModuleCreateWithNameInContext(c_str!(module_name), context);
         let builder = LLVMCreateBuilderInContext(context);
 
+        let target_triple = LLVMGetDefaultTargetTriple();
+        LLVMSetTarget(module, target_triple);
+
         let mut code_gen_visitor = LlvmCodeGenVisitor::new(module, builder);
+        code_gen_visitor.add_builtin_fns()?;
         code_gen_visitor.visit_compilation_unit(ast)?;
 
         // basic optimizations

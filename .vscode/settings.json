@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.lock": "toml",
+        "iostream": "cpp"
+    }
+}
