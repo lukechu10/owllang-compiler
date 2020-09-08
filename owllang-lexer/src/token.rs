@@ -18,8 +18,11 @@ pub enum OpPrecedence {
     Error = -1,
     /// Used to except all operator.
     Expression = 0,
+    // `=`
     Assignment,
+    // `==`
     Equality,
+    // `>`, `>=`, `<` and `<=`
     Relational,
     /// `+`, and `-`
     Additive,
@@ -32,25 +35,42 @@ pub enum OpPrecedence {
 #[repr(u8)]
 pub enum TokenVal {
     // punctuation
-    PuncOpenParen,  // '('
-    PuncCloseParen, // ')'
-    PuncOpenBrace,  // '{'
-    PuncCloseBrace, // '}'
-    PuncComma,      // ','
-    PuncSemi,       // ;'
+    /// `(`
+    PuncOpenParen,
+    /// `)`
+    PuncCloseParen,
+    /// `{`
+    PuncOpenBrace,
+    /// `}`
+    PuncCloseBrace,
+    /// `,`
+    PuncComma,
+    /// `;`
+    PuncSemi,
     // operators
-    OpPlus,    // '+'
-    OpMinus,   // '-'
-    OpAsterisk, // '*'
-    OpSlash,   // '/'
-    OpPercent, // '%' (for modulo operator)
-    OpEquals,  // '='
+    /// `+`
+    OpPlus,
+    /// `-`
+    OpMinus,
+    /// `*`
+    OpAsterisk,
+    /// `/`
+    OpSlash,
+    /// `%` (for modulo operator)
+    OpPercent,
+    /// `=`
+    OpEquals,
 
-    OpEqualsEquals,      // '=='
-    OpGreaterThan,       // '>'
-    OpEqualsGreaterThan, // '>='
-    OpLessThan,          // '<'
-    OpEqualsLessThan,    // '<='
+    /// `==`
+    OpEqualsEquals,
+    /// `>`
+    OpGreaterThan,
+    /// `>=`
+    OpEqualsGreaterThan,
+    /// `<`
+    OpLessThan,
+    /// `<=`
+    OpEqualsLessThan,
     // keywords
     KeywordFn,
     KeywordExtern,
