@@ -10,7 +10,12 @@ pub struct Parser<'a> {
 
 impl<'a> Parser<'a> {
     pub fn new(lexer: &'a mut Lexer<'a>) -> Self {
-        let first_token = lexer.next().unwrap();
+        let first_token = lexer.next().unwrap_or(Token {
+            value: TokenVal::EndOfFile,
+            row: 0,
+            col: 0,
+            len: 0,
+        });
         Self {
             lexer: lexer.peekable(),
             current_token: first_token,
