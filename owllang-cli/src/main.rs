@@ -73,7 +73,9 @@ fn repl_loop(matches: &ArgMatches) {
                             LLVMRunPassManager(pm, module);
                             LLVMDisposePassManager(pm);
 
-                            LLVMDumpValue(last_func);
+                            if matches.is_present("dump-llvm") {
+                                LLVMDumpValue(last_func);
+                            }
 
                             if evaluate_res {
                                 LLVMAddModule(engine, module);
@@ -169,6 +171,13 @@ fn main() {
                 .long("output")
                 .help("Emits output to file or print to stdout if not present")
                 .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("dump-llvm")
+                .long("dump-llvm")
+                .help("Dumps generated LLVM IR to stdout in repl mode")
+                .conflicts_with("input")
+                .takes_value(false)
         )
         .arg(
             Arg::with_name("show-ast")
