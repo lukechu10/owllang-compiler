@@ -2,9 +2,7 @@ mod macros;
 
 use llvm_sys::core::*;
 use llvm_sys::prelude::*;
-use llvm_sys::transforms::util::*;
 use llvm_sys::{LLVMIntPredicate, LLVMLinkage, LLVMTypeKind};
-use llvm_sys::target_machine::*;
 use owllang_lexer::TokenVal;
 use owllang_parser::ast::expressions::*;
 use owllang_parser::ast::statements::*;
@@ -36,7 +34,7 @@ impl LlvmCodeGenVisitor {
         }
     }
 
-    pub fn add_builtin_fns(&mut self) -> Result<(), SyntaxError>{
+    pub fn add_builtin_fns(&mut self) -> Result<(), SyntaxError> {
         let printf_t = FnProto {
             args: vec!["x".to_string()],
             iden: "println".to_string(),
@@ -361,6 +359,8 @@ impl LlvmCodeGenVisitor {
 
     /// Custom codegen function for repl.
     pub fn handle_repl_input(&mut self, stmt: Stmt) -> Result<(), SyntaxError> {
+        static mut ANON_FN_COUNTER: u64 = 0;
+
         match stmt.kind {
             StmtKind::Fn {
                 ref proto,
@@ -373,15 +373,18 @@ impl LlvmCodeGenVisitor {
             StmtKind::ExprSemi { expr } => {
                 // codegen anonymous function that returns value
                 // create fake return stmt.
-                let ret_stmt = Stmt::new(StmtKind::Return { value: expr });
-                let proto = FnProto {
-                    iden: "".to_string(),
-                    args: Vec::new(),
-                };
-                let body = Stmt::new(StmtKind::Block {
-                    statements: vec![ret_stmt],
-                });
-                self.codegen_fn_stmt(&proto, &Box::new(body))
+                unsafe {
+                    ANON_FN_COUNTER += 1;
+                    let ret_stmt = Stmt::new(StmtKind::Return { value: expr });
+                    let proto = FnProto {
+                        iden: format!("0anonymous_func_{}", ANON_FN_COUNTER), // start with '0' to prevent conflict with user defined functions
+                        args: Vec::new(),
+                    };
+                    let body = Stmt::new(StmtKind::Block {
+                        statements: vec![ret_stmt],
+                    });
+                    self.codegen_fn_stmt(&proto, &Box::new(body))
+                }
             }
             _ => unreachable!(),
         }
