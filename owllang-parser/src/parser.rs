@@ -102,13 +102,15 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse_compilation_unit(&mut self) -> Result<CompilationUnit, SyntaxError> {
-        let mut functions: Vec<Stmt> = Vec::new();
+    pub fn parse_compilation_unit(&mut self) -> Result<CompilationUnit, Vec<SyntaxError>> {
+        let mut compilation_unit = CompilationUnit::new("entry".to_string());
         while self.current_token.value != TokenVal::EndOfFile {
-            let func = self.parse_fn_declaration()?;
-            functions.push(func);
+            match self.parse_fn_declaration() {
+                Ok(func) => compilation_unit.add_func(func),
+                Err(err) => compilation_unit.add_err(err),
+            }
         }
-        Ok(CompilationUnit::new("entry".to_string(), functions))
+        Ok(compilation_unit)
     }
 
     fn parse_statement(&mut self) -> Result<Stmt, SyntaxError> {

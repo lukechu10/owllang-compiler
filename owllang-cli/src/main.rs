@@ -115,6 +115,14 @@ fn compile_file(matches: ArgMatches) {
     let mut parser = Parser::new(&mut lexer);
 
     let ast = parser.parse_compilation_unit().unwrap();
+    if ast.has_errors() {
+        // print out errors
+        for err in ast.errors {
+            println!("{}", err);
+        }
+        return;
+    }
+
     unsafe {
         let context = LLVMGetGlobalContext();
         let module = LLVMModuleCreateWithNameInContext(c_str!(path), context);
