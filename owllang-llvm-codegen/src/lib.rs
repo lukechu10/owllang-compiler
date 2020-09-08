@@ -421,33 +421,3 @@ impl Visitor for LlvmCodeGenVisitor {
         Ok(())
     }
 }
-
-pub fn codegen_compilation_unit(ast: &CompilationUnit) -> Result<LLVMModuleRef, SyntaxError> {
-    unsafe {
-        let context = LLVMGetGlobalContext();
-        let module_name = ast.entry_file_name.as_str();
-        let module = LLVMModuleCreateWithNameInContext(c_str!(module_name), context);
-        let builder = LLVMCreateBuilderInContext(context);
-
-        let target_triple = LLVMGetDefaultTargetTriple();
-        LLVMSetTarget(module, target_triple);
-
-        let mut code_gen_visitor = LlvmCodeGenVisitor::new(module, builder);
-        code_gen_visitor.add_builtin_fns()?;
-        code_gen_visitor.visit_compilation_unit(ast)?;
-
-        // basic optimizations
-        let pass_manager = LLVMCreatePassManager();
-        LLVMAddPromoteMemoryToRegisterPass(pass_manager);
-        LLVMRunPassManager(pass_manager, module);
-
-        LLVMDumpModule(module);
-
-        // dispose resources to prevent memory leak
-        LLVMDisposeModule(module);
-        LLVMDisposeBuilder(builder);
-        LLVMDisposePassManager(pass_manager);
-
-        Ok(module)
-    }
-}

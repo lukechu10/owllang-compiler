@@ -1,10 +1,11 @@
 use clap::{App, Arg, ArgMatches};
 use llvm_sys::{
-    analysis::*, core::*, execution_engine::*, target::*, target_machine::*, transforms::util::*,
+    analysis::*, bit_writer::*, core::*, execution_engine::*, target::*, target_machine::*,
+    transforms::util::*,
 };
 use owllang_lexer::Lexer;
-use owllang_llvm_codegen::{c_str, codegen_compilation_unit, LlvmCodeGenVisitor};
-use owllang_parser::{ast::statements::StmtKind, parser::Parser};
+use owllang_llvm_codegen::{c_str, LlvmCodeGenVisitor};
+use owllang_parser::{ast::statements::StmtKind, parser::Parser, Visitor};
 use std::{fs, io, io::prelude::*};
 
 fn repl_loop(matches: &ArgMatches) {
@@ -114,7 +115,33 @@ fn compile_file(matches: ArgMatches) {
     let mut parser = Parser::new(&mut lexer);
 
     let ast = parser.parse_compilation_unit().unwrap();
-    codegen_compilation_unit(&ast).unwrap();
+    unsafe {
+        let context = LLVMGetGlobalContext();
+        let module = LLVMModuleCreateWithNameInContext(c_str!(path), context);
+        let builder = LLVMCreateBuilderInContext(context);
+
+        let target_triple = LLVMGetDefaultTargetTriple();
+        LLVMSetTarget(module, target_triple);
+
+        let mut codegen_visitor = LlvmCodeGenVisitor::new(module, builder);
+        codegen_visitor.add_builtin_fns();
+        codegen_visitor.visit_compilation_unit(&ast);
+
+        // optimization passes
+        let pass_manager = LLVMCreatePassManager();
+        LLVMAddPromoteMemoryToRegisterPass(pass_manager);
+        LLVMRunPassManager(pass_manager, module);
+
+        if matches.is_present("output") {
+            // dump to file
+            let out_file = matches.value_of("output").unwrap();
+            LLVMWriteBitcodeToFile(module, c_str!(out_file));
+        }
+        else {
+            // dump llvm ir to stdout
+            LLVMDumpModule(module);
+        }
+    }
 }
 
 fn main() {
@@ -126,6 +153,13 @@ fn main() {
             Arg::with_name("input")
                 .index(1)
                 .required(false)
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("output")
+                .short("o")
+                .long("output")
+                .help("Emits output to file or print to stdout if not present")
                 .takes_value(true),
         )
         .arg(
