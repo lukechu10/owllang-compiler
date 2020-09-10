@@ -1,5 +1,6 @@
 use std::fmt;
 
+#[deprecated = "use owlc_error::ErrorReporter"]
 #[derive(Debug)]
 pub struct SyntaxError {
     /// The name of the file the error occurred in.

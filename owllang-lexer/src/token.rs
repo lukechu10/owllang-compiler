@@ -87,7 +87,7 @@ pub enum TokenKind {
     // literals
     LiteralInt(i64),
     LiteralDouble(f32),
-    // miscaleneous
+    // miscellaneous
     EndOfFile,
 }
 

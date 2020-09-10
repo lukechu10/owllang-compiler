@@ -3,6 +3,7 @@ use llvm_sys::{
     analysis::*, bit_writer::*, core::*, execution_engine::*, target::*, target_machine::*,
     transforms::util::*,
 };
+use owlc_error::ErrorReporter;
 use owllang_lexer::Lexer;
 use owllang_llvm_codegen::{c_str, LlvmCodeGenVisitor};
 use owllang_parser::{ast::statements::StmtKind, parser::Parser, Visitor};
@@ -14,7 +15,7 @@ fn repl_loop(matches: &ArgMatches) {
         let mut stdout = io::stdout();
 
         let context = LLVMGetGlobalContext();
-        let mut module = LLVMModuleCreateWithNameInContext(c_str!("repl_tmp"), context);
+        let mut module = LLVMModuleCreateWithNameInContext(c_str!("repl"), context);
         let builder = LLVMCreateBuilderInContext(context);
 
         LLVMLinkInMCJIT();
@@ -44,61 +45,55 @@ fn repl_loop(matches: &ArgMatches) {
                     }
 
                     let mut lexer = Lexer::with_string(input.as_str());
-                    let mut parser = Parser::new(&mut lexer);
-                    let ast_result = parser.parse_repl_input();
+                    let error_reporter = ErrorReporter::new();
+                    let mut parser = Parser::new(&mut lexer, error_reporter);
+                    let ast = parser.parse_repl_input();
 
-                    match ast_result {
-                        Ok(ast) => {
-                            if matches.is_present("show-ast") {
-                                println!("{:#?}", ast);
-                            }
-                            let mut codegen_visitor = LlvmCodeGenVisitor::new(module, builder);
+                    if parser.errs.has_errors() {
+                        print!("{}", parser.errs);
+                        continue; // do not evaluate result
+                    }
 
-                            // True if repl should evaluate input.
-                            let evaluate_res = match ast.kind {
-                                StmtKind::ExprSemi { expr: _ } => true,
-                                _ => false,
-                            };
+                    if matches.is_present("show-ast") {
+                        println!("{:#?}", ast);
+                    }
+                    let mut codegen_visitor = LlvmCodeGenVisitor::new(module, builder);
 
-                            codegen_visitor.handle_repl_input(ast).unwrap();
+                    // True if repl should evaluate input.
+                    let evaluate_res = match ast.kind {
+                        StmtKind::ExprSemi { expr: _ } => true,
+                        _ => false,
+                    };
 
-                            let last_func = LLVMGetLastFunction(module);
-                            LLVMVerifyFunction(
-                                last_func,
-                                LLVMVerifierFailureAction::LLVMPrintMessageAction,
-                            );
-                            // optimization passes
-                            let pm = LLVMCreatePassManager();
-                            LLVMAddPromoteMemoryToRegisterPass(pm);
-                            LLVMRunPassManager(pm, module);
-                            LLVMDisposePassManager(pm);
+                    codegen_visitor.handle_repl_input(ast).unwrap();
 
-                            if matches.is_present("dump-llvm") {
-                                LLVMDumpValue(last_func);
-                            }
+                    let last_func = LLVMGetLastFunction(module);
+                    LLVMVerifyFunction(
+                        last_func,
+                        LLVMVerifierFailureAction::LLVMPrintMessageAction,
+                    );
+                    // optimization passes
+                    let pm = LLVMCreatePassManager();
+                    LLVMAddPromoteMemoryToRegisterPass(pm);
+                    LLVMRunPassManager(pm, module);
+                    LLVMDisposePassManager(pm);
 
-                            if evaluate_res {
-                                LLVMAddModule(engine, module);
-                                let mut args: Vec<LLVMGenericValueRef> = Vec::new(); // no arguments
-                                let res = LLVMRunFunction(engine, last_func, 0, args.as_mut_ptr());
-                                println!(
-                                    "Evaluated to: {}",
-                                    LLVMGenericValueToInt(res, true as i32)
-                                );
-                                LLVMRemoveModule(engine, module, &mut module, error);
-                            }
-                        }
-                        Err(err) => eprintln!(
-                            "Error at {}({}:{}). {}",
-                            err.file_name, err.row, err.col, err.message
-                        ),
+                    if matches.is_present("dump-llvm") {
+                        LLVMDumpValue(last_func);
+                    }
+
+                    if evaluate_res {
+                        LLVMAddModule(engine, module);
+                        let mut args: Vec<LLVMGenericValueRef> = Vec::new(); // no arguments
+                        let res = LLVMRunFunction(engine, last_func, 0, args.as_mut_ptr());
+                        println!("Evaluated to: {}", LLVMGenericValueToInt(res, true as i32));
+                        LLVMRemoveModule(engine, module, &mut module, error);
                     }
                 }
                 Err(err) => println!("Error: {}", err),
             }
         }
 
-        LLVMDisposeModule(module);
         LLVMDisposeBuilder(builder);
         LLVMDisposeExecutionEngine(engine);
     }
@@ -108,15 +103,18 @@ fn repl_loop(matches: &ArgMatches) {
 /// # Panics
 /// This method panics if `matches.value_of("input")` is `None`.
 /// This method panics if the path does not exist. // TODO
-/// This method panics if `parser.parse_compilation_unit()` returns an `Err`. // TODO
 fn compile_file(matches: ArgMatches) {
     let path = matches.value_of("input").unwrap();
     let file_str = fs::read_to_string(path).unwrap();
 
     let mut lexer = Lexer::with_string(file_str.as_str());
-    let mut parser = Parser::new(&mut lexer);
+    let error_reporter = ErrorReporter::new();
+    let mut parser = Parser::new(&mut lexer, error_reporter);
+    if parser.errs.has_errors() {
+        print!("{}", parser.errs);
+    }
 
-    let ast = parser.parse_compilation_unit().unwrap();
+    let ast = parser.parse_compilation_unit();
     if ast.has_errors() {
         // print out errors
         for err in ast.errors {
@@ -135,7 +133,13 @@ fn compile_file(matches: ArgMatches) {
 
         let mut codegen_visitor = LlvmCodeGenVisitor::new(module, builder);
         codegen_visitor.add_builtin_fns();
-        codegen_visitor.visit_compilation_unit(&ast);
+        match codegen_visitor.visit_compilation_unit(&ast) {
+            Ok(_) => {}
+            Err(err) => {
+                println!("{}", err.message);
+                return;
+            }
+        }
 
         // optimization passes
         let pass_manager = LLVMCreatePassManager();
@@ -146,11 +150,14 @@ fn compile_file(matches: ArgMatches) {
             // dump to file
             let out_file = matches.value_of("output").unwrap();
             LLVMWriteBitcodeToFile(module, c_str!(out_file));
-        }
-        else {
+        } else {
             // dump llvm ir to stdout
             LLVMDumpModule(module);
         }
+
+        LLVMDisposeModule(module);
+        LLVMDisposeBuilder(builder);
+        LLVMDisposePassManager(pass_manager);
     }
 }
 
@@ -177,7 +184,7 @@ fn main() {
                 .long("dump-llvm")
                 .help("Dumps generated LLVM IR to stdout in repl mode")
                 .conflicts_with("input")
-                .takes_value(false)
+                .takes_value(false),
         )
         .arg(
             Arg::with_name("show-ast")

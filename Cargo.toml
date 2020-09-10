@@ -5,4 +5,6 @@ members = [
   "owllang-lexer",
   "owllang-parser",
   "owllang-llvm-codegen",
+  "owlc-passes",
+  "owlc-error",
 ]
