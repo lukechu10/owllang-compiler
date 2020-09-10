@@ -1,4 +1,4 @@
-use owllang_lexer::TokenVal;
+use owllang_lexer::TokenKind;
 
 #[derive(Debug)]
 pub enum ExprKind {
@@ -12,7 +12,7 @@ pub enum ExprKind {
         lhs: Box<Expr>,
         rhs: Box<Expr>,
         /// The operator type of the `BinaryExpr`. Represented with a `TokenVal`. The value of the field should only be valid operator variants of `TokenVal`.
-        op_type: TokenVal,
+        op_type: TokenKind,
     },
 }
 

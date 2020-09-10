@@ -3,7 +3,7 @@ mod macros;
 use llvm_sys::core::*;
 use llvm_sys::prelude::*;
 use llvm_sys::{LLVMIntPredicate, LLVMLinkage, LLVMTypeKind};
-use owllang_lexer::TokenVal;
+use owllang_lexer::TokenKind;
 use owllang_parser::ast::expressions::*;
 use owllang_parser::ast::statements::*;
 use owllang_parser::{SyntaxError, Visitor};
@@ -164,7 +164,7 @@ impl LlvmCodeGenVisitor {
                     let rhs = self.value_stack.pop().unwrap();
 
                     match &op_type {
-                        TokenVal::OpEquals => {
+                        TokenKind::OpEquals => {
                             // do not codegen lhs for assignment expression
                             // lhs of assignment expression should be an identifier
 
@@ -196,37 +196,37 @@ impl LlvmCodeGenVisitor {
                             let lhs = self.value_stack.pop().unwrap();
 
                             res = match &op_type {
-                                TokenVal::OpPlus => {
+                                TokenKind::OpPlus => {
                                     LLVMBuildAdd(self.builder, lhs, rhs, c_str!("add_tmp"))
                                 }
-                                TokenVal::OpMinus => {
+                                TokenKind::OpMinus => {
                                     LLVMBuildSub(self.builder, lhs, rhs, c_str!("sub_tmp"))
                                 }
-                                TokenVal::OpAsterisk => {
+                                TokenKind::OpAsterisk => {
                                     LLVMBuildMul(self.builder, lhs, rhs, c_str!("mul_tmp"))
                                 }
-                                TokenVal::OpSlash => {
+                                TokenKind::OpSlash => {
                                     LLVMBuildSDiv(self.builder, lhs, rhs, c_str!("sdiv_tmp"))
                                 }
-                                TokenVal::OpPercent => {
+                                TokenKind::OpPercent => {
                                     LLVMBuildSRem(self.builder, lhs, rhs, c_str!("srem_tmp"))
                                 }
                                 _ => {
                                     // codegen relational operators
                                     let cmp_predicate = match &op_type {
-                                        TokenVal::OpEqualsEquals => {
+                                        TokenKind::OpEqualsEquals => {
                                             (LLVMIntPredicate::LLVMIntEQ, "eq_cmp_tmp")
                                         }
-                                        TokenVal::OpGreaterThan => {
+                                        TokenKind::OpGreaterThan => {
                                             (LLVMIntPredicate::LLVMIntSGT, "sgt_cmp_tmp")
                                         }
-                                        TokenVal::OpEqualsGreaterThan => {
+                                        TokenKind::OpEqualsGreaterThan => {
                                             (LLVMIntPredicate::LLVMIntSGE, "sge_cmp_tmp")
                                         }
-                                        TokenVal::OpLessThan => {
+                                        TokenKind::OpLessThan => {
                                             (LLVMIntPredicate::LLVMIntSLT, "slt_cmp_tmp")
                                         }
-                                        TokenVal::OpEqualsLessThan => {
+                                        TokenKind::OpEqualsLessThan => {
                                             (LLVMIntPredicate::LLVMIntSLE, "sle_cmp_tmp")
                                         }
                                         _ => unreachable!(),

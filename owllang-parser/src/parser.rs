@@ -1,6 +1,6 @@
 use crate::ast::{expressions::*, statements::*};
 use crate::SyntaxError;
-use owllang_lexer::{Lexer, OpPrecedence, Token, TokenVal};
+use owllang_lexer::{Lexer, OpPrecedence, Token, TokenKind};
 use std::iter::Peekable;
 
 pub struct Parser<'a> {
@@ -11,7 +11,7 @@ pub struct Parser<'a> {
 impl<'a> Parser<'a> {
     pub fn new(lexer: &'a mut Lexer<'a>) -> Self {
         let first_token = lexer.next().unwrap_or(Token {
-            value: TokenVal::EndOfFile,
+            value: TokenKind::EndOfFile,
             row: 0,
             col: 0,
             len: 0,
@@ -25,7 +25,7 @@ impl<'a> Parser<'a> {
     /// Creates a new syntax error at the current token.
     fn new_syntax_error_at_current_token(&self, message: String) -> SyntaxError {
         SyntaxError {
-            file_name: "repl_tmp".to_string(),
+            file_name: "repl".to_string(),
             row: self.current_token.row,
             col: self.current_token.col,
             message,
@@ -39,7 +39,7 @@ impl<'a> Parser<'a> {
             Some(tok) => self.current_token = tok,
             None => {
                 self.current_token = Token {
-                    value: TokenVal::EndOfFile,
+                    value: TokenKind::EndOfFile,
                     row: self.current_token.row,
                     col: self.current_token.col + 1, // 1 character after last token
                     len: 0,
@@ -50,13 +50,13 @@ impl<'a> Parser<'a> {
     }
 
     /// Returns a `Err(SyntaxError)` if the token does not match the expected token. Eats the token even if bad match.
-    fn expect_and_eat_tok(&mut self, expected: TokenVal) -> Result<Token, SyntaxError> {
+    fn expect_and_eat_tok(&mut self, expected: TokenKind) -> Result<Token, SyntaxError> {
         let actual = self.eat_token()?;
         if actual.value != expected {
             Err(self.new_syntax_error_at_current_token(
                 format!(
-                    "Expected a {:?} token. Found a {:?} token.",
-                    expected, actual.value
+                    "Unexpected {} token when expecting {} token.",
+                    actual.value, expected
                 )
                 .to_string(),
             ))
@@ -68,12 +68,13 @@ impl<'a> Parser<'a> {
     /// Returns the identifier `String` or a `SyntaxError` if bad match. Eats the token even if bad match.
     fn expect_and_eat_iden_tok(&mut self) -> Result<String, SyntaxError> {
         let actual = self.eat_token()?;
-        if let TokenVal::Identifier(iden) = actual.value {
+        if let TokenKind::Identifier(iden) = actual.value {
             Ok(iden)
         } else {
             Err(self.new_syntax_error_at_current_token(format!(
-                "Expected a identifier token. Found a {:?} token",
-                actual.value
+                "Unexpected {} token when expecting {} token.",
+                actual.value,
+                TokenKind::Identifier("".to_string())
             )))
         }
     }
@@ -83,14 +84,14 @@ impl<'a> Parser<'a> {
     /// User can input both fn definitions and statements / expressions in the repl prompt.
     pub fn parse_repl_input(&mut self) -> Result<Stmt, SyntaxError> {
         match self.current_token.value {
-            TokenVal::KeywordFn => {
+            TokenKind::KeywordFn => {
                 let func = self.parse_fn_declaration()?;
                 Ok(func)
             }
-            TokenVal::KeywordLet => {
+            TokenKind::KeywordLet => {
                 let let_statement = self.parse_let_statement()?;
-                if self.current_token.value == TokenVal::PuncSemi {
-                    self.expect_and_eat_tok(TokenVal::PuncSemi)?;
+                if self.current_token.value == TokenKind::PuncSemi {
+                    self.expect_and_eat_tok(TokenKind::PuncSemi)?;
                 }
                 Ok(let_statement)
             }
@@ -98,8 +99,8 @@ impl<'a> Parser<'a> {
                 // try to parse expression statement
                 let expr = self.parse_expression()?;
                 // semi colon is optional in repl
-                if self.current_token.value == TokenVal::PuncSemi {
-                    self.expect_and_eat_tok(TokenVal::PuncSemi)?;
+                if self.current_token.value == TokenKind::PuncSemi {
+                    self.expect_and_eat_tok(TokenKind::PuncSemi)?;
                 }
                 let expr_statement = Stmt::new(StmtKind::ExprSemi { expr });
                 Ok(expr_statement)
@@ -109,7 +110,7 @@ impl<'a> Parser<'a> {
 
     pub fn parse_compilation_unit(&mut self) -> Result<CompilationUnit, Vec<SyntaxError>> {
         let mut compilation_unit = CompilationUnit::new("entry".to_string());
-        while self.current_token.value != TokenVal::EndOfFile {
+        while self.current_token.value != TokenKind::EndOfFile {
             match self.parse_fn_declaration() {
                 Ok(func) => compilation_unit.add_func(func),
                 Err(err) => compilation_unit.add_err(err),
@@ -120,24 +121,24 @@ impl<'a> Parser<'a> {
 
     fn parse_statement(&mut self) -> Result<Stmt, SyntaxError> {
         match self.current_token.value {
-            TokenVal::KeywordReturn => {
+            TokenKind::KeywordReturn => {
                 let ret_statement = self.parse_return_statement()?;
-                self.expect_and_eat_tok(TokenVal::PuncSemi)?;
+                self.expect_and_eat_tok(TokenKind::PuncSemi)?;
                 Ok(ret_statement)
             }
-            TokenVal::KeywordLet => {
+            TokenKind::KeywordLet => {
                 let let_statement = self.parse_let_statement()?;
-                self.expect_and_eat_tok(TokenVal::PuncSemi)?;
+                self.expect_and_eat_tok(TokenKind::PuncSemi)?;
                 Ok(let_statement)
             }
-            TokenVal::PuncOpenBrace => {
+            TokenKind::PuncOpenBrace => {
                 let block = self.parse_block_statement()?;
                 Ok(block)
             }
             _ => {
                 // try to parse expression statement
                 let expr = self.parse_expression()?;
-                self.expect_and_eat_tok(TokenVal::PuncSemi)?;
+                self.expect_and_eat_tok(TokenKind::PuncSemi)?;
                 let expr_statement = Stmt::new(StmtKind::ExprSemi { expr });
                 Ok(expr_statement)
             }
@@ -145,15 +146,15 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_return_statement(&mut self) -> Result<Stmt, SyntaxError> {
-        self.expect_and_eat_tok(TokenVal::KeywordReturn)?;
+        self.expect_and_eat_tok(TokenKind::KeywordReturn)?;
         let value = self.parse_expression()?;
         Ok(Stmt::new(StmtKind::Return { value }))
     }
 
     fn parse_let_statement(&mut self) -> Result<Stmt, SyntaxError> {
-        self.expect_and_eat_tok(TokenVal::KeywordLet)?;
+        self.expect_and_eat_tok(TokenKind::KeywordLet)?;
         let iden = self.expect_and_eat_iden_tok()?;
-        self.expect_and_eat_tok(TokenVal::OpEquals)?;
+        self.expect_and_eat_tok(TokenKind::OpEquals)?;
         let initializer = self.parse_expression()?;
         Ok(Stmt::new(StmtKind::Let { iden, initializer }))
     }
@@ -167,63 +168,70 @@ impl<'a> Parser<'a> {
     /// Atomic expression.
     fn parse_primary_expression(&mut self) -> Result<Expr, SyntaxError> {
         match self.current_token.value {
-            TokenVal::PuncOpenParen => {
-                self.expect_and_eat_tok(TokenVal::PuncOpenParen)?;
+            TokenKind::PuncOpenParen => {
+                self.expect_and_eat_tok(TokenKind::PuncOpenParen)?;
                 // parse expression inside parenthesis.
                 let expr_ast = self.parse_expression()?;
-                self.expect_and_eat_tok(TokenVal::PuncCloseParen)?;
+                self.expect_and_eat_tok(TokenKind::PuncCloseParen)?;
                 Ok(expr_ast)
             }
-            TokenVal::LiteralInt(_) => {
+            TokenKind::LiteralInt(_) => {
                 let literal_ast = self.parse_int_literal()?;
                 Ok(literal_ast)
             }
-            TokenVal::Identifier(_) => self.parse_identifier_or_call_expr(),
+            TokenKind::Identifier(_) => self.parse_identifier_or_call_expr(),
             _ => Err(self.new_syntax_error_at_current_token(format!(
-                "Unexpected {:?} token when expecting an expression.",
+                "Unexpected {} token when expecting an expression.",
                 self.current_token.value
             ))),
         }
     }
 
     fn parse_int_literal(&mut self) -> Result<Expr, SyntaxError> {
-        if let TokenVal::LiteralInt(num) = self.current_token.value {
+        if let TokenKind::LiteralInt(num) = self.current_token.value {
             self.eat_token()?; // eat int literal token
             Ok(Expr::new(ExprKind::Literal(num)))
         } else {
-            Err(self.new_syntax_error_at_current_token("Expected an int literal.".to_string()))
+            Err(self.new_syntax_error_at_current_token(format!(
+                "Unexpected {} token when expecting {} token.",
+                self.current_token.value,
+                TokenKind::LiteralInt(0) // dummy value for generating message
+            )))
         }
     }
 
     /// Returns a `IdentifierExprAST` or `CallExprAST`, depending on the scenario.
     fn parse_identifier_or_call_expr(&mut self) -> Result<Expr, SyntaxError> {
-        let identifier: String = if let TokenVal::Identifier(iden) = &self.current_token.value {
+        let identifier: String = if let TokenKind::Identifier(iden) = &self.current_token.value {
             iden.clone()
         } else {
-            return Err(
-                self.new_syntax_error_at_current_token("Expected an identifier.".to_string())
-            );
+            return Err(self.new_syntax_error_at_current_token(format!(
+                "Unexpected {} token when expecting {} token.",
+                self.current_token.value,
+                TokenKind::Identifier("".to_string()) // dummy value for generating message
+            )));
         };
         self.eat_token()?; // eat identifier token
 
-        if self.current_token.value == TokenVal::PuncOpenParen {
-            self.expect_and_eat_tok(TokenVal::PuncOpenParen)?;
+        if self.current_token.value == TokenKind::PuncOpenParen {
+            self.expect_and_eat_tok(TokenKind::PuncOpenParen)?;
             // parse function call expression
             let mut args: Vec<Expr> = Vec::new();
             loop {
-                if self.current_token.value == TokenVal::PuncCloseParen {
-                    self.expect_and_eat_tok(TokenVal::PuncCloseParen)?;
+                if self.current_token.value == TokenKind::PuncCloseParen {
+                    self.expect_and_eat_tok(TokenKind::PuncCloseParen)?;
                     break;
                 }
                 let expr = self.parse_expression()?;
                 args.push(expr);
-                if self.current_token.value == TokenVal::PuncComma {
-                    self.expect_and_eat_tok(TokenVal::PuncComma)?;
-                } else if self.current_token.value != TokenVal::PuncCloseParen {
-                    return Err(self.new_syntax_error_at_current_token(
-                        "Expected a ',' or ')' token after expression in argument list."
-                            .to_string(),
-                    ));
+                if self.current_token.value == TokenKind::PuncComma {
+                    self.expect_and_eat_tok(TokenKind::PuncComma)?;
+                } else if self.current_token.value != TokenKind::PuncCloseParen {
+                    return Err(self.new_syntax_error_at_current_token(format!(
+                        "Expected {} or {} token after expression in argument list.",
+                        TokenKind::PuncComma,
+                        TokenKind::PuncCloseParen
+                    )));
                 }
             }
             // Ok(Box::new(CallExprAST::new(identifier, args)))
@@ -272,27 +280,29 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_fn_prototype(&mut self) -> Result<FnProto, SyntaxError> {
-        self.expect_and_eat_tok(TokenVal::KeywordFn)?;
+        self.expect_and_eat_tok(TokenKind::KeywordFn)?;
         let iden = self.expect_and_eat_iden_tok()?;
-        self.expect_and_eat_tok(TokenVal::PuncOpenParen)?;
+        self.expect_and_eat_tok(TokenKind::PuncOpenParen)?;
 
         // parse argument list
         let mut args: Vec<String> = Vec::new();
         loop {
-            if self.current_token.value == TokenVal::PuncCloseParen {
-                self.expect_and_eat_tok(TokenVal::PuncCloseParen)?;
+            if self.current_token.value == TokenKind::PuncCloseParen {
+                self.expect_and_eat_tok(TokenKind::PuncCloseParen)?;
                 break; // exit loop
             }
             // parse argument identifier
             let arg_iden = self.expect_and_eat_iden_tok()?;
             args.push(arg_iden);
 
-            if self.current_token.value == TokenVal::PuncComma {
-                self.expect_and_eat_tok(TokenVal::PuncComma)?;
-            } else if self.current_token.value != TokenVal::PuncCloseParen {
-                return Err(self.new_syntax_error_at_current_token(
-                    "Expected a ',' or ')' token after identifier in argument list.".to_string(),
-                ));
+            if self.current_token.value == TokenKind::PuncComma {
+                self.expect_and_eat_tok(TokenKind::PuncComma)?;
+            } else if self.current_token.value != TokenKind::PuncCloseParen {
+                return Err(self.new_syntax_error_at_current_token(format!(
+                    "Expected {} or {} token after identifier in argument list.",
+                    TokenKind::PuncComma,
+                    TokenKind::PuncCloseParen
+                )));
             }
         }
 
@@ -307,11 +317,11 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_block_statement(&mut self) -> Result<Stmt, SyntaxError> {
-        self.expect_and_eat_tok(TokenVal::PuncOpenBrace)?;
+        self.expect_and_eat_tok(TokenKind::PuncOpenBrace)?;
         let mut statements: Vec<Stmt> = Vec::new();
         loop {
-            if self.current_token.value == TokenVal::PuncCloseBrace {
-                self.expect_and_eat_tok(TokenVal::PuncCloseBrace)?;
+            if self.current_token.value == TokenKind::PuncCloseBrace {
+                self.expect_and_eat_tok(TokenKind::PuncCloseBrace)?;
                 break;
             }
             let statement = self.parse_statement()?;

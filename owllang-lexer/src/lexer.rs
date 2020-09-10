@@ -1,4 +1,4 @@
-use crate::{Token, TokenVal};
+use crate::{Token, TokenKind};
 use std::iter::{Iterator, Peekable};
 use std::str::Chars;
 
@@ -70,7 +70,7 @@ impl<'a> Lexer<'a> {
     }
 
     /// Utility factory function to create new tokens with current position.
-    fn create_token(&self, value: TokenVal, len: u32) -> Token {
+    fn create_token(&self, value: TokenKind, len: u32) -> Token {
         Token {
             value,
             row: self.row_num,
@@ -102,43 +102,43 @@ impl<'a> Iterator for Lexer<'a> {
 
         match current_char {
             // punctuation
-            '(' => Some(self.create_token(TokenVal::PuncOpenParen, 1)),
-            ')' => Some(self.create_token(TokenVal::PuncCloseParen, 1)),
-            '{' => Some(self.create_token(TokenVal::PuncOpenBrace, 1)),
-            '}' => Some(self.create_token(TokenVal::PuncCloseBrace, 1)),
-            ',' => Some(self.create_token(TokenVal::PuncComma, 1)),
-            ';' => Some(self.create_token(TokenVal::PuncSemi, 1)),
+            '(' => Some(self.create_token(TokenKind::PuncOpenParen, 1)),
+            ')' => Some(self.create_token(TokenKind::PuncCloseParen, 1)),
+            '{' => Some(self.create_token(TokenKind::PuncOpenBrace, 1)),
+            '}' => Some(self.create_token(TokenKind::PuncCloseBrace, 1)),
+            ',' => Some(self.create_token(TokenKind::PuncComma, 1)),
+            ';' => Some(self.create_token(TokenKind::PuncSemi, 1)),
             // operators
-            '+' => Some(self.create_token(TokenVal::OpPlus, 1)),
-            '-' => Some(self.create_token(TokenVal::OpMinus, 1)),
-            '*' => Some(self.create_token(TokenVal::OpAsterisk, 1)),
-            '/' => Some(self.create_token(TokenVal::OpSlash, 1)),
-            '%' => Some(self.create_token(TokenVal::OpPercent, 1)),
+            '+' => Some(self.create_token(TokenKind::OpPlus, 1)),
+            '-' => Some(self.create_token(TokenKind::OpMinus, 1)),
+            '*' => Some(self.create_token(TokenKind::OpAsterisk, 1)),
+            '/' => Some(self.create_token(TokenKind::OpSlash, 1)),
+            '%' => Some(self.create_token(TokenKind::OpPercent, 1)),
             '=' => {
                 match self.peek_char() {
                     Some('=') => {
                         self.next_char(); // eat character
-                        Some(self.create_token(TokenVal::OpEqualsEquals, 2))
+                        Some(self.create_token(TokenKind::OpEqualsEquals, 2))
                     }
-                    _ => Some(self.create_token(TokenVal::OpEquals, 1)),
+                    _ => Some(self.create_token(TokenKind::OpEquals, 1)),
                 }
             }
             '>' => {
                 match self.peek_char() {
                     Some('=') => {
                         self.next_char(); // eat character
-                        Some(self.create_token(TokenVal::OpEqualsGreaterThan, 2))
+                        Some(self.create_token(TokenKind::OpEqualsGreaterThan, 2))
                     }
-                    _ => Some(self.create_token(TokenVal::OpGreaterThan, 1)),
+                    _ => Some(self.create_token(TokenKind::OpGreaterThan, 1)),
                 }
             }
             '<' => {
                 match self.peek_char() {
                     Some('=') => {
                         self.next_char(); // eat character
-                        Some(self.create_token(TokenVal::OpEqualsLessThan, 2))
+                        Some(self.create_token(TokenKind::OpEqualsLessThan, 2))
                     }
-                    _ => Some(self.create_token(TokenVal::OpLessThan, 1)),
+                    _ => Some(self.create_token(TokenKind::OpLessThan, 1)),
                 }
             }
             '0'..='9' => {
@@ -153,7 +153,7 @@ impl<'a> Iterator for Lexer<'a> {
                 }
 
                 let int: i64 = int_str.parse().unwrap();
-                Some(self.create_token(TokenVal::LiteralInt(int), int_str.len() as u32))
+                Some(self.create_token(TokenKind::LiteralInt(int), int_str.len() as u32))
             }
             c if Self::is_iden_start(c) => {
                 // lex compound Token
@@ -169,21 +169,21 @@ impl<'a> Iterator for Lexer<'a> {
 
                 // check if iden_str is a keyword
                 match iden_str {
-                    s if s == "fn" => Some(self.create_token(TokenVal::KeywordFn, iden_str_len)),
+                    s if s == "fn" => Some(self.create_token(TokenKind::KeywordFn, iden_str_len)),
                     s if s == "extern" => {
-                        Some(self.create_token(TokenVal::KeywordExtern, iden_str_len))
+                        Some(self.create_token(TokenKind::KeywordExtern, iden_str_len))
                     }
-                    s if s == "let" => Some(self.create_token(TokenVal::KeywordLet, iden_str_len)),
-                    s if s == "if" => Some(self.create_token(TokenVal::KeywordIf, iden_str_len)),
+                    s if s == "let" => Some(self.create_token(TokenKind::KeywordLet, iden_str_len)),
+                    s if s == "if" => Some(self.create_token(TokenKind::KeywordIf, iden_str_len)),
                     s if s == "else" => {
-                        Some(self.create_token(TokenVal::KeywordElse, iden_str_len))
+                        Some(self.create_token(TokenKind::KeywordElse, iden_str_len))
                     }
                     s if s == "while" => {
-                        Some(self.create_token(TokenVal::KeywordWhile, iden_str_len))
+                        Some(self.create_token(TokenKind::KeywordWhile, iden_str_len))
                     }
-                    s if s == "for" => Some(self.create_token(TokenVal::KeywordFor, iden_str_len)),
-                    s if s == "return" => Some(self.create_token(TokenVal::KeywordReturn, iden_str_len)),
-                    _ => Some(self.create_token(TokenVal::Identifier(iden_str), iden_str_len)),
+                    s if s == "for" => Some(self.create_token(TokenKind::KeywordFor, iden_str_len)),
+                    s if s == "return" => Some(self.create_token(TokenKind::KeywordReturn, iden_str_len)),
+                    _ => Some(self.create_token(TokenKind::Identifier(iden_str), iden_str_len)),
                 }
             }
             _ => panic!(format!("Unexpected character {}", current_char)),

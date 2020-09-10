@@ -89,7 +89,7 @@ fn repl_loop(matches: &ArgMatches) {
                             }
                         }
                         Err(err) => eprintln!(
-                            "Error at {}({}:{}). Message = {}",
+                            "Error at {}({}:{}). {}",
                             err.file_name, err.row, err.col, err.message
                         ),
                     }
