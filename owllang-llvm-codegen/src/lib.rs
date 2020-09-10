@@ -415,12 +415,4 @@ impl Visitor for LlvmCodeGenVisitor {
             _ => unimplemented!(),
         }
     }
-
-    fn visit_compilation_unit(&mut self, node: &CompilationUnit) -> Result<(), SyntaxError> {
-        // visit functions in compilation unit
-        for function in &node.functions {
-            self.visit_stmt(function)?;
-        }
-        Ok(())
-    }
 }

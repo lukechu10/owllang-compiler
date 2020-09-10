@@ -8,7 +8,13 @@ pub trait Visitor {
 
     // ast nodes in statements.rs
     fn visit_stmt(&mut self, node: &Stmt) -> Result<(), SyntaxError>;
-    fn visit_compilation_unit(&mut self, node: &CompilationUnit) -> Result<(), SyntaxError>;
+    fn visit_compilation_unit(&mut self, node: &CompilationUnit) -> Result<(), SyntaxError> {
+        // visit functions in compilation unit
+        for function in &node.functions {
+            self.visit_stmt(function)?;
+        }
+        Ok(())
+    }
 }
 
 pub trait Visitable {
