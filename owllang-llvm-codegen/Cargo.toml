@@ -8,5 +8,6 @@ version = "0.1.0"
 
 [dependencies]
 llvm-sys = "100"
+owlc-error = {path = "../owlc-error"}
 owllang-lexer = {path = "../owllang-lexer"}
 owllang-parser = {path = "../owllang-parser"}

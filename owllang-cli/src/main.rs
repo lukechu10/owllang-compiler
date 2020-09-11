@@ -4,6 +4,7 @@ use llvm_sys::{
     transforms::util::*,
 };
 use owlc_error::ErrorReporter;
+use owlc_passes::resolver::{ResolverVisitor, SymbolTable};
 use owllang_lexer::Lexer;
 use owllang_llvm_codegen::{c_str, LlvmCodeGenVisitor};
 use owllang_parser::{ast::statements::StmtKind, parser::Parser, Visitor};
@@ -30,6 +31,8 @@ fn repl_loop(matches: &ArgMatches) {
         let target_data_layout = LLVMCreateTargetDataLayout(target_machine);
         LLVMSetModuleDataLayout(module, target_data_layout);
 
+        let mut symbol_table = SymbolTable::new();
+
         loop {
             let mut input = String::new();
             print!("ready> ");
@@ -49,7 +52,17 @@ fn repl_loop(matches: &ArgMatches) {
 
                     let ast = {
                         let mut parser = Parser::new(&mut lexer, &mut error_reporter);
-                        parser.parse_repl_input()
+                        let stmt = parser.parse_repl_input();
+
+                        let mut resolver_visitor = ResolverVisitor::new(&mut error_reporter);
+                        // restore previous symbols
+                        resolver_visitor.symbols = symbol_table;
+
+                        resolver_visitor.visit_stmt(&stmt).unwrap();
+
+                        // add resolved symbols to symbol_table
+                        symbol_table = resolver_visitor.symbols;
+                        stmt
                     };
 
                     if error_reporter.has_errors() {
