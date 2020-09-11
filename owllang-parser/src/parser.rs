@@ -7,11 +7,11 @@ pub struct Parser<'a> {
     lexer: Peekable<&'a mut Lexer<'a>>,
     current_token: Token,
 
-    pub errs: ErrorReporter,
+    errs: &'a mut ErrorReporter,
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(lexer: &'a mut Lexer<'a>, error_reporter: ErrorReporter) -> Self {
+    pub fn new(lexer: &'a mut Lexer<'a>, error_reporter: &'a mut ErrorReporter) -> Self {
         let first_token = lexer.next().unwrap_or(Token {
             value: TokenKind::EndOfFile,
             row: 0,

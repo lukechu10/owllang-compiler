@@ -45,12 +45,15 @@ fn repl_loop(matches: &ArgMatches) {
                     }
 
                     let mut lexer = Lexer::with_string(input.as_str());
-                    let error_reporter = ErrorReporter::new();
-                    let mut parser = Parser::new(&mut lexer, error_reporter);
-                    let ast = parser.parse_repl_input();
+                    let mut error_reporter = ErrorReporter::new();
 
-                    if parser.errs.has_errors() {
-                        print!("{}", parser.errs);
+                    let ast = {
+                        let mut parser = Parser::new(&mut lexer, &mut error_reporter);
+                        parser.parse_repl_input()
+                    };
+
+                    if error_reporter.has_errors() {
+                        print!("{}", error_reporter);
                         continue; // do not evaluate result
                     }
 
@@ -108,19 +111,15 @@ fn compile_file(matches: ArgMatches) {
     let file_str = fs::read_to_string(path).unwrap();
 
     let mut lexer = Lexer::with_string(file_str.as_str());
-    let error_reporter = ErrorReporter::new();
-    let mut parser = Parser::new(&mut lexer, error_reporter);
-    if parser.errs.has_errors() {
-        print!("{}", parser.errs);
-    }
+    let mut error_reporter = ErrorReporter::new();
 
-    let ast = parser.parse_compilation_unit();
-    if ast.has_errors() {
-        // print out errors
-        for err in ast.errors {
-            println!("{}", err);
-        }
-        return;
+    let ast = {
+        let mut parser = Parser::new(&mut lexer, &mut error_reporter);
+        parser.parse_compilation_unit()
+    };
+
+    if error_reporter.has_errors() {
+        print!("{}", error_reporter);
     }
 
     unsafe {
