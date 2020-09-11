@@ -12,3 +12,7 @@ Cargo.lock
 **/*.rs.bk
 
 # End of https://www.toptal.com/developers/gitignore/api/rust
+
+# LLVM IR and bitcode (not portable across platforms)
+*.bc
+*.ll
