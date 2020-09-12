@@ -47,6 +47,11 @@ impl ErrorReporter {
     pub fn has_errors(&self) -> bool {
         self.errs.len() > 0
     }
+
+    /// Consumes `error_reporter` and merges the errors into `self`.
+    pub fn merge_from(&mut self, error_reporter: &mut ErrorReporter) {
+        self.errs.append(&mut error_reporter.errs);
+    }
 }
 
 impl fmt::Display for ErrorReporter {

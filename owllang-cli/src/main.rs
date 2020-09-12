@@ -47,8 +47,9 @@ fn repl_loop(matches: &ArgMatches) {
                         break;
                     }
 
-                    let mut lexer = Lexer::with_string(input.as_str());
                     let mut error_reporter = ErrorReporter::new();
+                    let mut lexer_error_reporter = ErrorReporter::new();
+                    let mut lexer = Lexer::with_string(input.as_str(), &mut lexer_error_reporter);
 
                     let ast = {
                         let mut parser = Parser::new(&mut lexer, &mut error_reporter);
@@ -64,6 +65,8 @@ fn repl_loop(matches: &ArgMatches) {
                         symbol_table = resolver_visitor.symbols;
                         stmt
                     };
+
+                    error_reporter.merge_from(&mut lexer_error_reporter);
 
                     if error_reporter.has_errors() {
                         print!("{}", error_reporter);
@@ -81,6 +84,7 @@ fn repl_loop(matches: &ArgMatches) {
                         _ => false,
                     };
 
+                    codegen_visitor.add_builtin_fns();
                     codegen_visitor.handle_repl_input(ast).unwrap();
 
                     let last_func = LLVMGetLastFunction(module);
@@ -123,13 +127,23 @@ fn compile_file(matches: ArgMatches) {
     let path = matches.value_of("input").unwrap();
     let file_str = fs::read_to_string(path).unwrap();
 
-    let mut lexer = Lexer::with_string(file_str.as_str());
     let mut error_reporter = ErrorReporter::new();
+    let mut lexer_error_reporter = ErrorReporter::new();
+    let mut lexer = Lexer::with_string(file_str.as_str(), &mut lexer_error_reporter);
 
     let ast = {
         let mut parser = Parser::new(&mut lexer, &mut error_reporter);
-        parser.parse_compilation_unit()
+        let compilation_unit = parser.parse_compilation_unit();
+
+        let mut resolver_visitor = ResolverVisitor::new(&mut error_reporter);
+
+        resolver_visitor
+            .visit_compilation_unit(&compilation_unit)
+            .unwrap();
+
+        compilation_unit
     };
+    error_reporter.merge_from(&mut lexer_error_reporter);
 
     if error_reporter.has_errors() {
         print!("{}", error_reporter);

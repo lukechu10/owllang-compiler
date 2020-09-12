@@ -1,4 +1,5 @@
 use crate::{Token, TokenKind};
+use owlc_error::{Error, ErrorReporter};
 use std::iter::{Iterator, Peekable};
 use std::str::Chars;
 
@@ -12,15 +13,18 @@ pub struct Lexer<'a> {
     col_num: u32,
     /// Iterator over all the characters in `input`.
     chars: Peekable<Chars<'a>>,
+
+    errors: &'a mut ErrorReporter,
 }
 
 impl<'a> Lexer<'a> {
-    pub fn with_string(input: &'a str) -> Self {
+    pub fn with_string(input: &'a str, error_reporter: &'a mut ErrorReporter) -> Self {
         Lexer {
             input,
             row_num: 1,
             col_num: 0, // start at 0 because first call to next() will increment value
             chars: input.chars().peekable(),
+            errors: error_reporter,
         }
     }
 
@@ -182,11 +186,22 @@ impl<'a> Iterator for Lexer<'a> {
                         Some(self.create_token(TokenKind::KeywordWhile, iden_str_len))
                     }
                     s if s == "for" => Some(self.create_token(TokenKind::KeywordFor, iden_str_len)),
-                    s if s == "return" => Some(self.create_token(TokenKind::KeywordReturn, iden_str_len)),
+                    s if s == "return" => {
+                        Some(self.create_token(TokenKind::KeywordReturn, iden_str_len))
+                    }
                     _ => Some(self.create_token(TokenKind::Identifier(iden_str), iden_str_len)),
                 }
             }
-            _ => panic!(format!("Unexpected character {}", current_char)),
+            _ => {
+                let error = Error {
+                    file_name: "repl".to_string(), // FIXME,
+                    row: self.row_num,
+                    col: self.col_num,
+                    message: format!("Unexpected {} character.", current_char),
+                };
+                self.errors.report(error);
+                None
+            }
         }
     }
 }
