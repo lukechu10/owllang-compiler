@@ -2,6 +2,7 @@ use crate::ast::expressions::*;
 use crate::ast::statements::*;
 use crate::SyntaxError;
 
+#[deprecated = "use AstVisitor"]
 pub trait Visitor {
     // ast nodes in expressions.rs
     fn visit_expr(&mut self, node: &Expr) -> Result<(), SyntaxError>;
