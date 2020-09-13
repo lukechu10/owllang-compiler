@@ -18,6 +18,8 @@ fn repl_loop(matches: &ArgMatches) {
         let context = LLVMGetGlobalContext();
         let mut module = LLVMModuleCreateWithNameInContext(c_str!("repl"), context);
         let builder = LLVMCreateBuilderInContext(context);
+        let mut codegen_visitor = LlvmCodeGenVisitor::new(module, builder);
+        codegen_visitor.add_builtin_fns();
 
         LLVMLinkInMCJIT();
         LLVM_InitializeNativeTarget();
@@ -76,7 +78,6 @@ fn repl_loop(matches: &ArgMatches) {
                     if matches.is_present("show-ast") {
                         println!("{:#?}", ast);
                     }
-                    let mut codegen_visitor = LlvmCodeGenVisitor::new(module, builder);
 
                     // True if repl should evaluate input.
                     let evaluate_res = match ast.kind {
@@ -84,7 +85,6 @@ fn repl_loop(matches: &ArgMatches) {
                         _ => false,
                     };
 
-                    codegen_visitor.add_builtin_fns();
                     codegen_visitor.handle_repl_input(ast).unwrap();
 
                     let last_func = LLVMGetLastFunction(module);

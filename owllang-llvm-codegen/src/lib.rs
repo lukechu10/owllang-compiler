@@ -374,12 +374,12 @@ impl LlvmCodeGenVisitor {
                 // codegen anonymous function that returns value
                 // create fake return stmt.
                 unsafe {
-                    ANON_FN_COUNTER += 1;
                     let ret_stmt = Stmt::new(StmtKind::Return { value: expr });
                     let proto = FnProto {
                         iden: format!("0anonymous_func_{}", ANON_FN_COUNTER), // start with '0' to prevent conflict with user defined functions
                         args: Vec::new(),
                     };
+                    ANON_FN_COUNTER += 1;
                     let body = Stmt::new(StmtKind::Block {
                         statements: vec![ret_stmt],
                     });
