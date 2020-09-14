@@ -7,4 +7,5 @@ members = [
   "owllang-llvm-codegen",
   "owlc-passes",
   "owlc-error",
+  "owlc-span",
 ]
