@@ -1,9 +1,8 @@
 use crate::{Token, TokenKind};
 use owlc_error::{Error, ErrorReporter};
-use owlc_span::SourceFile;
+use owlc_span::{BytePos, SourceFile};
 use std::iter::{Iterator, Peekable};
-use std::rc::Rc;
-use std::str::Chars;
+use std::str::{CharIndices, Chars};
 
 pub struct Lexer<'a> {
     /// The string to read from.
@@ -14,6 +13,10 @@ pub struct Lexer<'a> {
     col_num: u32,
     /// Iterator over all the characters in `input`.
     chars: Peekable<Chars<'a>>,
+    chars_indices: Peekable<CharIndices<'a>>,
+
+    /// The byte pos of the current char being read. Should be updated when `self.chars_indices.next()` is called.
+    current_byte_pos: u32,
 
     errors: &'a mut ErrorReporter,
 }
@@ -24,11 +27,14 @@ impl<'a> Lexer<'a> {
         error_reporter: &'a mut ErrorReporter,
     ) -> Self {
         let chars = source_file.src.chars().peekable();
+        let chars_indices = source_file.src.char_indices().peekable();
         Lexer {
             src: source_file,
             row_num: 1,
             col_num: 0, // start at 0 because first call to next() will increment value
             chars,
+            chars_indices,
+            current_byte_pos: 0,
             errors: error_reporter,
         }
     }
@@ -49,43 +55,29 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    /// Util function to read next char. If char is a newline character, the line number is incremented.
+    /// Util function to read next char.
     fn next_char(&mut self) -> Option<char> {
-        let c = self.chars.next();
-
-        let is_newline = c.is_some() && {
-            let c_unwrapped = c.unwrap();
-            // newline character
-            c_unwrapped == '\n'
-            // carriage return characters (\r\n)
-                || (c_unwrapped == '\r'
-                    && self.chars.peek().is_some()
-                    && *self.chars.peek().unwrap() == '\n')
-        };
-
-        if is_newline {
-            self.row_num += 1; // increment row number
-            self.col_num = 1; // reset column number.
-        } else {
-            self.col_num += 1; // increment column number.
+        match self.chars_indices.next() {
+            Some(x) => {
+                self.current_byte_pos = x.0 as u32;
+                Some(x.1)
+            }
+            None => None,
         }
-
-        c
     }
 
     /// Utility function to peek next char without consuming it.
-    fn peek_char(&mut self) -> Option<&char> {
-        self.chars.peek()
+    fn peek_char(&mut self) -> Option<char> {
+        match self.chars_indices.peek() {
+            Some(x) => Some(x.1),
+            None => None,
+        }
     }
 
     /// Utility factory function to create new tokens with current position.
     fn create_token(&self, value: TokenKind, len: u32) -> Token {
-        Token {
-            value,
-            row: self.row_num,
-            col: self.col_num + 1 - len, // self.col_num is position of end of token.
-            len,
-        }
+        let span = BytePos(self.current_byte_pos + 1 - len).to(BytePos(self.current_byte_pos));
+        Token { value, loc: span }
     }
 }
 
@@ -169,7 +161,7 @@ impl<'a> Iterator for Lexer<'a> {
                 let mut iden_str = current_char.to_string();
                 let mut next_char = self.peek_char();
 
-                while next_char.is_some() && Self::is_iden_continue(*next_char.unwrap()) {
+                while next_char.is_some() && Self::is_iden_continue(next_char.unwrap()) {
                     iden_str.push(self.next_char().unwrap());
                     next_char = self.peek_char();
                 }
@@ -200,8 +192,7 @@ impl<'a> Iterator for Lexer<'a> {
             _ => {
                 let error = Error {
                     file_name: "repl".to_string(), // FIXME,
-                    row: self.row_num,
-                    col: self.col_num,
+                    loc: BytePos(self.current_byte_pos).to(BytePos(self.current_byte_pos)),
                     message: format!("Unexpected {} character.", current_char),
                 };
                 self.errors.report(error);

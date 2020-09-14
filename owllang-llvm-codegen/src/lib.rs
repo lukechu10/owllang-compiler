@@ -101,7 +101,7 @@ impl LlvmCodeGenVisitor {
                             col: 0,
                             file_name: "tmp".to_string(),
                             message: format!(
-                                "Identifier {} does not exist in current context",
+                                "Identifier {} does not exist in current scope",
                                 iden
                             ),
                         })

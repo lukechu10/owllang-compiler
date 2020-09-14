@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::ops::Sub;
 use std::rc::Rc;
 
 /// Utility for storing position in source code. Position is represented as the position of the byte in the `SourceFile`. `BytePos` should be 0 based.
@@ -11,13 +12,25 @@ impl BytePos {
         SpanData { lo: self, hi }
     }
 }
+impl Sub for BytePos {
+    type Output = u32;
+    fn sub(self, other: BytePos) -> u32 {
+        self.0 - other.0
+    }
+}
 
 /// `SpanData` represents a region of code, used for error reporting. `SpanData` is represented with the starting and ending position of the region.
 /// The starting position is inclusive and the ending position is exclusive.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct SpanData {
-    lo: BytePos,
-    hi: BytePos,
+    pub lo: BytePos,
+    pub hi: BytePos,
+}
+impl SpanData {
+    /// **Note**: This returns the length in *bytes*, not chars.
+    pub fn len(&self) -> u32 {
+        return self.hi - self.lo;
+    }
 }
 
 /// Use `Rc` to prevent unnecessary duplication of the `String`.
@@ -87,5 +100,12 @@ impl SourceFile {
                 Err(line) => Some(line - 1),
             }
         }
+    }
+
+    /// Returns the col of the position `pos` in the source file. The returned col number is 0 based. If the `pos` is out of bounds, should return `None`.
+    pub fn lookup_col(&self, pos: BytePos) -> Option<usize> {
+        let line = self.lookup_line(pos)?;
+        let line_start = self.newline_pos[line];
+        Some((line_start - pos) as usize)
     }
 }

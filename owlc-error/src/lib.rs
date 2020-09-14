@@ -1,5 +1,6 @@
 //! Utilities for reporting errors during compilation.
 
+use owlc_span::SpanData;
 use std::fmt;
 
 /// Represents a compile error.
@@ -9,10 +10,8 @@ pub struct Error {
     pub file_name: String,
     /// The error message
     pub message: String,
-    /// The row of the error.
-    pub row: u32,
-    /// The column of the error.
-    pub col: u32,
+    /// The span data / location of the error.
+    pub loc: SpanData,
 }
 
 impl fmt::Display for Error {
@@ -20,7 +19,8 @@ impl fmt::Display for Error {
         write!(
             f,
             "{}({}:{}): {}",
-            self.file_name, self.row, self.col, self.message
+            // Add 1 to location to provide 1 based index
+            self.file_name, self.loc.lo.0 + 1, self.loc.hi.0 + 1, self.message // TODO, compute row and col number
         )
     }
 }

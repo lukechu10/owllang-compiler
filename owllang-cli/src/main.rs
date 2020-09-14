@@ -150,6 +150,7 @@ fn compile_file(matches: ArgMatches) {
 
     if error_reporter.has_errors() {
         print!("{}", error_reporter);
+        return; // do not codegen if error
     }
 
     unsafe {

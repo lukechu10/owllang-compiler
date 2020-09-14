@@ -1,9 +1,11 @@
 use crate::ast::{expressions::*, statements::*};
 use owlc_error::{Error, ErrorReporter};
+use owlc_span::{BytePos, SourceFile};
 use owllang_lexer::{Lexer, OpPrecedence, Token, TokenKind};
 use std::iter::Peekable;
 
 pub struct Parser<'a> {
+    src: &'a SourceFile,
     lexer: Peekable<&'a mut Lexer<'a>>,
     current_token: Token,
 
@@ -14,12 +16,11 @@ impl<'a> Parser<'a> {
     pub fn new(lexer: &'a mut Lexer<'a>, error_reporter: &'a mut ErrorReporter) -> Self {
         let first_token = lexer.next().unwrap_or(Token {
             value: TokenKind::EndOfFile,
-            row: 0,
-            col: 0,
-            len: 0,
+            loc: BytePos(0).to(BytePos(1)),
         });
 
         Self {
+            src: lexer.src,
             lexer: lexer.peekable(),
             current_token: first_token,
             errs: error_reporter,
@@ -30,9 +31,8 @@ impl<'a> Parser<'a> {
     fn emit_err_at_current_tok(&mut self, message: String) {
         let err = Error {
             file_name: "repl".to_string(),
-            row: self.current_token.row,
-            col: self.current_token.col,
             message,
+            loc: self.current_token.loc,
         };
 
         self.errs.report(err);
@@ -46,9 +46,7 @@ impl<'a> Parser<'a> {
             None => {
                 self.current_token = Token {
                     value: TokenKind::EndOfFile,
-                    row: self.current_token.row,
-                    col: self.current_token.col + 1, // 1 character after last token
-                    len: 0,
+                    loc: self.current_token.loc,
                 }
             }
         }
@@ -67,9 +65,7 @@ impl<'a> Parser<'a> {
 
             Token {
                 value: expected,
-                row: self.current_token.row,
-                col: self.current_token.col + 1, // 1 character after last token
-                len: 0,
+                loc: self.current_token.loc,
             }
         } else {
             actual

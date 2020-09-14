@@ -8,5 +8,6 @@ version = "0.1.0"
 
 [dependencies]
 owlc-error = {path = "../owlc-error"}
+owlc-span = {path = "../owlc-span"}
 owllang-lexer = {path = "../owllang-lexer"}
 owllang-parser = {path = "../owllang-parser"}

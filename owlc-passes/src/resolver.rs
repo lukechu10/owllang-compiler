@@ -2,6 +2,7 @@
 use owlc_error::{Error, ErrorReporter};
 use owllang_parser::ast::{expressions::*, statements::*};
 use owllang_parser::{SyntaxError, Visitor};
+use owlc_span::BytePos;
 
 /// Represents a resolved symbol (can be either variable type or function type).
 #[derive(Debug, PartialEq, Eq, Hash)]
@@ -159,8 +160,7 @@ impl<'a> Visitor for ResolverVisitor<'a> {
                                 self.errors.report(Error {
                                     file_name: "repl".to_string(), // FIXME
                                     message: format!("Symbol {} is not a variable.", ident),
-                                    row: 0,
-                                    col: 0,
+                                    loc: BytePos(0).to(BytePos(0))
                                 })
                             }
                             Symbol::Let { ident: _ } => {}
@@ -169,13 +169,17 @@ impl<'a> Visitor for ResolverVisitor<'a> {
                     None => self.errors.report(Error {
                         file_name: "repl".to_string(), // FIXME
                         message: format!("Identifier {} does not exist in current scope.", ident),
-                        row: 0,
-                        col: 0,
+                        loc: BytePos(0).to(BytePos(0))
                     }),
                 }
             }
             ExprKind::Literal(_) => {}
             ExprKind::FuncCall { callee, args } => {
+                // visit function arguments
+                for arg in args {
+                    self.visit_expr(arg)?;
+                }
+
                 match self.symbols.lookup(callee) {
                     Some(symbol) => {
                         match symbol {
@@ -183,9 +187,8 @@ impl<'a> Visitor for ResolverVisitor<'a> {
                                 self.errors.report(Error {
                                     file_name: "repl".to_string(), // FIXME
                                     message: format!("Symbol {} is not a function.", callee),
-                                    row: 0,
-                                    col: 0,
-                                })
+                                    loc: BytePos(0).to(BytePos(0))
+                                });
                             }
                             Symbol::Fn {
                                 ident: _,
@@ -195,9 +198,8 @@ impl<'a> Visitor for ResolverVisitor<'a> {
                                     self.errors.report(Error {
                                         file_name: "repl".to_string(), // FIXME
                                         message: format!("Function {} expected {} argument(s) but found {} argument(s).", callee, args_count, args.len()),
-                                        row: 0,
-                                        col: 0,
-                                    })
+                                        loc: BytePos(0).to(BytePos(0))
+                                    });
                                 }
                             }
                         }
@@ -205,8 +207,7 @@ impl<'a> Visitor for ResolverVisitor<'a> {
                     None => self.errors.report(Error {
                         file_name: "repl".to_string(), // FIXME
                         message: format!("Function {} does not exist in current scope.", callee),
-                        row: 0,
-                        col: 0,
+                        loc: BytePos(0).to(BytePos(0))
                     }),
                 }
             }
