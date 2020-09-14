@@ -1,18 +1,18 @@
 use owlc_error::ErrorReporter;
+use owlc_span::SourceFile;
 use owllang_lexer::{Lexer, TokenKind};
 
 #[test]
 fn lex_fn_definition() {
     let mut errors = ErrorReporter::new();
-    let lexer = Lexer::with_string(
-        r#"
+    let code = r#"
         fn square(x) {
             let a = x * x;
             return a;
         }
-    "#,
-        &mut errors,
-    );
+    "#;
+    let source_file = SourceFile::new("<tmp>", code);
+    let lexer = Lexer::with_source_file(&source_file, &mut errors);
 
     let tokens: Vec<TokenKind> = lexer.map(|token| token.value).collect();
     assert!(!errors.has_errors());

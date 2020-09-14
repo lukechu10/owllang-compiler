@@ -11,6 +11,7 @@ clap = "2"
 llvm-sys = "100"
 owlc-error = {path = "../owlc-error"}
 owlc-passes = {path = "../owlc-passes"}
+owlc-span = {path = "../owlc-span"}
 owllang-lexer = {path = "../owllang-lexer"}
 owllang-llvm-codegen = {path = "../owllang-llvm-codegen"}
 owllang-parser = {path = "../owllang-parser"}

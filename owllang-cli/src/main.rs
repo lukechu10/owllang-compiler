@@ -4,6 +4,7 @@ use llvm_sys::{
     transforms::util::*,
 };
 use owlc_error::ErrorReporter;
+use owlc_span::SourceFile;
 use owlc_passes::resolver::{ResolverVisitor, SymbolTable};
 use owllang_lexer::Lexer;
 use owllang_llvm_codegen::{c_str, LlvmCodeGenVisitor};
@@ -51,7 +52,8 @@ fn repl_loop(matches: &ArgMatches) {
 
                     let mut error_reporter = ErrorReporter::new();
                     let mut lexer_error_reporter = ErrorReporter::new();
-                    let mut lexer = Lexer::with_string(input.as_str(), &mut lexer_error_reporter);
+                    let source_file = SourceFile::new("<repl>",input.as_str());
+                    let mut lexer = Lexer::with_source_file(&source_file, &mut lexer_error_reporter);
 
                     let ast = {
                         let mut parser = Parser::new(&mut lexer, &mut error_reporter);
@@ -126,10 +128,11 @@ fn repl_loop(matches: &ArgMatches) {
 fn compile_file(matches: ArgMatches) {
     let path = matches.value_of("input").unwrap();
     let file_str = fs::read_to_string(path).unwrap();
+    let source_file = SourceFile::new(path, file_str.as_str());
 
     let mut error_reporter = ErrorReporter::new();
     let mut lexer_error_reporter = ErrorReporter::new();
-    let mut lexer = Lexer::with_string(file_str.as_str(), &mut lexer_error_reporter);
+    let mut lexer = Lexer::with_source_file(&source_file, &mut lexer_error_reporter);
 
     let ast = {
         let mut parser = Parser::new(&mut lexer, &mut error_reporter);

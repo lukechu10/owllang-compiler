@@ -9,6 +9,7 @@ version = "0.1.0"
 [dependencies]
 bencher = "0.1.5"
 owlc-error = {path = "../owlc-error"}
+owlc-span = {path = "../owlc-span"}
 
 [[bench]]
 harness = false

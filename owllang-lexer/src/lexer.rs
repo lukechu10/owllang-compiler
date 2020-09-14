@@ -1,12 +1,13 @@
 use crate::{Token, TokenKind};
 use owlc_error::{Error, ErrorReporter};
+use owlc_span::SourceFile;
 use std::iter::{Iterator, Peekable};
+use std::rc::Rc;
 use std::str::Chars;
 
-#[allow(dead_code)] // TODO remove allow
 pub struct Lexer<'a> {
     /// The string to read from.
-    input: &'a str,
+    pub src: &'a SourceFile,
     /// Should be 1 based because `row_num` is user facing.
     row_num: u32,
     /// Should be 1 based because `col_num` is user facing.
@@ -18,12 +19,16 @@ pub struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
-    pub fn with_string(input: &'a str, error_reporter: &'a mut ErrorReporter) -> Self {
+    pub fn with_source_file(
+        source_file: &'a SourceFile,
+        error_reporter: &'a mut ErrorReporter,
+    ) -> Self {
+        let chars = source_file.src.chars().peekable();
         Lexer {
-            input,
+            src: source_file,
             row_num: 1,
             col_num: 0, // start at 0 because first call to next() will increment value
-            chars: input.chars().peekable(),
+            chars,
             errors: error_reporter,
         }
     }
