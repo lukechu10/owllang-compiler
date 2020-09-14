@@ -2,7 +2,7 @@ use bencher::{benchmark_group, benchmark_main, Bencher};
 use owllang_lexer::{Lexer, Token};
 use owlc_error::ErrorReporter;
 
-fn square_fn(bench: &mut Bencher) {
+fn lex_square_fn(bench: &mut Bencher) {
     let code = r#"
         fn square(x) {
             let result = x * x;
@@ -17,7 +17,7 @@ fn square_fn(bench: &mut Bencher) {
     });
 }
 
-fn fibonacci_fn(bench: &mut Bencher) {
+fn lex_fibonacci_fn(bench: &mut Bencher) {
     let code = r#"
         fn fib(x) {
             if x == 0 {
@@ -36,5 +36,5 @@ fn fibonacci_fn(bench: &mut Bencher) {
     });
 }
 
-benchmark_group!(benches, square_fn, fibonacci_fn);
+benchmark_group!(benches, lex_square_fn, lex_fibonacci_fn);
 benchmark_main!(benches);
