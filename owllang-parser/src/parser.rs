@@ -93,7 +93,7 @@ impl<'a> Parser<'a> {
     /// User can input both fn definitions and statements / expressions in the repl prompt.
     pub fn parse_repl_input(&mut self) -> Stmt {
         match self.current_token.value {
-            TokenKind::KeywordFn => {
+            TokenKind::KeywordFn | TokenKind::KeywordExtern => {
                 let func = self.parse_fn_declaration();
                 func
             }

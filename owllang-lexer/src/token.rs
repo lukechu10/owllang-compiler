@@ -1,4 +1,4 @@
-use owlc_span::SpanData;
+use owlc_span::Span;
 use std::fmt;
 
 /// Represents a single token.
@@ -7,7 +7,7 @@ pub struct Token {
     /// The value of the token.
     pub value: TokenKind,
     /// The position of the `Token` in the `SourceFile`.
-    pub loc: SpanData,
+    pub loc: Span,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]

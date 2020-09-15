@@ -8,27 +8,17 @@ pub struct CompilationUnit {
     /// A compilation unit may only contain functions as top level statements.
     /// This field should only include variant `StmtKind::Fn`.
     pub functions: Vec<Stmt>,
-    pub errors: Vec<SyntaxError>,
 }
 impl CompilationUnit {
     pub fn new(entry_file_name: String) -> Self {
         Self {
             entry_file_name,
             functions: Vec::new(),
-            errors: Vec::new(),
         }
     }
 
     pub fn add_func(&mut self, func: Stmt) {
         self.functions.push(func);
-    }
-
-    pub fn add_err(&mut self, error: SyntaxError) {
-        self.errors.push(error);
-    }
-
-    pub fn has_errors(&self) -> bool {
-        self.errors.len() > 0
     }
 }
 

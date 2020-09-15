@@ -8,8 +8,8 @@ pub struct BytePos(pub u32);
 
 impl BytePos {
     /// Create a new `SpanData` from `self` to `hi`.
-    pub fn to(self, hi: BytePos) -> SpanData {
-        SpanData { lo: self, hi }
+    pub fn to(self, hi: BytePos) -> Span {
+        Span { lo: self, hi }
     }
 }
 impl Sub for BytePos {
@@ -19,14 +19,14 @@ impl Sub for BytePos {
     }
 }
 
-/// `SpanData` represents a region of code, used for error reporting. `SpanData` is represented with the starting and ending position of the region.
+/// `Span` represents a region of code, used for error reporting. `Span` is represented with the starting and ending position of the region.
 /// The starting position is inclusive and the ending position is exclusive.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct SpanData {
+pub struct Span {
     pub lo: BytePos,
     pub hi: BytePos,
 }
-impl SpanData {
+impl Span {
     /// **Note**: This returns the length in *bytes*, not chars.
     pub fn len(&self) -> u32 {
         return self.hi - self.lo;

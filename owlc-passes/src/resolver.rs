@@ -1,8 +1,9 @@
 //! Resolving logic for symbols in the generated abstract syntax tree.
 use owlc_error::{Error, ErrorReporter};
 use owlc_span::BytePos;
+use owllang_parser::ast::NodeData;
 use owllang_parser::ast::{expressions::*, statements::*};
-use owllang_parser::{SyntaxError, Visitor};
+use owllang_parser::visitor::AstVisitor;
 
 /// Represents a resolved symbol (can be either variable type or function type).
 #[derive(Debug, PartialEq, Eq, Hash)]
@@ -146,9 +147,9 @@ impl<'a> ResolverVisitor<'a> {
     }
 }
 
-impl<'a> Visitor for ResolverVisitor<'a> {
-    fn visit_expr(&mut self, node: &Expr) -> Result<(), SyntaxError> {
-        match &node.kind {
+impl<'a> AstVisitor for ResolverVisitor<'a> {
+    fn visit_expr(&mut self, expr: &Expr) {
+        match &expr.kind {
             ExprKind::Identifier(ident) => {
                 match self.symbols.lookup(ident) {
                     Some(symbol) => {
@@ -177,7 +178,7 @@ impl<'a> Visitor for ResolverVisitor<'a> {
             ExprKind::FuncCall { callee, args } => {
                 // visit function arguments
                 for arg in args {
-                    self.visit_expr(arg)?;
+                    self.visit_expr(arg);
                 }
 
                 match self.symbols.lookup(callee) {
@@ -216,15 +217,14 @@ impl<'a> Visitor for ResolverVisitor<'a> {
                 rhs,
                 op_type: _,
             } => {
-                self.visit_expr(lhs)?;
-                self.visit_expr(rhs)?;
+                self.visit_expr(lhs);
+                self.visit_expr(rhs);
             }
         }
-        Ok(())
     }
 
-    fn visit_stmt(&mut self, node: &Stmt) -> Result<(), SyntaxError> {
-        match &node.kind {
+    fn visit_stmt(&mut self, stmt: &Stmt) {
+        match &stmt.kind {
             StmtKind::Block { statements } => {
                 // create empty Scope::Block
                 let block_scope = Scope::Block(Vec::new());
@@ -232,47 +232,10 @@ impl<'a> Visitor for ResolverVisitor<'a> {
 
                 // visit statements
                 for statement in statements {
-                    self.visit_stmt(statement)?;
+                    self.visit_stmt(statement);
                 }
             }
-            StmtKind::Fn { proto, body } => {
-                // create new scope with function declaration.
-                // This scope is pushed onto the scope_stack before the block scope to prevent it from being popped after exiting the function.
-                let func_symbol = Symbol::Fn {
-                    ident: proto.iden.clone(),
-                    args_count: proto.args.len() as u32,
-                };
-                let let_scope = Scope::Let(func_symbol);
-                self.symbols.push_scope(let_scope);
-
-                // create new Scope::Block with function args.
-                let args = &proto.args;
-                let symbols: Vec<Symbol> = args
-                    .iter()
-                    .map(|arg| Symbol::Let { ident: arg.clone() })
-                    .collect();
-
-                let block_scope = Scope::Block(symbols);
-                self.symbols.push_scope(block_scope);
-
-                // visit body
-                // do not visit block as that will create a new block scope.
-                match body {
-                    Some(body) => {
-                        match &body.kind {
-                            StmtKind::Block { statements } => {
-                                for stmt in statements {
-                                    self.visit_stmt(&stmt).unwrap();
-                                }
-                            }
-                            _ => unreachable!("Function body must have kind StmtKind::Block."),
-                        }
-
-                        self.symbols.pop_until_block(); // remove all symbols created inside function
-                    }
-                    None => {}
-                }
-            }
+            StmtKind::Fn { proto: _, body: _ } => {}
             StmtKind::While => {}
             StmtKind::For => {}
             StmtKind::Let {
@@ -285,12 +248,49 @@ impl<'a> Visitor for ResolverVisitor<'a> {
                 self.symbols.push_scope(let_scope);
             }
             StmtKind::Return { value } => {
-                self.visit_expr(value)?;
+                self.visit_expr(value);
             }
             StmtKind::ExprSemi { expr } => {
-                self.visit_expr(expr)?;
+                self.visit_expr(expr);
             }
         }
-        Ok(())
+    }
+
+    fn visit_fn_stmt(&mut self, proto: &FnProto, body: &Option<Box<Stmt>>) {
+        // create new scope with function declaration.
+        // This scope is pushed onto the scope_stack before the block scope to prevent it from being popped after exiting the function.
+        let func_symbol = Symbol::Fn {
+            ident: proto.iden.clone(),
+            args_count: proto.args.len() as u32,
+        };
+        let let_scope = Scope::Let(func_symbol);
+        self.symbols.push_scope(let_scope);
+
+        // create new Scope::Block with function args.
+        let symbols: Vec<Symbol> = proto.args
+            .iter()
+            .map(|arg| Symbol::Let { ident: arg.clone() })
+            .collect();
+
+        let block_scope = Scope::Block(symbols);
+        self.symbols.push_scope(block_scope);
+
+        // visit body
+        // do not visit block as that will create a new block scope.
+        match body {
+            Some(body) => {
+                match &body.kind {
+                    StmtKind::Block { statements } => {
+                        for stmt in statements {
+                            self.visit_stmt(&stmt);
+                        }
+                    }
+                    _ => unreachable!("Function body must have kind StmtKind::Block."),
+                }
+
+                self.symbols.pop_until_block(); // remove all symbols created inside function
+            }
+            None => {}
+        }
     }
 }

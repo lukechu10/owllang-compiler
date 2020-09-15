@@ -1,6 +1,6 @@
 //! Utilities for reporting errors during compilation.
 
-use owlc_span::SpanData;
+use owlc_span::Span;
 use std::fmt;
 
 /// Represents a compile error.
@@ -11,7 +11,7 @@ pub struct Error {
     /// The error message
     pub message: String,
     /// The span data / location of the error.
-    pub loc: SpanData,
+    pub loc: Span,
 }
 
 impl fmt::Display for Error {

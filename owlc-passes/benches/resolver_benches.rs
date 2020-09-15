@@ -4,7 +4,7 @@ use owlc_passes::resolver::ResolverVisitor;
 use owlc_span::SourceFile;
 use owllang_lexer::Lexer;
 use owllang_parser::parser::Parser;
-use owllang_parser::Visitor;
+use owllang_parser::visitor::AstVisitor;
 
 fn resolve_std_symbols(bench: &mut Bencher) {
     let std_source = include_str!("../std.hoot");
@@ -20,7 +20,7 @@ fn resolve_std_symbols(bench: &mut Bencher) {
         let mut resolve_errors = ErrorReporter::new();
         let mut resolver_visitor = ResolverVisitor::new(&mut resolve_errors);
 
-        resolver_visitor.visit_compilation_unit(&ast).unwrap();
+        resolver_visitor.visit_compilation_unit(&ast);
     })
 }
 

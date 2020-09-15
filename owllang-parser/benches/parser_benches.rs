@@ -1,7 +1,7 @@
 use bencher::{benchmark_group, benchmark_main, Bencher};
 use owlc_error::ErrorReporter;
 use owlc_span::SourceFile;
-use owllang_lexer::{Lexer, Token};
+use owllang_lexer::Lexer;
 use owllang_parser::parser::Parser;
 
 fn parse_simple_fn(bench: &mut Bencher) {

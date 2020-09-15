@@ -3,12 +3,12 @@ use owlc_passes::resolver::ResolverVisitor;
 use owlc_span::SourceFile;
 use owllang_lexer::Lexer;
 use owllang_parser::parser::Parser;
-use owllang_parser::Visitor;
+use owllang_parser::visitor::AstVisitor;
 
 #[test]
 fn can_resolve_std_symbols() {
     let std_source = include_str!("../std.hoot");
-    let source_file = SourceFile::new("<tmp", std_source);
+    let source_file = SourceFile::new("<tmp>", std_source);
     let mut lex_errors = ErrorReporter::new();
     let mut lexer = Lexer::with_source_file(&source_file, &mut lex_errors);
     let mut parse_errors = ErrorReporter::new();
@@ -19,7 +19,7 @@ fn can_resolve_std_symbols() {
     let mut resolve_errors = ErrorReporter::new();
     let mut resolver_visitor = ResolverVisitor::new(&mut resolve_errors);
 
-    resolver_visitor.visit_compilation_unit(&ast).unwrap();
+    resolver_visitor.visit_compilation_unit(&ast);
 
     assert!(resolver_visitor
         .symbols

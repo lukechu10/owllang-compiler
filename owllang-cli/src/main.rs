@@ -9,7 +9,7 @@ use owlc_passes::resolver::{ResolverVisitor, SymbolTable};
 use owlc_span::SourceFile;
 use owllang_lexer::Lexer;
 use owllang_llvm_codegen::{c_str, LlvmCodeGenVisitor};
-use owllang_parser::{ast::statements::StmtKind, parser::Parser, Visitor};
+use owllang_parser::{ast::statements::StmtKind, parser::Parser, visitor::AstVisitor, Visitor};
 use std::{fs, io, io::prelude::*};
 
 #[no_mangle]
@@ -53,7 +53,7 @@ fn repl_loop(matches: &ArgMatches) {
         let target_data_layout = LLVMCreateTargetDataLayout(target_machine);
         LLVMSetModuleDataLayout(module, target_data_layout);
 
-        let mut symbol_table = SymbolTable::new();
+        let mut symbol_table;
 
         // codegen std.hoot
         let mut std_error_reporter = ErrorReporter::new();
@@ -64,7 +64,7 @@ fn repl_loop(matches: &ArgMatches) {
         let mut parser = Parser::new(&mut std_lexer, &mut parser_error_reporter);
         let std_ast = parser.parse_compilation_unit();
         let mut resolver_visitor = ResolverVisitor::new(&mut std_error_reporter);
-        resolver_visitor.visit_compilation_unit(&std_ast).unwrap();
+        resolver_visitor.visit_compilation_unit(&std_ast);
         symbol_table = resolver_visitor.symbols;
 
         // merge error reporter
@@ -72,7 +72,7 @@ fn repl_loop(matches: &ArgMatches) {
         if std_error_reporter.has_errors() {
             panic!("Errors in standard library. Aborting.");
         } else {
-            codegen_visitor.visit_compilation_unit(&std_ast);
+            codegen_visitor.visit_compilation_unit(&std_ast).unwrap();
         }
 
         loop {
@@ -103,7 +103,7 @@ fn repl_loop(matches: &ArgMatches) {
                         // restore previous symbols
                         resolver_visitor.symbols = symbol_table;
 
-                        resolver_visitor.visit_stmt(&stmt).unwrap();
+                        resolver_visitor.visit_stmt(&stmt);
 
                         // add resolved symbols to symbol_table
                         symbol_table = resolver_visitor.symbols;
@@ -190,7 +190,7 @@ fn compile_file(matches: ArgMatches) {
         let mut parser = Parser::new(&mut std_lexer, &mut parser_error_reporter);
         let std_ast = parser.parse_compilation_unit();
         let mut resolver_visitor = ResolverVisitor::new(&mut std_error_reporter);
-        resolver_visitor.visit_compilation_unit(&std_ast).unwrap();
+        resolver_visitor.visit_compilation_unit(&std_ast);
         symbol_table = resolver_visitor.symbols;
 
         // merge error reporter
@@ -198,7 +198,7 @@ fn compile_file(matches: ArgMatches) {
         if std_error_reporter.has_errors() {
             panic!("Errors in standard library. Aborting.");
         } else {
-            codegen_visitor.visit_compilation_unit(&std_ast);
+            codegen_visitor.visit_compilation_unit(&std_ast).unwrap();
         }
 
         let mut error_reporter = ErrorReporter::new();
@@ -211,9 +211,7 @@ fn compile_file(matches: ArgMatches) {
 
             let mut resolver_visitor = ResolverVisitor::new(&mut error_reporter);
             resolver_visitor.symbols = symbol_table;
-            resolver_visitor
-                .visit_compilation_unit(&compilation_unit)
-                .unwrap();
+            resolver_visitor.visit_compilation_unit(&compilation_unit);
 
             compilation_unit
         };
