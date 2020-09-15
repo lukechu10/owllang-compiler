@@ -1,5 +1,4 @@
 use crate::ast::expressions::Expr;
-use crate::SyntaxError;
 
 #[derive(Debug)]
 pub struct CompilationUnit {

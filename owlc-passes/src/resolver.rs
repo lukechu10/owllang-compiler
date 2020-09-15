@@ -1,7 +1,6 @@
 //! Resolving logic for symbols in the generated abstract syntax tree.
 use owlc_error::{Error, ErrorReporter};
 use owlc_span::BytePos;
-use owllang_parser::ast::NodeData;
 use owllang_parser::ast::{expressions::*, statements::*};
 use owllang_parser::visitor::AstVisitor;
 

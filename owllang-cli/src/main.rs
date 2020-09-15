@@ -5,7 +5,7 @@ use llvm_sys::{
     transforms::util::*,
 };
 use owlc_error::ErrorReporter;
-use owlc_passes::resolver::{ResolverVisitor, SymbolTable};
+use owlc_passes::resolver::ResolverVisitor;
 use owlc_span::SourceFile;
 use owllang_lexer::Lexer;
 use owllang_llvm_codegen::{c_str, LlvmCodeGenVisitor};
@@ -179,7 +179,7 @@ fn compile_file(matches: ArgMatches) {
         LLVMSetTarget(module, target_triple);
 
         let mut codegen_visitor = LlvmCodeGenVisitor::new(module, builder);
-        let mut symbol_table;
+        let symbol_table;
 
         // codegen std.hoot
         let mut std_error_reporter = ErrorReporter::new();
