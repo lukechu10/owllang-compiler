@@ -7,7 +7,12 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+bencher = "0.1.5"
 owlc-error = {path = "../owlc-error"}
 owlc-span = {path = "../owlc-span"}
 owllang-lexer = {path = "../owllang-lexer"}
 owllang-parser = {path = "../owllang-parser"}
+
+[[bench]]
+harness = false
+name = "resolver_benches"
