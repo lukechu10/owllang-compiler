@@ -2,7 +2,7 @@ use owllang_lexer::TokenKind;
 
 #[derive(Debug)]
 pub enum ExprKind {
-    /// Represnets an int literal (internally represented using `i64`).
+    /// Represents an int literal (internally represented using `i64`).
     Literal(i64),
     /// Represents an identifier expression.
     Identifier(String),

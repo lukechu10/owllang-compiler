@@ -14,7 +14,7 @@ fn lex_fn_definition() {
     let source_file = SourceFile::new("<tmp>", code);
     let lexer = Lexer::with_source_file(&source_file, &mut errors);
 
-    let tokens: Vec<TokenKind> = lexer.map(|token| token.value).collect();
+    let tokens: Vec<TokenKind> = lexer.map(|token| token.kind).collect();
     assert!(!errors.has_errors());
     assert_eq!(
         tokens,

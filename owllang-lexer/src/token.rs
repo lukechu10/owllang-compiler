@@ -4,8 +4,8 @@ use std::fmt;
 /// Represents a single token.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {
-    /// The value of the token.
-    pub value: TokenKind,
+    /// The internal data of the token.
+    pub kind: TokenKind,
     /// The position of the `Token` in the `SourceFile`.
     pub loc: Span,
 }
@@ -83,6 +83,7 @@ pub enum TokenKind {
     Identifier(String),
     // literals
     LiteralInt(i64),
+    /// **Note**: Current unused.
     LiteralDouble(f32),
     // miscellaneous
     EndOfFile,
