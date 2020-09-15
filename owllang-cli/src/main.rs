@@ -9,7 +9,7 @@ use owlc_passes::resolver::ResolverVisitor;
 use owlc_span::SourceFile;
 use owllang_lexer::Lexer;
 use owllang_llvm_codegen::{c_str, LlvmCodeGenVisitor};
-use owllang_parser::{ast::statements::StmtKind, parser::Parser, visitor::AstVisitor, Visitor};
+use owllang_parser::{ast::statements::StmtKind, parser::Parser, visitor::AstVisitor};
 use std::{fs, io, io::prelude::*};
 
 #[no_mangle]
@@ -72,7 +72,7 @@ fn repl_loop(matches: &ArgMatches) {
         if std_error_reporter.has_errors() {
             panic!("Errors in standard library. Aborting.");
         } else {
-            codegen_visitor.visit_compilation_unit(&std_ast).unwrap();
+            codegen_visitor.visit_compilation_unit(&std_ast);
         }
 
         loop {
@@ -127,7 +127,7 @@ fn repl_loop(matches: &ArgMatches) {
                         _ => false,
                     };
 
-                    codegen_visitor.handle_repl_input(ast).unwrap();
+                    codegen_visitor.handle_repl_input(ast);
 
                     let last_func = LLVMGetLastFunction(module);
                     LLVMVerifyFunction(
@@ -198,7 +198,7 @@ fn compile_file(matches: ArgMatches) {
         if std_error_reporter.has_errors() {
             panic!("Errors in standard library. Aborting.");
         } else {
-            codegen_visitor.visit_compilation_unit(&std_ast).unwrap();
+            codegen_visitor.visit_compilation_unit(&std_ast);
         }
 
         let mut error_reporter = ErrorReporter::new();
@@ -222,13 +222,7 @@ fn compile_file(matches: ArgMatches) {
             return; // do not codegen if error
         }
 
-        match codegen_visitor.visit_compilation_unit(&ast) {
-            Ok(_) => {}
-            Err(err) => {
-                println!("{}", err.message);
-                return;
-            }
-        }
+        codegen_visitor.visit_compilation_unit(&ast);
 
         // optimization passes
         let pass_manager = LLVMCreatePassManager();

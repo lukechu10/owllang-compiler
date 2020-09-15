@@ -2,17 +2,12 @@ use crate::{Token, TokenKind};
 use owlc_error::{Error, ErrorReporter};
 use owlc_span::{BytePos, SourceFile};
 use std::iter::{Iterator, Peekable};
-use std::str::{CharIndices, Chars};
+use std::str::CharIndices;
 
 pub struct Lexer<'a> {
     /// The string to read from.
     pub src: &'a SourceFile,
-    /// Should be 1 based because `row_num` is user facing.
-    row_num: u32,
-    /// Should be 1 based because `col_num` is user facing.
-    col_num: u32,
     /// Iterator over all the characters in `input`.
-    chars: Peekable<Chars<'a>>,
     chars_indices: Peekable<CharIndices<'a>>,
 
     /// The byte pos of the current char being read. Should be updated when `self.chars_indices.next()` is called.
@@ -26,20 +21,16 @@ impl<'a> Lexer<'a> {
         source_file: &'a SourceFile,
         error_reporter: &'a mut ErrorReporter,
     ) -> Self {
-        let chars = source_file.src.chars().peekable();
         let chars_indices = source_file.src.char_indices().peekable();
         Lexer {
             src: source_file,
-            row_num: 1,
-            col_num: 0, // start at 0 because first call to next() will increment value
-            chars,
             chars_indices,
             current_byte_pos: 0,
             errors: error_reporter,
         }
     }
 
-    /// Returns `true` if `c` is a valid character as the first character in an identifier. Else retrurns `false`.
+    /// Returns `true` if `c` is a valid character as the first character in an identifier. Else returns `false`.
     fn is_iden_start(c: char) -> bool {
         match c {
             'a'..='z' | 'A'..='Z' | '_' => true,
@@ -47,7 +38,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    /// Returns `true` if `c` is a valid character in the middle of an identifier. Else retrurns `false`.
+    /// Returns `true` if `c` is a valid character in the middle of an identifier. Else returns `false`.
     fn is_iden_continue(c: char) -> bool {
         match c {
             'a'..='z' | 'A'..='Z' | '0'..='9' | '_' => true,
@@ -77,7 +68,10 @@ impl<'a> Lexer<'a> {
     /// Utility factory function to create new tokens with current position.
     fn create_token(&self, value: TokenKind, len: u32) -> Token {
         let span = BytePos(self.current_byte_pos + 1 - len).to(BytePos(self.current_byte_pos));
-        Token { kind: value, loc: span }
+        Token {
+            kind: value,
+            loc: span,
+        }
     }
 }
 

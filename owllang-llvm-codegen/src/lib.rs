@@ -6,7 +6,7 @@ use llvm_sys::{LLVMIntPredicate, LLVMLinkage, LLVMTypeKind};
 use owllang_lexer::TokenKind;
 use owllang_parser::ast::expressions::*;
 use owllang_parser::ast::statements::*;
-use owllang_parser::{SyntaxError, Visitor};
+use owllang_parser::visitor::AstVisitor;
 use std::collections::HashMap;
 
 pub struct LlvmCodeGenVisitor {
@@ -34,16 +34,7 @@ impl LlvmCodeGenVisitor {
         }
     }
 
-    #[deprecated = "parse owlc-passes/std.hoot instead for std symbols"]
-    pub fn add_builtin_fns(&mut self) -> Result<(), SyntaxError> {
-        let printf_t = FnProto {
-            args: vec!["x".to_string()],
-            iden: "println".to_string(),
-        };
-        self.codegen_fn_proto(&printf_t)
-    }
-
-    /// Creates an `alloca` instruction in the `entry` block of the current function. Returns the memory address of the allocated variable.
+    /// Creates an `alloca` instruction in the `entry` block of the current function. Returns the `LLVMValueRef` memory address of the allocated variable.
     pub unsafe fn build_entry_bb_alloca(&mut self, name: &String) -> LLVMValueRef {
         debug_assert!(self.current_function != None);
 
@@ -70,206 +61,210 @@ impl Drop for LlvmCodeGenVisitor {
 }
 
 /// Codegen functions for `Expr` variants
+impl LlvmCodeGenVisitor {}
+
 impl LlvmCodeGenVisitor {
-    fn visit_literal_expr(&mut self, node: &Expr) -> Result<(), SyntaxError> {
-        unsafe {
-            match &node.kind {
-                ExprKind::Literal(num) => {
-                    let const_int = LLVMConstInt(LLVMInt64Type(), *num as u64, 0);
-                    self.value_stack.push(const_int);
+    /// Custom codegen function for repl.
+    pub fn handle_repl_input(&mut self, stmt: Stmt) {
+        static mut ANON_FN_COUNTER: u64 = 0;
+
+        match stmt.kind {
+            StmtKind::Fn {
+                ref proto,
+                ref body,
+            } => self.visit_fn_stmt(proto, body),
+            StmtKind::Let {
+                iden: _,
+                initializer: _,
+            } => unimplemented!(),
+            StmtKind::ExprSemi { expr } => {
+                // codegen anonymous function that returns value
+                // create fake return stmt.
+                unsafe {
+                    let ret_stmt = Stmt::new(StmtKind::Return { value: expr });
+                    let proto = FnProto {
+                        iden: format!("0anonymous_func_{}", ANON_FN_COUNTER), // start with '0' to prevent conflict with user defined functions
+                        args: Vec::new(),
+                    };
+                    ANON_FN_COUNTER += 1;
+                    let body = Stmt::new(StmtKind::Block {
+                        stmts: vec![ret_stmt],
+                    });
+                    self.visit_fn_stmt(&proto, &Some(Box::new(body)));
                 }
-                _ => unreachable!(),
             }
-        }
-        Ok(())
-    }
-
-    fn visit_identifier_expr(&mut self, node: &Expr) -> Result<(), SyntaxError> {
-        unsafe {
-            match &node.kind {
-                ExprKind::Identifier(iden) => {
-                    let value_option = self.named_values.get(iden);
-
-                    if let Some(value) = value_option {
-                        // deallocate value
-                        let val = LLVMBuildLoad(self.builder, *value, c_str!("loadtmp"));
-                        self.value_stack.push(val);
-                        Ok(())
-                    } else {
-                        Err(SyntaxError {
-                            // TODO
-                            row: 0,
-                            col: 0,
-                            file_name: "tmp".to_string(),
-                            message: format!("Identifier {} does not exist in current scope", iden),
-                        })
-                    }
-                }
-                _ => unreachable!(),
-            }
-        }
-    }
-
-    fn visit_call_expr(&mut self, node: &Expr) -> Result<(), SyntaxError> {
-        unsafe {
-            match &node.kind {
-                ExprKind::FuncCall { callee, args } => {
-                    let arg_count = args.len();
-                    let func = LLVMGetNamedFunction(self.module, c_str!(callee));
-
-                    if func.is_null() {
-                        panic!("Error, function not defined");
-                    }
-                    if LLVMCountParams(func) != arg_count as u32 {
-                        panic!("Invalid argument count");
-                    }
-
-                    let mut argv: Vec<LLVMValueRef> = Vec::with_capacity(arg_count);
-
-                    for arg in args {
-                        self.visit_expr(arg)?;
-                        argv.push(self.value_stack.pop().unwrap()); // unwrap should not panic here because arg.accept pushes a value onto self.value_stack
-                    }
-
-                    let res = LLVMBuildCall(
-                        self.builder,
-                        func,
-                        argv.as_mut_ptr(),
-                        arg_count as u32,
-                        c_str!("calltmp"),
-                    );
-                    self.value_stack.push(res);
-
-                    Ok(())
-                }
-                _ => unreachable!(),
-            }
-        }
-    }
-
-    fn visit_binary_expr(&mut self, node: &Expr) -> Result<(), SyntaxError> {
-        unsafe {
-            match &node.kind {
-                ExprKind::BinaryExpr {
-                    lhs: lhs_ast,
-                    rhs: rhs_ast,
-                    op_type,
-                } => {
-                    let res: LLVMValueRef;
-
-                    // codegen right side of binary expression
-                    self.visit_expr(rhs_ast)?;
-                    let rhs = self.value_stack.pop().unwrap();
-
-                    match &op_type {
-                        TokenKind::OpEquals => {
-                            // do not codegen lhs for assignment expression
-                            // lhs of assignment expression should be an identifier
-
-                            let iden = {
-                                match &lhs_ast.kind {
-                                    ExprKind::Identifier(iden_str) => iden_str,
-                                    _ => panic!("LHS of assignment must be identifier"),
-                                }
-                            };
-
-                            match self.named_values.get(iden) {
-                                Some(addr_val) => {
-                                    debug_assert!(
-                                        LLVMGetTypeKind(LLVMTypeOf(*addr_val))
-                                            == LLVMTypeKind::LLVMPointerTypeKind,
-                                        "Value should be pointer type."
-                                    );
-
-                                    res = LLVMBuildStore(self.builder, rhs, *addr_val);
-                                }
-                                None => {
-                                    panic!("Not in scope");
-                                }
-                            }
-                        }
-                        _ => {
-                            // codegen lhs of binary expression
-                            self.visit_expr(lhs_ast)?;
-                            let lhs = self.value_stack.pop().unwrap();
-
-                            res = match &op_type {
-                                TokenKind::OpPlus => {
-                                    LLVMBuildAdd(self.builder, lhs, rhs, c_str!("add_tmp"))
-                                }
-                                TokenKind::OpMinus => {
-                                    LLVMBuildSub(self.builder, lhs, rhs, c_str!("sub_tmp"))
-                                }
-                                TokenKind::OpAsterisk => {
-                                    LLVMBuildMul(self.builder, lhs, rhs, c_str!("mul_tmp"))
-                                }
-                                TokenKind::OpSlash => {
-                                    LLVMBuildSDiv(self.builder, lhs, rhs, c_str!("sdiv_tmp"))
-                                }
-                                TokenKind::OpPercent => {
-                                    LLVMBuildSRem(self.builder, lhs, rhs, c_str!("srem_tmp"))
-                                }
-                                _ => {
-                                    // codegen relational operators
-                                    let cmp_predicate = match &op_type {
-                                        TokenKind::OpEqualsEquals => {
-                                            (LLVMIntPredicate::LLVMIntEQ, "eq_cmp_tmp")
-                                        }
-                                        TokenKind::OpGreaterThan => {
-                                            (LLVMIntPredicate::LLVMIntSGT, "sgt_cmp_tmp")
-                                        }
-                                        TokenKind::OpEqualsGreaterThan => {
-                                            (LLVMIntPredicate::LLVMIntSGE, "sge_cmp_tmp")
-                                        }
-                                        TokenKind::OpLessThan => {
-                                            (LLVMIntPredicate::LLVMIntSLT, "slt_cmp_tmp")
-                                        }
-                                        TokenKind::OpEqualsLessThan => {
-                                            (LLVMIntPredicate::LLVMIntSLE, "sle_cmp_tmp")
-                                        }
-                                        _ => unreachable!(),
-                                    };
-
-                                    let cmp_tmp = LLVMBuildICmp(
-                                        self.builder,
-                                        cmp_predicate.0,
-                                        lhs,
-                                        rhs,
-                                        c_str!(cmp_predicate.1),
-                                    );
-                                    LLVMBuildIntCast(
-                                        self.builder,
-                                        cmp_tmp,
-                                        LLVMInt64Type(),
-                                        c_str!("cast_tmp"),
-                                    )
-                                }
-                            };
-                        }
-                    }
-
-                    self.value_stack.push(res);
-                    Ok(())
-                }
-                _ => unreachable!(),
-            }
+            _ => unreachable!(),
         }
     }
 }
 
-impl LlvmCodeGenVisitor {
-    fn codegen_fn_proto(&mut self, node: &FnProto) -> Result<(), SyntaxError> {
+impl AstVisitor for LlvmCodeGenVisitor {
+    fn visit_literal_expr(&mut self, val: &i64) {
         unsafe {
-            let arg_count = node.args.len();
-            let mut argv: Vec<LLVMTypeRef> = Vec::with_capacity(arg_count);
+            let const_int = LLVMConstInt(LLVMInt64Type(), *val as u64, 0);
+            self.value_stack.push(const_int);
+        }
+    }
 
-            let mut func = LLVMGetNamedFunction(self.module, c_str!(node.iden));
+    fn visit_identifier_expr(&mut self, ident: &String) {
+        unsafe {
+            match self.named_values.get(ident) {
+                Some(addr) => {
+                    // deallocate value
+                    let val = LLVMBuildLoad(self.builder, *addr, c_str!("loadtmp"));
+                    self.value_stack.push(val);
+                }
+                None => {
+                    panic!(format!(
+                        "Identifier {} does not exist in current scope",
+                        ident
+                    ));
+                }
+            }
+        }
+    }
 
-            if !func.is_null() && LLVMGetEntryBasicBlock(func).is_null() {
-                panic!("Error, function '{}' already exists.", node.iden);
+    fn visit_func_call(&mut self, callee: &String, args: &Vec<Expr>) {
+        unsafe {
+            let arg_count = args.len();
+            let func = LLVMGetNamedFunction(self.module, c_str!(callee));
+
+            if func.is_null() {
+                panic!("Error, function not defined");
+            }
+            if LLVMCountParams(func) != arg_count as u32 {
+                panic!("Invalid argument count");
             }
 
-            for _ in &node.args {
+            let mut argv: Vec<LLVMValueRef> = Vec::with_capacity(arg_count);
+
+            for arg in args {
+                self.visit_expr(arg);
+                argv.push(self.value_stack.pop().unwrap()); // unwrap should not panic here because arg.accept pushes a value onto self.value_stack
+            }
+
+            let res = LLVMBuildCall(
+                self.builder,
+                func,
+                argv.as_mut_ptr(),
+                arg_count as u32,
+                c_str!("calltmp"),
+            );
+            self.value_stack.push(res);
+        }
+    }
+
+    fn visit_bin_expr(&mut self, lhs: &Box<Expr>, rhs: &Box<Expr>, op_type: &TokenKind) {
+        unsafe {
+            let res: LLVMValueRef;
+
+            // codegen right side of binary expression
+            self.visit_expr(rhs);
+            let rhs_llvm = self.value_stack.pop().unwrap();
+
+            match &op_type {
+                TokenKind::OpEquals => {
+                    // do not codegen lhs for assignment expression
+                    // lhs of assignment expression should be an identifier
+
+                    let ident = {
+                        match &lhs.kind {
+                            ExprKind::Identifier(iden_str) => iden_str,
+                            _ => panic!("LHS of assignment must be identifier"),
+                        }
+                    };
+
+                    match self.named_values.get(ident) {
+                        Some(addr_val) => {
+                            debug_assert!(
+                                LLVMGetTypeKind(LLVMTypeOf(*addr_val))
+                                    == LLVMTypeKind::LLVMPointerTypeKind,
+                                "Value should be pointer type."
+                            );
+
+                            res = LLVMBuildStore(self.builder, rhs_llvm, *addr_val);
+                        }
+                        None => {
+                            panic!("Not in scope");
+                        }
+                    }
+                }
+                _ => {
+                    // codegen lhs of binary expression
+                    self.visit_expr(lhs);
+                    let lhs_llvm = self.value_stack.pop().unwrap();
+
+                    res = match &op_type {
+                        TokenKind::OpPlus => {
+                            LLVMBuildAdd(self.builder, lhs_llvm, rhs_llvm, c_str!("add_tmp"))
+                        }
+                        TokenKind::OpMinus => {
+                            LLVMBuildSub(self.builder, lhs_llvm, rhs_llvm, c_str!("sub_tmp"))
+                        }
+                        TokenKind::OpAsterisk => {
+                            LLVMBuildMul(self.builder, lhs_llvm, rhs_llvm, c_str!("mul_tmp"))
+                        }
+                        TokenKind::OpSlash => {
+                            LLVMBuildSDiv(self.builder, lhs_llvm, rhs_llvm, c_str!("sdiv_tmp"))
+                        }
+                        TokenKind::OpPercent => {
+                            LLVMBuildSRem(self.builder, lhs_llvm, rhs_llvm, c_str!("srem_tmp"))
+                        }
+                        _ => {
+                            // codegen relational operators
+                            let cmp_predicate = match &op_type {
+                                TokenKind::OpEqualsEquals => {
+                                    (LLVMIntPredicate::LLVMIntEQ, "eq_cmp_tmp")
+                                }
+                                TokenKind::OpGreaterThan => {
+                                    (LLVMIntPredicate::LLVMIntSGT, "sgt_cmp_tmp")
+                                }
+                                TokenKind::OpEqualsGreaterThan => {
+                                    (LLVMIntPredicate::LLVMIntSGE, "sge_cmp_tmp")
+                                }
+                                TokenKind::OpLessThan => {
+                                    (LLVMIntPredicate::LLVMIntSLT, "slt_cmp_tmp")
+                                }
+                                TokenKind::OpEqualsLessThan => {
+                                    (LLVMIntPredicate::LLVMIntSLE, "sle_cmp_tmp")
+                                }
+                                _ => unreachable!(),
+                            };
+
+                            let cmp_tmp = LLVMBuildICmp(
+                                self.builder,
+                                cmp_predicate.0,
+                                lhs_llvm,
+                                rhs_llvm,
+                                c_str!(cmp_predicate.1),
+                            );
+                            LLVMBuildIntCast(
+                                self.builder,
+                                cmp_tmp,
+                                LLVMInt64Type(),
+                                c_str!("cast_tmp"),
+                            )
+                        }
+                    };
+                }
+            }
+
+            self.value_stack.push(res);
+        }
+    }
+
+    fn visit_fn_proto(&mut self, ident: &String, args: &Vec<String>) {
+        unsafe {
+            let arg_count = args.len();
+            let mut argv: Vec<LLVMTypeRef> = Vec::with_capacity(arg_count);
+
+            let mut func = LLVMGetNamedFunction(self.module, c_str!(ident));
+
+            if !func.is_null() && LLVMGetEntryBasicBlock(func).is_null() {
+                panic!("Error, function '{}' already exists.", ident);
+            }
+
+            for _ in 0..args.len() {
                 argv.push(LLVMInt64Type());
             }
 
@@ -280,36 +275,18 @@ impl LlvmCodeGenVisitor {
                 false as i32,
             );
 
-            func = LLVMAddFunction(self.module, c_str!(node.iden), func_type);
+            func = LLVMAddFunction(self.module, c_str!(ident), func_type);
             LLVMSetLinkage(func, LLVMLinkage::LLVMExternalLinkage);
 
             self.value_stack.push(func);
-
-            Ok(())
         }
     }
 
-    /// # Arguments
-    /// * `statements` - The `statements` field in `SemiKind::Block`.
-    fn codegen_block_stmt(&mut self, statements: &Vec<Stmt>) -> Result<(), SyntaxError> {
-        for stmt in statements {
-            self.visit_stmt(stmt)?;
-        }
-        Ok(())
-    }
-
-    /// # Arguments
-    /// * `proto` - The function prototype.
-    /// * `body` - The function body.
-    fn codegen_fn_stmt(
-        &mut self,
-        proto: &FnProto,
-        body: &Option<Box<Stmt>>,
-    ) -> Result<(), SyntaxError> {
+    fn visit_fn_stmt(&mut self, proto: &FnProto, body: &Option<Box<Stmt>>) {
         unsafe {
             self.named_values.clear(); // clear symbols from previous function
 
-            self.codegen_fn_proto(proto)?;
+            self.visit_fn_proto(&proto.iden, &proto.args);
             let func = self.value_stack.pop().unwrap();
 
             match body {
@@ -330,99 +307,32 @@ impl LlvmCodeGenVisitor {
 
                     // codegen function body
                     match &body.kind {
-                        StmtKind::Block { statements } => self.codegen_block_stmt(statements)?,
+                        StmtKind::Block { stmts } => self.visit_block_stmt(stmts),
                         _ => unreachable!(),
                     }
 
                     // unset self.current_function
                     self.current_function = None;
-                    Ok(())
                 }
-                None => Ok(()),
+                None => {}
             }
         }
     }
 
-    fn codegen_let_stmt(&mut self, _iden: &String, _initializer: &Expr) -> Result<(), SyntaxError> {
+    fn visit_let_stmt(&mut self, _iden: &String, _initializer: &Expr) {
         unimplemented!()
     }
 
-    /// # Arguments
-    /// * `value` - The return value expression of the `SemiKind::Return` node.
-    fn codegen_return_stmt(&mut self, value: &Expr) -> Result<(), SyntaxError> {
+    fn visit_return_stmt(&mut self, value: &Expr) {
         unsafe {
-            self.visit_expr(value)?; // codegen return value
+            self.visit_expr(value); // codegen return value
             let llvm_value = self.value_stack.pop().unwrap();
             LLVMBuildRet(self.builder, llvm_value);
-
-            Ok(())
         }
     }
 
-    /// # Arguments
-    /// * `expr` - The expression of the `SemiKind::ExprSemi` node.
-    fn codegen_expr_semi_stmt(&mut self, expr: &Expr) -> Result<(), SyntaxError> {
-        self.visit_expr(expr)?;
+    fn visit_expr_semi_stmt(&mut self, expr: &Expr) {
+        self.visit_expr(expr);
         self.value_stack.pop(); // make value is not accessible
-        Ok(())
-    }
-
-    /// Custom codegen function for repl.
-    pub fn handle_repl_input(&mut self, stmt: Stmt) -> Result<(), SyntaxError> {
-        static mut ANON_FN_COUNTER: u64 = 0;
-
-        match stmt.kind {
-            StmtKind::Fn {
-                ref proto,
-                ref body,
-            } => self.codegen_fn_stmt(proto, body),
-            StmtKind::Let {
-                iden: _,
-                initializer: _,
-            } => unimplemented!(),
-            StmtKind::ExprSemi { expr } => {
-                // codegen anonymous function that returns value
-                // create fake return stmt.
-                unsafe {
-                    let ret_stmt = Stmt::new(StmtKind::Return { value: expr });
-                    let proto = FnProto {
-                        iden: format!("0anonymous_func_{}", ANON_FN_COUNTER), // start with '0' to prevent conflict with user defined functions
-                        args: Vec::new(),
-                    };
-                    ANON_FN_COUNTER += 1;
-                    let body = Stmt::new(StmtKind::Block {
-                        statements: vec![ret_stmt],
-                    });
-                    self.codegen_fn_stmt(&proto, &Some(Box::new(body)))
-                }
-            }
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl Visitor for LlvmCodeGenVisitor {
-    fn visit_expr(&mut self, node: &Expr) -> Result<(), SyntaxError> {
-        match &node.kind {
-            ExprKind::Literal(_) => self.visit_literal_expr(node),
-            ExprKind::Identifier(_) => self.visit_identifier_expr(node),
-            ExprKind::FuncCall { callee: _, args: _ } => self.visit_call_expr(node),
-            ExprKind::BinaryExpr {
-                lhs: _,
-                rhs: _,
-                op_type: _,
-            } => self.visit_binary_expr(node),
-        }
-    }
-
-    fn visit_stmt(&mut self, node: &Stmt) -> Result<(), SyntaxError> {
-        match &node.kind {
-            StmtKind::Block { statements } => self.codegen_block_stmt(statements),
-            StmtKind::Fn { proto, body } => self.codegen_fn_stmt(proto, body),
-            StmtKind::Let { iden, initializer } => self.codegen_let_stmt(iden, initializer),
-            StmtKind::Return { value } => self.codegen_return_stmt(value),
-            StmtKind::ExprSemi { expr } => self.codegen_expr_semi_stmt(expr),
-            _ => unimplemented!(),
-        }
     }
 }

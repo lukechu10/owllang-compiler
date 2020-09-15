@@ -224,17 +224,17 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
 
     fn visit_stmt(&mut self, stmt: &Stmt) {
         match &stmt.kind {
-            StmtKind::Block { statements } => {
+            StmtKind::Block { stmts } => {
                 // create empty Scope::Block
                 let block_scope = Scope::Block(Vec::new());
                 self.symbols.push_scope(block_scope);
 
                 // visit statements
-                for statement in statements {
+                for statement in stmts {
                     self.visit_stmt(statement);
                 }
             }
-            StmtKind::Fn { proto: _, body: _ } => {}
+            StmtKind::Fn { proto, body } => self.visit_fn_stmt(proto, body),
             StmtKind::While => {}
             StmtKind::For => {}
             StmtKind::Let {
@@ -279,17 +279,17 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
         match body {
             Some(body) => {
                 match &body.kind {
-                    StmtKind::Block { statements } => {
-                        for stmt in statements {
+                    StmtKind::Block { stmts } => {
+                        for stmt in stmts {
                             self.visit_stmt(&stmt);
                         }
                     }
                     _ => unreachable!("Function body must have kind StmtKind::Block."),
                 }
-
-                self.symbols.pop_until_block(); // remove all symbols created inside function
             }
             None => {}
         }
+
+        self.symbols.pop_until_block(); // remove all symbols created inside function and block scope itself. Does not remove symbol of function.
     }
 }

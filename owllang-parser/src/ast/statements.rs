@@ -31,7 +31,7 @@ pub struct FnProto {
 pub enum StmtKind {
     /// Represents code delimited by curly brackets '{' and '}'.
     Block {
-        statements: Vec<Stmt>,
+        stmts: Vec<Stmt>,
     },
     /// Represents a function declaration / definition.
     /// Field `body.kind` should always be variant `StmtKind::Block`.

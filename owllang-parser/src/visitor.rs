@@ -28,7 +28,7 @@ pub trait AstVisitor {
     /// This method should not be overridden unless custom behavior is needed.
     fn visit_stmt(&mut self, stmt: &Stmt) {
         match &stmt.kind {
-            StmtKind::Block { statements } => self.visit_block_stmt(statements),
+            StmtKind::Block { stmts } => self.visit_block_stmt(stmts),
             StmtKind::Fn { proto, body } => self.visit_fn_stmt(proto, body),
             StmtKind::While => self.visit_while_stmt(),
             StmtKind::For => self.visit_for_stmt(),
@@ -59,7 +59,7 @@ pub trait AstVisitor {
         self.visit_fn_proto(&proto.iden, &proto.args);
         match body {
             Some(b) => match &b.kind {
-                StmtKind::Block { statements } => self.visit_block_stmt(statements),
+                StmtKind::Block { stmts } => self.visit_block_stmt(stmts),
                 _ => unreachable!(),
             },
             None => {}

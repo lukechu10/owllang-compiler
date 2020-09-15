@@ -5,7 +5,7 @@ use owllang_lexer::{Lexer, OpPrecedence, Token, TokenKind};
 use std::iter::Peekable;
 
 pub struct Parser<'a> {
-    src: &'a SourceFile,
+    _src: &'a SourceFile,
     lexer: Peekable<&'a mut Lexer<'a>>,
     current_token: Token,
 
@@ -20,7 +20,7 @@ impl<'a> Parser<'a> {
         });
 
         Self {
-            src: lexer.src,
+            _src: lexer.src,
             lexer: lexer.peekable(),
             current_token: first_token,
             errs: error_reporter,
@@ -340,7 +340,7 @@ impl<'a> Parser<'a> {
 
     fn parse_block_statement(&mut self) -> Stmt {
         self.expect_and_eat_tok(TokenKind::PuncOpenBrace);
-        let mut statements: Vec<Stmt> = Vec::new();
+        let mut stmts: Vec<Stmt> = Vec::new();
         loop {
             if self.current_token.kind == TokenKind::PuncCloseBrace
                 || self.current_token.kind == TokenKind::EndOfFile
@@ -350,9 +350,9 @@ impl<'a> Parser<'a> {
                 break;
             }
             let statement = self.parse_statement();
-            statements.push(statement);
+            stmts.push(statement);
         }
 
-        Stmt::new(StmtKind::Block { statements })
+        Stmt::new(StmtKind::Block { stmts })
     }
 }
