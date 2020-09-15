@@ -46,9 +46,10 @@ pub enum StmtKind {
     },
     /// Represents a function declaration / definition.
     /// Field `body.kind` should always be variant `StmtKind::Block`.
+    /// If field `body` is `None`, function is an extern function.
     Fn {
         proto: FnProto,
-        body: Box<Stmt>,
+        body: Option<Box<Stmt>>,
     },
     While,
     For,

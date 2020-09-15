@@ -1,8 +1,8 @@
 //! Resolving logic for symbols in the generated abstract syntax tree.
 use owlc_error::{Error, ErrorReporter};
+use owlc_span::BytePos;
 use owllang_parser::ast::{expressions::*, statements::*};
 use owllang_parser::{SyntaxError, Visitor};
-use owlc_span::BytePos;
 
 /// Represents a resolved symbol (can be either variable type or function type).
 #[derive(Debug, PartialEq, Eq, Hash)]
@@ -160,7 +160,7 @@ impl<'a> Visitor for ResolverVisitor<'a> {
                                 self.errors.report(Error {
                                     file_name: "repl".to_string(), // FIXME
                                     message: format!("Symbol {} is not a variable.", ident),
-                                    loc: BytePos(0).to(BytePos(0))
+                                    loc: BytePos(0).to(BytePos(0)),
                                 })
                             }
                             Symbol::Let { ident: _ } => {}
@@ -169,7 +169,7 @@ impl<'a> Visitor for ResolverVisitor<'a> {
                     None => self.errors.report(Error {
                         file_name: "repl".to_string(), // FIXME
                         message: format!("Identifier {} does not exist in current scope.", ident),
-                        loc: BytePos(0).to(BytePos(0))
+                        loc: BytePos(0).to(BytePos(0)),
                     }),
                 }
             }
@@ -187,7 +187,7 @@ impl<'a> Visitor for ResolverVisitor<'a> {
                                 self.errors.report(Error {
                                     file_name: "repl".to_string(), // FIXME
                                     message: format!("Symbol {} is not a function.", callee),
-                                    loc: BytePos(0).to(BytePos(0))
+                                    loc: BytePos(0).to(BytePos(0)),
                                 });
                             }
                             Symbol::Fn {
@@ -207,11 +207,15 @@ impl<'a> Visitor for ResolverVisitor<'a> {
                     None => self.errors.report(Error {
                         file_name: "repl".to_string(), // FIXME
                         message: format!("Function {} does not exist in current scope.", callee),
-                        loc: BytePos(0).to(BytePos(0))
+                        loc: BytePos(0).to(BytePos(0)),
                     }),
                 }
             }
-            ExprKind::BinaryExpr { lhs, rhs, op_type: _ } => {
+            ExprKind::BinaryExpr {
+                lhs,
+                rhs,
+                op_type: _,
+            } => {
                 self.visit_expr(lhs)?;
                 self.visit_expr(rhs)?;
             }
@@ -253,16 +257,21 @@ impl<'a> Visitor for ResolverVisitor<'a> {
 
                 // visit body
                 // do not visit block as that will create a new block scope.
-                match &body.kind {
-                    StmtKind::Block { statements } => {
-                        for stmt in statements {
-                            self.visit_stmt(&stmt).unwrap();
+                match body {
+                    Some(body) => {
+                        match &body.kind {
+                            StmtKind::Block { statements } => {
+                                for stmt in statements {
+                                    self.visit_stmt(&stmt).unwrap();
+                                }
+                            }
+                            _ => unreachable!("Function body must have kind StmtKind::Block."),
                         }
-                    }
-                    _ => unreachable!("Function body must have kind StmtKind::Block."),
-                }
 
-                self.symbols.pop_until_block(); // remove all symbols created inside function
+                        self.symbols.pop_until_block(); // remove all symbols created inside function
+                    }
+                    None => {}
+                }
             }
             StmtKind::While => {}
             StmtKind::For => {}

@@ -34,6 +34,7 @@ impl LlvmCodeGenVisitor {
         }
     }
 
+    #[deprecated = "parse owlc-passes/std.hoot instead for std symbols"]
     pub fn add_builtin_fns(&mut self) -> Result<(), SyntaxError> {
         let printf_t = FnProto {
             args: vec!["x".to_string()],
@@ -100,10 +101,7 @@ impl LlvmCodeGenVisitor {
                             row: 0,
                             col: 0,
                             file_name: "tmp".to_string(),
-                            message: format!(
-                                "Identifier {} does not exist in current scope",
-                                iden
-                            ),
+                            message: format!("Identifier {} does not exist in current scope", iden),
                         })
                     }
                 }
@@ -267,8 +265,8 @@ impl LlvmCodeGenVisitor {
 
             let mut func = LLVMGetNamedFunction(self.module, c_str!(node.iden));
 
-            if !func.is_null() {
-                panic!("Error, function already exists.");
+            if !func.is_null() && LLVMGetEntryBasicBlock(func).is_null() {
+                panic!("Error, function '{}' already exists.", node.iden);
             }
 
             for _ in &node.args {
@@ -303,33 +301,45 @@ impl LlvmCodeGenVisitor {
     /// # Arguments
     /// * `proto` - The function prototype.
     /// * `body` - The function body.
-    fn codegen_fn_stmt(&mut self, proto: &FnProto, body: &Box<Stmt>) -> Result<(), SyntaxError> {
+    fn codegen_fn_stmt(
+        &mut self,
+        proto: &FnProto,
+        body: &Option<Box<Stmt>>,
+    ) -> Result<(), SyntaxError> {
         unsafe {
             self.named_values.clear(); // clear symbols from previous function
 
             self.codegen_fn_proto(proto)?;
             let func = self.value_stack.pop().unwrap();
 
-            self.current_function = Some(func);
+            match body {
+                Some(body) => {
+                    self.current_function = Some(func);
 
-            LLVMPositionBuilderAtEnd(self.builder, LLVMAppendBasicBlock(func, c_str!("entry")));
+                    LLVMPositionBuilderAtEnd(
+                        self.builder,
+                        LLVMAppendBasicBlock(func, c_str!("entry")),
+                    );
 
-            for (i, arg) in proto.args.iter().enumerate() {
-                let addr = self.build_entry_bb_alloca(arg);
-                // store value
-                LLVMBuildStore(self.builder, LLVMGetParam(func, i as u32), addr);
-                self.named_values.insert(arg.clone(), addr);
+                    for (i, arg) in proto.args.iter().enumerate() {
+                        let addr = self.build_entry_bb_alloca(arg);
+                        // store value
+                        LLVMBuildStore(self.builder, LLVMGetParam(func, i as u32), addr);
+                        self.named_values.insert(arg.clone(), addr);
+                    }
+
+                    // codegen function body
+                    match &body.kind {
+                        StmtKind::Block { statements } => self.codegen_block_stmt(statements)?,
+                        _ => unreachable!(),
+                    }
+
+                    // unset self.current_function
+                    self.current_function = None;
+                    Ok(())
+                }
+                None => Ok(()),
             }
-
-            // codegen function body
-            match &body.kind {
-                StmtKind::Block { statements } => self.codegen_block_stmt(statements)?,
-                _ => unreachable!(),
-            }
-
-            // unset self.current_function
-            self.current_function = None;
-            Ok(())
         }
     }
 
@@ -383,7 +393,7 @@ impl LlvmCodeGenVisitor {
                     let body = Stmt::new(StmtKind::Block {
                         statements: vec![ret_stmt],
                     });
-                    self.codegen_fn_stmt(&proto, &Box::new(body))
+                    self.codegen_fn_stmt(&proto, &Some(Box::new(body)))
                 }
             }
             _ => unreachable!(),

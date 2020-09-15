@@ -315,10 +315,27 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_fn_declaration(&mut self) -> Stmt {
-        let proto = self.parse_fn_prototype();
-        let body = Box::new(self.parse_block_statement());
+        let is_extern = {
+            if self.current_token.value == TokenKind::KeywordExtern {
+                self.eat_token(); // eat 'extern' keyword
+                true
+            } else {
+                false
+            }
+        };
 
-        Stmt::new(StmtKind::Fn { proto, body })
+        let proto = self.parse_fn_prototype();
+
+        if !is_extern {
+            let body = Box::new(self.parse_block_statement());
+            Stmt::new(StmtKind::Fn {
+                proto,
+                body: Some(body),
+            })
+        } else {
+            self.expect_and_eat_tok(TokenKind::PuncSemi);
+            Stmt::new(StmtKind::Fn { proto, body: None })
+        }
     }
 
     fn parse_block_statement(&mut self) -> Stmt {

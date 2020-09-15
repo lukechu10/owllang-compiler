@@ -64,12 +64,15 @@ pub trait AstVisitor {
     }
     /// # Panics
     /// This method should panic if param `body.kind` is not a `StmtKind::Block` variant.
-    fn visit_fn_stmt(&mut self, node: &NodeData, proto: &FnProto, body: &Box<Stmt>) {
+    fn visit_fn_stmt(&mut self, node: &NodeData, proto: &FnProto, body: &Option<Box<Stmt>>) {
         self.visit_fn_proto(node, &proto.iden, &proto.args);
-        match &body.kind {
-            StmtKind::Block { statements } => self.visit_block_stmt(node, statements),
-            _ => unreachable!(),
-        };
+        match body {
+            Some(b) => match &b.kind {
+                StmtKind::Block { statements } => self.visit_block_stmt(node, statements),
+                _ => unreachable!(),
+            },
+            None => {}
+        }
     }
 
     fn visit_while_stmt(&mut self, _node: &NodeData) {

@@ -1,18 +1,37 @@
 use clap::{App, Arg, ArgMatches};
+use llvm_sys::support::*;
 use llvm_sys::{
     analysis::*, bit_writer::*, core::*, execution_engine::*, target::*, target_machine::*,
     transforms::util::*,
 };
 use owlc_error::ErrorReporter;
-use owlc_span::SourceFile;
 use owlc_passes::resolver::{ResolverVisitor, SymbolTable};
+use owlc_span::SourceFile;
 use owllang_lexer::Lexer;
 use owllang_llvm_codegen::{c_str, LlvmCodeGenVisitor};
 use owllang_parser::{ast::statements::StmtKind, parser::Parser, Visitor};
 use std::{fs, io, io::prelude::*};
 
+#[no_mangle]
+pub extern "C" fn println(num: i64) -> i64 {
+    println!("{}", num);
+    num
+}
+
+#[no_mangle]
+pub extern "C" fn read_num() -> i64 {
+    let stdin = io::stdin();
+    let mut line = String::new();
+    stdin.read_line(&mut line).unwrap();
+    let num: i64 = str::parse(&line.trim()).unwrap();
+    num
+}
+
 fn repl_loop(matches: &ArgMatches) {
     unsafe {
+        LLVMAddSymbol(c_str!("println"), println as *mut std::ffi::c_void);
+        LLVMAddSymbol(c_str!("read_num"), read_num as *mut std::ffi::c_void);
+
         let stdin = io::stdin();
         let mut stdout = io::stdout();
 
@@ -20,7 +39,7 @@ fn repl_loop(matches: &ArgMatches) {
         let mut module = LLVMModuleCreateWithNameInContext(c_str!("repl"), context);
         let builder = LLVMCreateBuilderInContext(context);
         let mut codegen_visitor = LlvmCodeGenVisitor::new(module, builder);
-        codegen_visitor.add_builtin_fns();
+        // codegen_visitor.add_builtin_fns();
 
         LLVMLinkInMCJIT();
         LLVM_InitializeNativeTarget();
@@ -35,6 +54,26 @@ fn repl_loop(matches: &ArgMatches) {
         LLVMSetModuleDataLayout(module, target_data_layout);
 
         let mut symbol_table = SymbolTable::new();
+
+        // codegen std.hoot
+        let mut std_error_reporter = ErrorReporter::new();
+        let std_hoot = include_str!("../../owlc-passes/std.hoot");
+        let std_source_file = SourceFile::new("std.hoot", std_hoot);
+        let mut std_lexer = Lexer::with_source_file(&std_source_file, &mut std_error_reporter);
+        let mut parser_error_reporter = ErrorReporter::new();
+        let mut parser = Parser::new(&mut std_lexer, &mut parser_error_reporter);
+        let std_ast = parser.parse_compilation_unit();
+        let mut resolver_visitor = ResolverVisitor::new(&mut std_error_reporter);
+        resolver_visitor.visit_compilation_unit(&std_ast).unwrap();
+        symbol_table = resolver_visitor.symbols;
+
+        // merge error reporter
+        std_error_reporter.merge_from(&mut parser_error_reporter);
+        if std_error_reporter.has_errors() {
+            panic!("Errors in standard library. Aborting.");
+        } else {
+            codegen_visitor.visit_compilation_unit(&std_ast);
+        }
 
         loop {
             let mut input = String::new();
@@ -52,8 +91,9 @@ fn repl_loop(matches: &ArgMatches) {
 
                     let mut error_reporter = ErrorReporter::new();
                     let mut lexer_error_reporter = ErrorReporter::new();
-                    let source_file = SourceFile::new("<repl>",input.as_str());
-                    let mut lexer = Lexer::with_source_file(&source_file, &mut lexer_error_reporter);
+                    let source_file = SourceFile::new("<repl>", input.as_str());
+                    let mut lexer =
+                        Lexer::with_source_file(&source_file, &mut lexer_error_reporter);
 
                     let ast = {
                         let mut parser = Parser::new(&mut lexer, &mut error_reporter);
@@ -126,34 +166,11 @@ fn repl_loop(matches: &ArgMatches) {
 /// This method panics if `matches.value_of("input")` is `None`.
 /// This method panics if the path does not exist. // TODO
 fn compile_file(matches: ArgMatches) {
-    let path = matches.value_of("input").unwrap();
-    let file_str = fs::read_to_string(path).unwrap();
-    let source_file = SourceFile::new(path, file_str.as_str());
-
-    let mut error_reporter = ErrorReporter::new();
-    let mut lexer_error_reporter = ErrorReporter::new();
-    let mut lexer = Lexer::with_source_file(&source_file, &mut lexer_error_reporter);
-
-    let ast = {
-        let mut parser = Parser::new(&mut lexer, &mut error_reporter);
-        let compilation_unit = parser.parse_compilation_unit();
-
-        let mut resolver_visitor = ResolverVisitor::new(&mut error_reporter);
-
-        resolver_visitor
-            .visit_compilation_unit(&compilation_unit)
-            .unwrap();
-
-        compilation_unit
-    };
-    error_reporter.merge_from(&mut lexer_error_reporter);
-
-    if error_reporter.has_errors() {
-        print!("{}", error_reporter);
-        return; // do not codegen if error
-    }
-
     unsafe {
+        let path = matches.value_of("input").unwrap();
+        let file_str = fs::read_to_string(path).unwrap();
+        let source_file = SourceFile::new(path, file_str.as_str());
+
         let context = LLVMGetGlobalContext();
         let module = LLVMModuleCreateWithNameInContext(c_str!(path), context);
         let builder = LLVMCreateBuilderInContext(context);
@@ -162,7 +179,51 @@ fn compile_file(matches: ArgMatches) {
         LLVMSetTarget(module, target_triple);
 
         let mut codegen_visitor = LlvmCodeGenVisitor::new(module, builder);
-        codegen_visitor.add_builtin_fns();
+        let mut symbol_table;
+
+        // codegen std.hoot
+        let mut std_error_reporter = ErrorReporter::new();
+        let std_hoot = include_str!("../../owlc-passes/std.hoot");
+        let std_source_file = SourceFile::new("std.hoot", std_hoot);
+        let mut std_lexer = Lexer::with_source_file(&std_source_file, &mut std_error_reporter);
+        let mut parser_error_reporter = ErrorReporter::new();
+        let mut parser = Parser::new(&mut std_lexer, &mut parser_error_reporter);
+        let std_ast = parser.parse_compilation_unit();
+        let mut resolver_visitor = ResolverVisitor::new(&mut std_error_reporter);
+        resolver_visitor.visit_compilation_unit(&std_ast).unwrap();
+        symbol_table = resolver_visitor.symbols;
+
+        // merge error reporter
+        std_error_reporter.merge_from(&mut parser_error_reporter);
+        if std_error_reporter.has_errors() {
+            panic!("Errors in standard library. Aborting.");
+        } else {
+            codegen_visitor.visit_compilation_unit(&std_ast);
+        }
+
+        let mut error_reporter = ErrorReporter::new();
+        let mut lexer_error_reporter = ErrorReporter::new();
+        let mut lexer = Lexer::with_source_file(&source_file, &mut lexer_error_reporter);
+
+        let ast = {
+            let mut parser = Parser::new(&mut lexer, &mut error_reporter);
+            let compilation_unit = parser.parse_compilation_unit();
+
+            let mut resolver_visitor = ResolverVisitor::new(&mut error_reporter);
+            resolver_visitor.symbols = symbol_table;
+            resolver_visitor
+                .visit_compilation_unit(&compilation_unit)
+                .unwrap();
+
+            compilation_unit
+        };
+        error_reporter.merge_from(&mut lexer_error_reporter);
+
+        if error_reporter.has_errors() {
+            print!("{}", error_reporter);
+            return; // do not codegen if error
+        }
+
         match codegen_visitor.visit_compilation_unit(&ast) {
             Ok(_) => {}
             Err(err) => {
