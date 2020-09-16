@@ -1,5 +1,5 @@
 use crate::ast::expressions::{Expr, ExprKind};
-use crate::ast::statements::{CompilationUnit, FnProto, Stmt, StmtKind};
+use crate::ast::statements::{Block, CompilationUnit, FnProto, Stmt, StmtKind};
 use owllang_lexer::TokenKind;
 
 pub trait AstVisitor {
@@ -28,7 +28,7 @@ pub trait AstVisitor {
     /// This method should not be overridden unless custom behavior is needed.
     fn visit_stmt(&mut self, stmt: &Stmt) {
         match &stmt.kind {
-            StmtKind::Block { stmts } => self.visit_block_stmt(stmts),
+            StmtKind::Block(block) => self.visit_block(block),
             StmtKind::Fn { proto, body } => self.visit_fn_stmt(proto, body),
             StmtKind::While => self.visit_while_stmt(),
             StmtKind::For => self.visit_for_stmt(),
@@ -48,20 +48,17 @@ pub trait AstVisitor {
     }
 
     fn visit_fn_proto(&mut self, _iden: &String, _args: &Vec<String>) {}
-    fn visit_block_stmt(&mut self, stmts: &Vec<Stmt>) {
-        for stmt in stmts {
+    fn visit_block(&mut self, block: &Block) {
+        for stmt in &block.stmts {
             self.visit_stmt(stmt);
         }
     }
     /// # Panics
     /// This method should panic if param `body.kind` is not a `StmtKind::Block` variant.
-    fn visit_fn_stmt(&mut self, proto: &FnProto, body: &Option<Box<Stmt>>) {
+    fn visit_fn_stmt(&mut self, proto: &FnProto, body: &Option<Block>) {
         self.visit_fn_proto(&proto.iden, &proto.args);
         match body {
-            Some(b) => match &b.kind {
-                StmtKind::Block { stmts } => self.visit_block_stmt(stmts),
-                _ => unreachable!(),
-            },
+            Some(block) => self.visit_block(block),
             None => {}
         }
     }

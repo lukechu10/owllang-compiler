@@ -13,7 +13,7 @@ pub struct LlvmCodeGenVisitor {
     pub module: LLVMModuleRef,
     pub builder: LLVMBuilderRef,
 
-    /// Seperate builder for building `alloca` instructions in `entry` basic block.
+    /// Separate builder for building `alloca` instructions in `entry` basic block.
     alloca_builder: LLVMBuilderRef,
 
     value_stack: Vec<LLVMValueRef>,
@@ -87,10 +87,10 @@ impl LlvmCodeGenVisitor {
                         args: Vec::new(),
                     };
                     ANON_FN_COUNTER += 1;
-                    let body = Stmt::new(StmtKind::Block {
+                    let body = Block {
                         stmts: vec![ret_stmt],
-                    });
-                    self.visit_fn_stmt(&proto, &Some(Box::new(body)));
+                    };
+                    self.visit_fn_stmt(&proto, &Some(body));
                 }
             }
             _ => unreachable!(),
@@ -282,7 +282,7 @@ impl AstVisitor for LlvmCodeGenVisitor {
         }
     }
 
-    fn visit_fn_stmt(&mut self, proto: &FnProto, body: &Option<Box<Stmt>>) {
+    fn visit_fn_stmt(&mut self, proto: &FnProto, body: &Option<Block>) {
         unsafe {
             self.named_values.clear(); // clear symbols from previous function
 
@@ -306,10 +306,7 @@ impl AstVisitor for LlvmCodeGenVisitor {
                     }
 
                     // codegen function body
-                    match &body.kind {
-                        StmtKind::Block { stmts } => self.visit_block_stmt(stmts),
-                        _ => unreachable!(),
-                    }
+                    self.visit_block(body);
 
                     // unset self.current_function
                     self.current_function = None;

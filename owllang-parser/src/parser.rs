@@ -140,7 +140,7 @@ impl<'a> Parser<'a> {
             }
             TokenKind::PuncOpenBrace => {
                 let block = self.parse_block_statement();
-                block
+                Stmt::new(StmtKind::Block(block))
             }
             _ => {
                 // try to parse expression statement
@@ -327,7 +327,7 @@ impl<'a> Parser<'a> {
         let proto = self.parse_fn_prototype();
 
         if !is_extern {
-            let body = Box::new(self.parse_block_statement());
+            let body = self.parse_block_statement();
             Stmt::new(StmtKind::Fn {
                 proto,
                 body: Some(body),
@@ -338,7 +338,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_block_statement(&mut self) -> Stmt {
+    fn parse_block_statement(&mut self) -> Block {
         self.expect_and_eat_tok(TokenKind::PuncOpenBrace);
         let mut stmts: Vec<Stmt> = Vec::new();
         loop {
@@ -353,6 +353,6 @@ impl<'a> Parser<'a> {
             stmts.push(statement);
         }
 
-        Stmt::new(StmtKind::Block { stmts })
+        Block { stmts }
     }
 }

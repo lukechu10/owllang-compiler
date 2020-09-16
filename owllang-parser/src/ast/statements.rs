@@ -21,24 +21,47 @@ impl CompilationUnit {
     }
 }
 
+/// Represents a block. e.g. `{...}`. A `Block` creates a new lexical scope. Variables declared inside the `Block` are not visible outside the `Block`.
+/// # Grammar
+/// ```ebnf
+/// block = "{", statements, "}";
+/// ```
+#[derive(Debug)]
+pub struct Block {
+    /// The statements inside the `Block`.
+    pub stmts: Vec<Stmt>,
+}
+
+/// Represents a function prototype (not the function body). e.g. `fn f(x)`.
+/// # Grammar
+/// ```ebnf
+/// fn proto param list = identifier, { ",", identifier };
+/// fn proto = "fn", identifier, "(", fn proto param list, ")";
+/// fn proto extern = "extern fn", identifier, "(", fn proto param list, ")";
+/// ```
 #[derive(Debug)]
 pub struct FnProto {
+    /// The name of the arguments as declared in the function prototype.
     pub args: Vec<String>,
+    /// The name of the function.
     pub iden: String,
 }
 
 #[derive(Debug)]
 pub enum StmtKind {
-    /// Represents code delimited by curly brackets '{' and '}'.
-    Block {
-        stmts: Vec<Stmt>,
-    },
-    /// Represents a function declaration / definition.
+    /// Wrapper around `Block`.
+    Block(Block),
+    /// Represents a function declaration (with definition if not `extern`). e.g. `fn f(x) { return 3; }`
     /// Field `body.kind` should always be variant `StmtKind::Block`.
     /// If field `body` is `None`, function is an extern function.
+    /// # Grammar
+    /// ```ebnf
+    /// fn = ( fn proto, block ) | (fn proto extern, ";" );
+    /// ```
     Fn {
         proto: FnProto,
-        body: Option<Box<Stmt>>,
+        /// Field should be `None` if function is an `extern fn`.
+        body: Option<Block>,
     },
     While,
     For,

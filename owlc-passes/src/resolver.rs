@@ -224,14 +224,14 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
 
     fn visit_stmt(&mut self, stmt: &Stmt) {
         match &stmt.kind {
-            StmtKind::Block { stmts } => {
+            StmtKind::Block(block) => {
                 // create empty Scope::Block
                 let block_scope = Scope::Block(Vec::new());
                 self.symbols.push_scope(block_scope);
 
                 // visit statements
-                for statement in stmts {
-                    self.visit_stmt(statement);
+                for stmt in &block.stmts {
+                    self.visit_stmt(stmt);
                 }
             }
             StmtKind::Fn { proto, body } => self.visit_fn_stmt(proto, body),
@@ -255,7 +255,7 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
         }
     }
 
-    fn visit_fn_stmt(&mut self, proto: &FnProto, body: &Option<Box<Stmt>>) {
+    fn visit_fn_stmt(&mut self, proto: &FnProto, body: &Option<Block>) {
         // create new scope with function declaration.
         // This scope is pushed onto the scope_stack before the block scope to prevent it from being popped after exiting the function.
         let func_symbol = Symbol::Fn {
@@ -266,7 +266,8 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
         self.symbols.push_scope(let_scope);
 
         // create new Scope::Block with function args.
-        let symbols: Vec<Symbol> = proto.args
+        let symbols: Vec<Symbol> = proto
+            .args
             .iter()
             .map(|arg| Symbol::Let { ident: arg.clone() })
             .collect();
@@ -278,15 +279,11 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
         // do not visit block as that will create a new block scope.
         match body {
             Some(body) => {
-                match &body.kind {
-                    StmtKind::Block { stmts } => {
-                        for stmt in stmts {
-                            self.visit_stmt(&stmt);
-                        }
-                    }
-                    _ => unreachable!("Function body must have kind StmtKind::Block."),
+                for stmt in &body.stmts {
+                    self.visit_stmt(stmt);
                 }
             }
+
             None => {}
         }
 

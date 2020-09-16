@@ -18,6 +18,6 @@ fn can_parse_function() {
     assert!(!error_reporter.has_errors());
     assert_eq!(
         format!("{:?}", ast),
-        "CompilationUnit { entry_file_name: \"entry\", functions: [Stmt { kind: Fn { proto: FnProto { args: [], iden: \"f\" }, body: Some(Stmt { kind: Block { stmts: [Stmt { kind: Return { value: Expr { kind: Literal(0) } } }] } }) } }] }"
+        "CompilationUnit { entry_file_name: \"entry\", functions: [Stmt { kind: Fn { proto: FnProto { args: [], iden: \"f\" }, body: Some(Block { stmts: [Stmt { kind: Return { value: Expr { kind: Literal(0) } } }] }) } }] }"
     );
 }
