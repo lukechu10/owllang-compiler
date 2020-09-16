@@ -83,7 +83,7 @@ impl LlvmCodeGenVisitor {
                 unsafe {
                     let ret_stmt = Stmt::new(StmtKind::Return { value: expr });
                     let proto = FnProto {
-                        iden: format!("0anonymous_func_{}", ANON_FN_COUNTER), // start with '0' to prevent conflict with user defined functions
+                        iden: format!("0.repl.{}", ANON_FN_COUNTER), // start with '0' to prevent conflict with user defined functions
                         args: Vec::new(),
                     };
                     ANON_FN_COUNTER += 1;

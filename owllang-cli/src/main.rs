@@ -1,3 +1,4 @@
+use ansi_term::{Color, Style};
 use clap::{App, Arg, ArgMatches};
 use llvm_sys::support::*;
 use llvm_sys::{
@@ -37,10 +38,9 @@ fn repl_loop(matches: &ArgMatches) {
         let mut stdout = io::stdout();
 
         let context = LLVMGetGlobalContext();
-        let mut module = LLVMModuleCreateWithNameInContext(c_str!("repl"), context);
+        let mut module = LLVMModuleCreateWithNameInContext(c_str!("<repl>"), context);
         let builder = LLVMCreateBuilderInContext(context);
         let mut codegen_visitor = LlvmCodeGenVisitor::new(module, builder);
-        // codegen_visitor.add_builtin_fns();
 
         LLVMLinkInMCJIT();
         LLVM_InitializeNativeTarget();
@@ -59,7 +59,6 @@ fn repl_loop(matches: &ArgMatches) {
         // codegen std.hoot
         let std_hoot = include_str!("../../owlc-passes/std.hoot");
         let std_source_file = Rc::new(SourceFile::new("std.hoot", std_hoot));
-
         let mut std_error_reporter = ErrorReporter::new(Rc::clone(&std_source_file));
         let mut std_lexer = Lexer::with_source_file(&std_source_file, &mut std_error_reporter);
 
@@ -81,7 +80,7 @@ fn repl_loop(matches: &ArgMatches) {
 
         loop {
             let mut input = String::new();
-            print!("ready> ");
+            print!("{}", Style::default().dimmed().paint("> "));
             stdout.flush().unwrap();
 
             let res = stdin.read_line(&mut input);
@@ -152,7 +151,7 @@ fn repl_loop(matches: &ArgMatches) {
                         LLVMAddModule(engine, module);
                         let mut args: Vec<LLVMGenericValueRef> = Vec::new(); // no arguments
                         let res = LLVMRunFunction(engine, last_func, 0, args.as_mut_ptr());
-                        println!("Evaluated to: {}", LLVMGenericValueToInt(res, true as i32));
+                        println!("{}", Color::Yellow.paint(LLVMGenericValueToInt(res, true as i32).to_string()));
                         LLVMRemoveModule(engine, module, &mut module, error);
                     }
                 }

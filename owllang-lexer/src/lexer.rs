@@ -185,7 +185,7 @@ impl<'a> Iterator for Lexer<'a> {
             }
             _ => {
                 let error = Error {
-                    file_name: "repl".to_string(), // FIXME,
+                    file_name: self.src.name.to_string(),
                     loc: BytePos(self.current_byte_pos).to(BytePos(self.current_byte_pos)),
                     message: format!("Unexpected {} character.", current_char),
                 };

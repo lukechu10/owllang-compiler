@@ -1,5 +1,7 @@
 //! Utilities for reporting errors during compilation.
 
+use ansi_term::Color::*;
+use ansi_term::Style;
 use owlc_span::{SourceFile, Span};
 use std::fmt;
 use std::rc::Rc;
@@ -53,12 +55,13 @@ impl fmt::Display for ErrorReporter {
         for err in &self.errs {
             writeln!(
                 f,
-                "{}({}:{}): {}",
+                "{}: {}({}:{}): {}",
+                Red.bold().paint("error"),
                 // Add 1 to location to provide 1 based index
                 err.file_name,
                 self.src.lookup_line(err.loc.lo).unwrap_or(0) + 1,
                 self.src.lookup_col(err.loc.lo).unwrap_or(0) + 1,
-                err.message
+                Style::default().bold().paint(&err.message)
             )?;
         }
         Ok(())

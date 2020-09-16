@@ -6,7 +6,7 @@ use std::iter::Peekable;
 use std::rc::Rc;
 
 pub struct Parser<'a> {
-    _src: Rc<SourceFile>,
+    src: Rc<SourceFile>,
     lexer: Peekable<&'a mut Lexer<'a>>,
     current_token: Token,
 
@@ -21,7 +21,7 @@ impl<'a> Parser<'a> {
         });
 
         Self {
-            _src: Rc::clone(&lexer.src),
+            src: Rc::clone(&lexer.src),
             lexer: lexer.peekable(),
             current_token: first_token,
             errs: error_reporter,
@@ -31,7 +31,7 @@ impl<'a> Parser<'a> {
     /// Creates a new syntax error at the current token and adds it to the `ErrorReporter`.
     fn emit_err_at_current_tok(&mut self, message: String) {
         let err = Error {
-            file_name: "repl".to_string(),
+            file_name: self.src.name.to_string(),
             message,
             loc: self.current_token.loc,
         };
@@ -119,7 +119,7 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_compilation_unit(&mut self) -> CompilationUnit {
-        let mut compilation_unit = CompilationUnit::new(self._src.name.to_string());
+        let mut compilation_unit = CompilationUnit::new(self.src.name.to_string());
         while self.current_token.kind != TokenKind::EndOfFile {
             let fn_declaration = self.parse_fn_declaration();
             compilation_unit.add_func(fn_declaration);
