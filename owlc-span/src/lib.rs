@@ -37,6 +37,7 @@ impl Span {
 pub type FileName = Rc<str>;
 
 /// Represents 1 `SourceFile`. **NOTE**: A `CompilationUnit` can have multiple `SourceFile`s.
+#[derive(Debug)]
 pub struct SourceFile {
     /// The file name.
     pub name: FileName,
@@ -106,6 +107,6 @@ impl SourceFile {
     pub fn lookup_col(&self, pos: BytePos) -> Option<usize> {
         let line = self.lookup_line(pos)?;
         let line_start = self.newline_pos[line];
-        Some((line_start - pos) as usize)
+        Some((pos - line_start) as usize)
     }
 }

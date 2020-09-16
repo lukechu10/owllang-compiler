@@ -2,6 +2,7 @@ use bencher::{benchmark_group, benchmark_main, Bencher};
 use owllang_lexer::{Lexer, Token};
 use owlc_error::ErrorReporter;
 use owlc_span::SourceFile;
+use std::rc::Rc;
 
 fn lex_square_fn(bench: &mut Bencher) {
     let code = r#"
@@ -10,10 +11,10 @@ fn lex_square_fn(bench: &mut Bencher) {
             return result;
         }
     "#;
-    let source_file = SourceFile::new("<tmp>", code);
+    let source_file = Rc::new(SourceFile::new("<tmp>", code));
 
     bench.iter(|| {
-        let mut errors = ErrorReporter::new();
+        let mut errors = ErrorReporter::new(Rc::clone(&source_file));
         let lexer = Lexer::with_source_file(&source_file, &mut errors);
         let _tokens: Vec<Token> = lexer.collect();
     });
@@ -30,10 +31,10 @@ fn lex_fibonacci_fn(bench: &mut Bencher) {
             }
         }
     "#;
-    let source_file = SourceFile::new("<tmp>", code);
+    let source_file = Rc::new(SourceFile::new("<tmp>", code));
 
     bench.iter(|| {
-        let mut errors = ErrorReporter::new();
+        let mut errors = ErrorReporter::new(Rc::clone(&source_file));
         let lexer = Lexer::with_source_file(&source_file, &mut errors);
         let _tokens: Vec<Token> = lexer.collect();
     });

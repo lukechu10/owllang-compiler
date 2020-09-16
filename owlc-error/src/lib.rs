@@ -1,7 +1,8 @@
 //! Utilities for reporting errors during compilation.
 
-use owlc_span::Span;
+use owlc_span::{SourceFile, Span};
 use std::fmt;
+use std::rc::Rc;
 
 /// Represents a compile error.
 #[derive(Debug)]
@@ -14,28 +15,21 @@ pub struct Error {
     pub loc: Span,
 }
 
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}({}:{}): {}",
-            // Add 1 to location to provide 1 based index
-            self.file_name, self.loc.lo.0 + 1, self.loc.hi.0 + 1, self.message // TODO, compute row and col number
-        )
-    }
-}
-
 /// Handles all errors for a compilation unit.
 /// Use `format!("{}", err_reporter);` to retrieve list of errors.
 pub struct ErrorReporter {
+    src: Rc<SourceFile>,
     /// A list of reported errors
     errs: Vec<Error>,
 }
 
 impl ErrorReporter {
     /// Creates an empty `ErrorReporter` without any errors.
-    pub fn new() -> Self {
-        Self { errs: Vec::new() }
+    pub fn new(src: Rc<SourceFile>) -> Self {
+        Self {
+            src,
+            errs: Vec::new(),
+        }
     }
 
     /// Add an error to the `ErrorReporter`.
@@ -57,7 +51,15 @@ impl ErrorReporter {
 impl fmt::Display for ErrorReporter {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for err in &self.errs {
-            writeln!(f, "{}", err)?;
+            writeln!(
+                f,
+                "{}({}:{}): {}",
+                // Add 1 to location to provide 1 based index
+                err.file_name,
+                self.src.lookup_line(err.loc.lo).unwrap_or(0) + 1,
+                self.src.lookup_col(err.loc.lo).unwrap_or(0) + 1,
+                err.message
+            )?;
         }
         Ok(())
     }

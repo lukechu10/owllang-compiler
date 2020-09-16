@@ -3,9 +3,10 @@ use owlc_error::{Error, ErrorReporter};
 use owlc_span::{BytePos, SourceFile};
 use owllang_lexer::{Lexer, OpPrecedence, Token, TokenKind};
 use std::iter::Peekable;
+use std::rc::Rc;
 
 pub struct Parser<'a> {
-    _src: &'a SourceFile,
+    _src: Rc<SourceFile>,
     lexer: Peekable<&'a mut Lexer<'a>>,
     current_token: Token,
 
@@ -20,7 +21,7 @@ impl<'a> Parser<'a> {
         });
 
         Self {
-            _src: lexer.src,
+            _src: Rc::clone(&lexer.src),
             lexer: lexer.peekable(),
             current_token: first_token,
             errs: error_reporter,

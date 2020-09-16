@@ -2,13 +2,14 @@ use crate::{Token, TokenKind};
 use owlc_error::{Error, ErrorReporter};
 use owlc_span::{BytePos, SourceFile};
 use std::iter::{Iterator, Peekable};
+use std::rc::Rc;
 use std::str::CharIndices;
 
 pub struct Lexer<'a> {
     /// The string to read from.
-    pub src: &'a SourceFile,
+    pub src: Rc<SourceFile>,
     /// Iterator over all the characters in `input`.
-    chars_indices: Peekable<CharIndices<'a>>,
+    char_indices: Peekable<CharIndices<'a>>,
 
     /// The byte pos of the current char being read. Should be updated when `self.chars_indices.next()` is called.
     current_byte_pos: u32,
@@ -18,13 +19,12 @@ pub struct Lexer<'a> {
 
 impl<'a> Lexer<'a> {
     pub fn with_source_file(
-        source_file: &'a SourceFile,
+        source_file: &'a Rc<SourceFile>,
         error_reporter: &'a mut ErrorReporter,
     ) -> Self {
-        let chars_indices = source_file.src.char_indices().peekable();
         Lexer {
-            src: source_file,
-            chars_indices,
+            src: Rc::clone(source_file),
+            char_indices: source_file.src.char_indices().peekable(),
             current_byte_pos: 0,
             errors: error_reporter,
         }
@@ -48,7 +48,7 @@ impl<'a> Lexer<'a> {
 
     /// Util function to read next char.
     fn next_char(&mut self) -> Option<char> {
-        match self.chars_indices.next() {
+        match self.char_indices.next() {
             Some(x) => {
                 self.current_byte_pos = x.0 as u32;
                 Some(x.1)
@@ -59,7 +59,7 @@ impl<'a> Lexer<'a> {
 
     /// Utility function to peek next char without consuming it.
     fn peek_char(&mut self) -> Option<char> {
-        match self.chars_indices.peek() {
+        match self.char_indices.peek() {
             Some(x) => Some(x.1),
             None => None,
         }
