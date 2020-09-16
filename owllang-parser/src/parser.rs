@@ -98,13 +98,13 @@ impl<'a> Parser<'a> {
                 let func = self.parse_fn_declaration();
                 func
             }
-            TokenKind::KeywordLet => {
-                let let_statement = self.parse_let_statement();
-                if self.current_token.kind == TokenKind::PuncSemi {
-                    self.expect_and_eat_tok(TokenKind::PuncSemi);
-                }
-                let_statement
-            }
+            // TokenKind::KeywordLet => {
+            //     let let_statement = self.parse_let_statement();
+            //     if self.current_token.kind == TokenKind::PuncSemi {
+            //         self.expect_and_eat_tok(TokenKind::PuncSemi);
+            //     }
+            //     let_statement
+            // }
             _ => {
                 // try to parse expression statement
                 let expr = self.parse_expression();
@@ -119,7 +119,7 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_compilation_unit(&mut self) -> CompilationUnit {
-        let mut compilation_unit = CompilationUnit::new("entry".to_string());
+        let mut compilation_unit = CompilationUnit::new(self._src.name.to_string());
         while self.current_token.kind != TokenKind::EndOfFile {
             let fn_declaration = self.parse_fn_declaration();
             compilation_unit.add_func(fn_declaration);

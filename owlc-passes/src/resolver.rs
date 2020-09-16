@@ -233,6 +233,8 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
                 for stmt in &block.stmts {
                     self.visit_stmt(stmt);
                 }
+
+                self.symbols.pop_until_block();
             }
             StmtKind::Fn { proto, body } => self.visit_fn_stmt(proto, body),
             StmtKind::While => {}

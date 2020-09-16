@@ -316,8 +316,23 @@ impl AstVisitor for LlvmCodeGenVisitor {
         }
     }
 
-    fn visit_let_stmt(&mut self, _iden: &String, _initializer: &Expr) {
-        unimplemented!()
+    fn visit_let_stmt(&mut self, ident: &String, initializer: &Expr) {
+        assert!(self.current_function.is_some());
+
+        if self.named_values.contains_key(ident) {
+            panic!("Variable {} already exists.", ident);
+        }
+
+        unsafe {
+            let alloca_ptr = self.build_entry_bb_alloca(ident);
+            // codegen initializer expr
+            self.visit_expr(initializer);
+            // build load
+            LLVMBuildStore(self.builder, self.value_stack.pop().unwrap(), alloca_ptr);
+
+            // add variable to named_values
+            self.named_values.insert(ident.clone(), alloca_ptr);
+        }
     }
 
     fn visit_return_stmt(&mut self, value: &Expr) {

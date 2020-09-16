@@ -219,6 +219,11 @@ fn compile_file(matches: ArgMatches) {
 
             compilation_unit
         };
+
+        if matches.is_present("show-ast") {
+            println!("{:#?}", ast);
+        }
+
         error_reporter.merge_from(&mut lexer_error_reporter);
 
         if error_reporter.has_errors() {
@@ -227,6 +232,12 @@ fn compile_file(matches: ArgMatches) {
         }
 
         codegen_visitor.visit_compilation_unit(&ast);
+
+        LLVMVerifyModule(
+            module,
+            LLVMVerifierFailureAction::LLVMPrintMessageAction,
+            0 as *mut *mut i8,
+        );
 
         // optimization passes
         let pass_manager = LLVMCreatePassManager();

@@ -1,4 +1,7 @@
 fn main() {
-    println(1);
+    {
+        let input = read_num();
+        println(input);
+    }
     return 0;
 }
