@@ -220,19 +220,16 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
     fn visit_stmt(&mut self, stmt: &Stmt) {
         match &stmt.kind {
             StmtKind::Block(block) => {
-                // create empty Scope::Block
-                let block_scope = Scope::Block(Vec::new());
-                self.symbols.push_scope(block_scope);
-
-                // visit statements
-                for stmt in &block.stmts {
-                    self.visit_stmt(stmt);
-                }
-
-                self.symbols.pop_until_block();
+                self.visit_block(block);
             }
             StmtKind::Fn { proto, body } => self.visit_fn_stmt(proto, body),
-            StmtKind::While => {}
+            StmtKind::While {
+                condition,
+                body,
+            } => {
+                self.visit_expr(condition);
+                self.visit_block(body);
+            }
             StmtKind::For => {}
             StmtKind::Let {
                 iden,
@@ -285,5 +282,18 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
         }
 
         self.symbols.pop_until_block(); // remove all symbols created inside function and block scope itself. Does not remove symbol of function.
+    }
+
+    fn visit_block(&mut self, block: &Block) {
+        // create empty Scope::Block
+        let block_scope = Scope::Block(Vec::new());
+        self.symbols.push_scope(block_scope);
+
+        // visit statements
+        for stmt in &block.stmts {
+            self.visit_stmt(stmt);
+        }
+
+        self.symbols.pop_until_block();
     }
 }

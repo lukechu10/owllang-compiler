@@ -1,3 +1,5 @@
+//! Parsing logic. Transforms `Token`s into abstract syntax tree nodes.
+
 use crate::ast::{expressions::*, statements::*};
 use owlc_error::{Error, ErrorReporter};
 use owlc_span::{BytePos, SourceFile};
@@ -135,6 +137,10 @@ impl<'a> Parser<'a> {
                 let let_statement = self.parse_let_statement();
                 self.expect_and_eat_tok(TokenKind::PuncSemi);
                 let_statement
+            }
+            TokenKind::KeywordWhile => {
+                let while_stmt = self.parse_while_stmt();
+                while_stmt
             }
             TokenKind::PuncOpenBrace => {
                 let block = self.parse_block_statement();
@@ -352,5 +358,13 @@ impl<'a> Parser<'a> {
         }
 
         Block { stmts }
+    }
+
+    fn parse_while_stmt(&mut self) -> Stmt {
+        self.expect_and_eat_tok(TokenKind::KeywordWhile);
+        let condition = self.parse_expression();
+        let body = self.parse_block_statement();
+
+        Stmt::new(StmtKind::While { condition, body })
     }
 }

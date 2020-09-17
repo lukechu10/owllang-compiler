@@ -1,6 +1,7 @@
 use owllang_lexer::TokenKind;
 use serde::{Deserialize, Serialize};
 
+/// Internal representation for [`Expr`](struct.Expr.html).
 #[derive(Serialize, Deserialize, Debug)]
 pub enum ExprKind {
     /// Represents an int literal (internally represented using `i64`).
@@ -18,7 +19,12 @@ pub enum ExprKind {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-/// Represents an expression.
+/// Represents an expression. Expressions may or may not have a side effect.
+/// # Example
+/// ```owllang
+/// 1 + 1 // no side effect here
+/// println(3) // side effect (printing to stdout)
+/// ```
 pub struct Expr {
     #[serde(flatten)]
     pub kind: ExprKind,

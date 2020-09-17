@@ -12,6 +12,7 @@ use std::collections::HashMap;
 pub struct LlvmCodeGenVisitor {
     pub module: LLVMModuleRef,
     pub builder: LLVMBuilderRef,
+    pub context: LLVMContextRef,
 
     /// Separate builder for building `alloca` instructions in `entry` basic block.
     alloca_builder: LLVMBuilderRef,
@@ -27,6 +28,7 @@ impl LlvmCodeGenVisitor {
         Self {
             module,
             builder,
+            context: unsafe { LLVMGetGlobalContext() },
             alloca_builder: unsafe { LLVMCreateBuilderInContext(LLVMGetGlobalContext()) },
             value_stack: Vec::new(),
             named_values: HashMap::new(),
@@ -313,6 +315,62 @@ impl AstVisitor for LlvmCodeGenVisitor {
                 }
                 None => {}
             }
+        }
+    }
+
+    fn visit_while_stmt(&mut self, condition: &Expr, body: &Block) {
+        unsafe {
+            // codegen condition
+            self.visit_expr(condition);
+            let condition_llvm = self.value_stack.pop().unwrap();
+            // cast condition to i1
+            let condition_llvm = LLVMBuildIntCast(
+                self.builder,
+                condition_llvm,
+                LLVMInt1Type(),
+                c_str!("bool_tmp"),
+            );
+
+            let while_bb =
+                LLVMAppendBasicBlock(self.current_function.unwrap(), c_str!("while.body"));
+            let after_bb =
+                LLVMAppendBasicBlock(self.current_function.unwrap(), c_str!("while.after"));
+
+            // initial branch instruction
+            LLVMBuildCondBr(self.builder, condition_llvm, while_bb, after_bb);
+
+            // while body codegen
+            LLVMPositionBuilderAtEnd(self.builder, while_bb);
+
+            self.visit_block(body);
+
+            // codegen while_bb terminator. Note: This instruction is not necessarily in the while.body block.
+            // Example
+            // // before
+            // while outer {
+            //     // while_outer.body
+            //     while inner {
+            //         // while_inner.body
+            //     }
+            //     // while_inner.after (not while_outer.body)
+            // }
+            // // while_outer.after
+            if LLVMGetBasicBlockTerminator(LLVMGetLastBasicBlock(self.current_function.unwrap())).is_null() {
+                // codegen condition after body in while_bb
+                self.visit_expr(condition);
+                let condition_llvm = self.value_stack.pop().unwrap();
+                // cast condition to i1
+                let condition_llvm = LLVMBuildIntCast(
+                    self.builder,
+                    condition_llvm,
+                    LLVMInt1Type(),
+                    c_str!("bool_tmp"),
+                );
+
+                LLVMBuildCondBr(self.builder, condition_llvm, while_bb, after_bb);
+            }
+
+            LLVMPositionBuilderAtEnd(self.builder, after_bb);
         }
     }
 

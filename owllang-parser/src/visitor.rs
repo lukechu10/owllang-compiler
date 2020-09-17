@@ -1,3 +1,5 @@
+//! Abstract syntax tree walking tools.
+
 use crate::ast::expressions::{Expr, ExprKind};
 use crate::ast::statements::{Block, CompilationUnit, FnProto, Stmt, StmtKind};
 use owllang_lexer::TokenKind;
@@ -30,7 +32,10 @@ pub trait AstVisitor {
         match &stmt.kind {
             StmtKind::Block(block) => self.visit_block(block),
             StmtKind::Fn { proto, body } => self.visit_fn_stmt(proto, body),
-            StmtKind::While => self.visit_while_stmt(),
+            StmtKind::While {
+                condition,
+                body,
+            } => self.visit_while_stmt(condition, body),
             StmtKind::For => self.visit_for_stmt(),
             StmtKind::Let { iden, initializer } => self.visit_let_stmt(iden, initializer),
             StmtKind::Return { value } => self.visit_return_stmt(value),
@@ -63,8 +68,9 @@ pub trait AstVisitor {
         }
     }
 
-    fn visit_while_stmt(&mut self) {
-        unimplemented!();
+    fn visit_while_stmt(&mut self, condition: &Expr, body: &Block) {
+        self.visit_expr(condition);
+        self.visit_block(body);
     }
     fn visit_for_stmt(&mut self) {
         unimplemented!();

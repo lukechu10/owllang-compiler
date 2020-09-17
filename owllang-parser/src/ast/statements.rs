@@ -1,6 +1,9 @@
 use crate::ast::expressions::Expr;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
+/// Represents a collection of functions that are included in the compilation unit.
+/// # Note
+/// Future implementations might change this into a list of files included for compilation.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CompilationUnit {
     /// The name of the entry point file.
@@ -10,6 +13,7 @@ pub struct CompilationUnit {
     pub functions: Vec<Stmt>,
 }
 impl CompilationUnit {
+    /// Create a new compilation unit for the file `entry_file_name` without any functions.
     pub fn new(entry_file_name: String) -> Self {
         Self {
             entry_file_name,
@@ -17,6 +21,7 @@ impl CompilationUnit {
         }
     }
 
+    /// Adds a function to the compilation unit.
     pub fn add_func(&mut self, func: Stmt) {
         self.functions.push(func);
     }
@@ -49,6 +54,7 @@ pub struct FnProto {
     pub iden: String,
 }
 
+/// Internal representation for [`Stmt`](struct.Stmt.html).
 #[derive(Serialize, Deserialize, Debug)]
 pub enum StmtKind {
     /// Wrapper around `Block`.
@@ -66,7 +72,12 @@ pub enum StmtKind {
         /// Field should be `None` if function is an `extern fn`.
         body: Option<Block>,
     },
-    While,
+    While {
+        /// `while` condition.
+        condition: Expr,
+        /// Content of the while loop.
+        body: Block,
+    },
     For,
     Let {
         iden: String,
@@ -83,6 +94,9 @@ pub enum StmtKind {
     },
 }
 
+/// Represents a statement. Statements do not have any value unlike [`Expr`](../expressions/struct.Expr.html). Statements usually have side effects.
+/// # TODO
+/// Eventually change all variants of this type to [`Expr`](../expressions/struct.Expr.html) to make the language more functional.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Stmt {
     #[serde(flatten)]
