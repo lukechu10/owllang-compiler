@@ -1,7 +1,7 @@
 use owlc_error::ErrorReporter;
+use owlc_span::SourceFile;
 use owllang_lexer::Lexer;
 use owllang_parser::parser::Parser;
-use owlc_span::SourceFile;
 use std::rc::Rc;
 
 #[test]
@@ -19,6 +19,5 @@ fn can_parse_function() {
     assert!(!error_reporter.has_errors());
     assert_eq!(
         format!("{:?}", ast),
-        "CompilationUnit { entry_file_name: \"entry\", functions: [Stmt { kind: Fn { proto: FnProto { args: [], iden: \"f\" }, body: Some(Block { stmts: [Stmt { kind: Return { value: Expr { kind: Literal(0) } } }] }) } }] }"
-    );
+        "CompilationUnit { entry_file_name: \"<tmp>\", functions: [Stmt { kind: Fn { proto: FnProto { args: [], iden: \"f\" }, body: Some(Block { stmts: [Stmt { kind: Return { value: Expr { kind: Literal(0) } } }] }) } }] }"    );
 }
