@@ -16,3 +16,5 @@ owlc-span = {path = "../owlc-span"}
 owllang-lexer = {path = "../owllang-lexer"}
 owllang-llvm-codegen = {path = "../owllang-llvm-codegen"}
 owllang-parser = {path = "../owllang-parser"}
+serde = {version = "1.0", features = ["derive"]}
+serde_yaml = "0.8"

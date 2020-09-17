@@ -13,6 +13,7 @@ use owllang_llvm_codegen::{c_str, LlvmCodeGenVisitor};
 use owllang_parser::{ast::statements::StmtKind, parser::Parser, visitor::AstVisitor};
 use std::rc::Rc;
 use std::{fs, io, io::prelude::*};
+use serde_yaml;
 
 #[no_mangle]
 pub extern "C" fn println(num: i64) -> i64 {
@@ -121,7 +122,8 @@ fn repl_loop(matches: &ArgMatches) {
                     }
 
                     if matches.is_present("show-ast") {
-                        println!("{:#?}", ast);
+                        let serialize_res = serde_yaml::to_string(&ast).unwrap();
+                        println!("{}", serialize_res);
                     }
 
                     // True if repl should evaluate input.

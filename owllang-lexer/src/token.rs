@@ -1,5 +1,6 @@
 use owlc_span::Span;
 use std::fmt;
+use serde::{Serialize, Deserialize};
 
 /// Represents a single token.
 #[derive(Debug, Clone, PartialEq)]
@@ -30,7 +31,7 @@ pub enum OpPrecedence {
 }
 
 /// Represents the value of a token.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[repr(u8)]
 pub enum TokenKind {
     // punctuation

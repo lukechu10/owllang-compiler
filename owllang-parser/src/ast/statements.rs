@@ -1,6 +1,7 @@
 use crate::ast::expressions::Expr;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CompilationUnit {
     /// The name of the entry point file.
     pub entry_file_name: String,
@@ -26,7 +27,7 @@ impl CompilationUnit {
 /// ```ebnf
 /// block = "{", statements, "}";
 /// ```
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Block {
     /// The statements inside the `Block`.
     pub stmts: Vec<Stmt>,
@@ -39,15 +40,16 @@ pub struct Block {
 /// fn proto = "fn", identifier, "(", fn proto param list, ")";
 /// fn proto extern = "extern fn", identifier, "(", fn proto param list, ")";
 /// ```
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct FnProto {
     /// The name of the arguments as declared in the function prototype.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub args: Vec<String>,
     /// The name of the function.
     pub iden: String,
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum StmtKind {
     /// Wrapper around `Block`.
     Block(Block),
@@ -59,6 +61,7 @@ pub enum StmtKind {
     /// fn = ( fn proto, block ) | (fn proto extern, ";" );
     /// ```
     Fn {
+        #[serde(flatten)]
         proto: FnProto,
         /// Field should be `None` if function is an `extern fn`.
         body: Option<Block>,
@@ -70,16 +73,19 @@ pub enum StmtKind {
         initializer: Expr,
     },
     Return {
+        #[serde(flatten)]
         value: Expr,
     },
     /// Represents an expression with semi colon (expression with side effect).
     ExprSemi {
+        #[serde(flatten)]
         expr: Expr,
     },
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Stmt {
+    #[serde(flatten)]
     pub kind: StmtKind,
 }
 impl Stmt {

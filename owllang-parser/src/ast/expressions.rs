@@ -1,6 +1,7 @@
 use owllang_lexer::TokenKind;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum ExprKind {
     /// Represents an int literal (internally represented using `i64`).
     Literal(i64),
@@ -16,9 +17,10 @@ pub enum ExprKind {
     },
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 /// Represents an expression.
 pub struct Expr {
+    #[serde(flatten)]
     pub kind: ExprKind,
 }
 impl Expr {
