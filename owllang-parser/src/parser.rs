@@ -88,11 +88,12 @@ impl<'a> Parser<'a> {
 
 impl<'a> Parser<'a> {
     /// User can input both fn definitions and statements / expressions in the repl prompt.
-    pub fn parse_repl_input(&mut self) -> Stmt {
+    pub fn parse_repl_input(&mut self) -> Option<Stmt> {
         match self.current_token.kind {
+            TokenKind::EndOfFile => None,
             TokenKind::KeywordFn | TokenKind::KeywordExtern => {
                 let func = self.parse_fn_declaration();
-                func
+                Some(func)
             }
             // TokenKind::KeywordLet => {
             //     let let_statement = self.parse_let_statement();
@@ -109,7 +110,7 @@ impl<'a> Parser<'a> {
                     self.expect_and_eat_tok(TokenKind::PuncSemi);
                 }
                 let expr_statement = Stmt::new(StmtKind::ExprSemi { expr });
-                expr_statement
+                Some(expr_statement)
             }
         }
     }

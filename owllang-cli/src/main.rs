@@ -11,9 +11,9 @@ use owlc_span::SourceFile;
 use owllang_lexer::Lexer;
 use owllang_llvm_codegen::{c_str, LlvmCodeGenVisitor};
 use owllang_parser::{ast::statements::StmtKind, parser::Parser, visitor::AstVisitor};
+use serde_yaml;
 use std::rc::Rc;
 use std::{fs, io, io::prelude::*};
-use serde_yaml;
 
 #[no_mangle]
 pub extern "C" fn println(num: i64) -> i64 {
@@ -102,6 +102,10 @@ fn repl_loop(matches: &ArgMatches) {
                     let ast = {
                         let mut parser = Parser::new(&mut lexer, &mut error_reporter);
                         let stmt = parser.parse_repl_input();
+                        if let None = stmt {
+                            continue; // empty repl input, prompt again
+                        }
+                        let stmt = stmt.unwrap();
 
                         let mut resolver_visitor = ResolverVisitor::new(&mut error_reporter);
                         // restore previous symbols
@@ -153,7 +157,11 @@ fn repl_loop(matches: &ArgMatches) {
                         LLVMAddModule(engine, module);
                         let mut args: Vec<LLVMGenericValueRef> = Vec::new(); // no arguments
                         let res = LLVMRunFunction(engine, last_func, 0, args.as_mut_ptr());
-                        println!("{}", Color::Yellow.paint(LLVMGenericValueToInt(res, true as i32).to_string()));
+                        println!(
+                            "{}",
+                            Color::Yellow
+                                .paint(LLVMGenericValueToInt(res, true as i32).to_string())
+                        );
                         LLVMRemoveModule(engine, module, &mut module, error);
                     }
                 }
