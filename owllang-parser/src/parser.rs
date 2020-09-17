@@ -30,11 +30,7 @@ impl<'a> Parser<'a> {
 
     /// Creates a new syntax error at the current token and adds it to the `ErrorReporter`.
     fn emit_err_at_current_tok(&mut self, message: String) {
-        let err = Error {
-            file_name: self.src.name.to_string(),
-            message,
-            loc: self.current_token.loc,
-        };
+        let err = Error::new(self.src.name.to_string(), self.current_token.loc, message);
 
         self.errs.report(err);
     }

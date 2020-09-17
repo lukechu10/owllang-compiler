@@ -11,10 +11,30 @@ use std::rc::Rc;
 pub struct Error {
     /// The name of the file the error occurred in.
     pub file_name: String,
-    /// The error message
+    /// The error message.
     pub message: String,
+    /// Optional help message.
+    pub help_hint: Option<String>,
     /// The span data / location of the error.
     pub loc: Span,
+}
+
+impl Error {
+    pub fn new(file_name: String, loc: Span, message: String) -> Self {
+        Self {
+            file_name,
+            loc,
+            message,
+            help_hint: None,
+        }
+    }
+
+    pub fn with_help_hint(self, help_hint: String) -> Self {
+        Self {
+            help_hint: Some(help_hint),
+            ..self
+        }
+    }
 }
 
 /// Handles all errors for a compilation unit.
@@ -63,6 +83,10 @@ impl fmt::Display for ErrorReporter {
                 self.src.lookup_col(err.loc.lo).unwrap_or(0) + 1,
                 Style::default().bold().paint(&err.message)
             )?;
+
+            if let Some(help_hint) = &err.help_hint {
+                writeln!(f, "  {}: {}", Blue.bold().paint("-> help"), help_hint)?;
+            }
         }
         Ok(())
     }

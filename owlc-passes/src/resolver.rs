@@ -149,30 +149,27 @@ impl<'a> ResolverVisitor<'a> {
 impl<'a> AstVisitor for ResolverVisitor<'a> {
     fn visit_expr(&mut self, expr: &Expr) {
         match &expr.kind {
-            ExprKind::Identifier(ident) => {
-                match self.symbols.lookup(ident) {
-                    Some(symbol) => {
-                        match symbol {
-                            Symbol::Fn {
-                                ident: _,
-                                args_count: _,
-                            } => {
-                                self.errors.report(Error {
-                                    file_name: "repl".to_string(), // FIXME
-                                    message: format!("Symbol {} is not a variable.", ident),
-                                    loc: BytePos(0).to(BytePos(0)),
-                                })
-                            }
-                            Symbol::Let { ident: _ } => {}
-                        }
-                    }
-                    None => self.errors.report(Error {
-                        file_name: "repl".to_string(), // FIXME
-                        message: format!("Identifier {} does not exist in current scope.", ident),
-                        loc: BytePos(0).to(BytePos(0)),
-                    }),
-                }
-            }
+            ExprKind::Identifier(ident) => match self.symbols.lookup(ident) {
+                Some(symbol) => match symbol {
+                    Symbol::Fn {
+                        ident: _,
+                        args_count: _,
+                    } => self.errors.report(
+                        Error::new(
+                            "repl".to_string(),
+                            BytePos(0).to(BytePos(0)),
+                            format!("Symbol {} is not a variable.", ident),
+                        )
+                        .with_help_hint(format!("A function exists with the same name. Call this function using '{}()'.", ident)),
+                    ),
+                    Symbol::Let { ident: _ } => {}
+                },
+                None => self.errors.report(Error::new(
+                    "repl".to_string(),
+                    BytePos(0).to(BytePos(0)),
+                    format!("Identifier {} does not exist in current scope.", ident),
+                )),
+            },
             ExprKind::Literal(_) => {}
             ExprKind::FuncCall { callee, args } => {
                 // visit function arguments
@@ -181,34 +178,32 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
                 }
 
                 match self.symbols.lookup(callee) {
-                    Some(symbol) => {
-                        match symbol {
-                            Symbol::Let { ident: _ } => {
-                                self.errors.report(Error {
-                                    file_name: "repl".to_string(), // FIXME
-                                    message: format!("Symbol {} is not a function.", callee),
-                                    loc: BytePos(0).to(BytePos(0)),
-                                });
-                            }
-                            Symbol::Fn {
-                                ident: _,
-                                args_count,
-                            } => {
-                                if args.len() as u32 != *args_count {
-                                    self.errors.report(Error {
-                                        file_name: "repl".to_string(), // FIXME
-                                        message: format!("Function {} expected {} argument(s) but found {} argument(s).", callee, args_count, args.len()),
-                                        loc: BytePos(0).to(BytePos(0))
-                                    });
-                                }
+                    Some(symbol) => match symbol {
+                        Symbol::Let { ident: _ } => {
+                            self.errors.report(Error::new(
+                                "repl".to_string(),
+                                BytePos(0).to(BytePos(0)),
+                                format!("Symbol {} is not a function.", callee),
+                            ));
+                        }
+                        Symbol::Fn {
+                            ident: _,
+                            args_count,
+                        } => {
+                            if args.len() as u32 != *args_count {
+                                self.errors.report(Error::new(
+                                        "repl".to_string(),
+                                        BytePos(0).to(BytePos(0)),
+                                        format!("Function {} expected {} argument(s) but found {} argument(s).", callee, args_count, args.len()),
+                                    ));
                             }
                         }
-                    }
-                    None => self.errors.report(Error {
-                        file_name: "repl".to_string(), // FIXME
-                        message: format!("Function {} does not exist in current scope.", callee),
-                        loc: BytePos(0).to(BytePos(0)),
-                    }),
+                    },
+                    None => self.errors.report(Error::new(
+                        "repl".to_string(),
+                        BytePos(0).to(BytePos(0)),
+                        format!("Function {} does not exist in current scope.", callee),
+                    )),
                 }
             }
             ExprKind::BinaryExpr {
