@@ -75,17 +75,22 @@ impl fmt::Display for ErrorReporter {
         for err in &self.errs {
             writeln!(
                 f,
-                "{}: {}({}:{}): {}",
+                "{}: {}",
                 Red.bold().paint("error"),
-                // Add 1 to location to provide 1 based index
+                Style::default().bold().paint(&err.message)
+            )?;
+            writeln!(
+                f,
+                "{} {}:{}:{}",
+                Blue.paint("   -->"),
                 err.file_name,
+                // Add 1 to location to provide 1 based index
                 self.src.lookup_line(err.loc.lo).unwrap_or(0) + 1,
                 self.src.lookup_col(err.loc.lo).unwrap_or(0) + 1,
-                Style::default().bold().paint(&err.message)
             )?;
 
             if let Some(help_hint) = &err.help_hint {
-                writeln!(f, "  {}: {}", Blue.bold().paint("-> help"), help_hint)?;
+                writeln!(f, "{} {}: {}", Blue.paint("   -->"), Blue.bold().paint("help"), help_hint)?;
             }
         }
         Ok(())

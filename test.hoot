@@ -1,7 +1,10 @@
+fn a() { return 1; }
+
 fn main() {
     {
         let input = read_num();
         println(input);
+        a
     }
     return 0;
 }
