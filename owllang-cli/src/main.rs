@@ -30,12 +30,73 @@ pub extern "C" fn read_num() -> i64 {
     num
 }
 
+/// Returns `true` if the repl input is finished.
+fn repl_input_is_finished(buf: &String) -> bool {
+    let mut paren_count = 0;
+    let mut brace_count = 0;
+
+    for char in buf.chars() {
+        match char {
+            '(' => paren_count += 1,
+            ')' => paren_count -= 1,
+            '{' => brace_count += 1,
+            '}' => brace_count -= 1,
+            _ => {}
+        }
+
+        if paren_count < 0 || brace_count < 0 {
+            return false; // paren_count and brace_count should be >= 0. Otherwise is error.
+        }
+    }
+
+    paren_count == 0 && brace_count == 0
+}
+
+/// Reads a line from the repl input. Automatically detects if input is finished (balanced paren and brace operators) and prompts user for second line if not.
+fn get_repl_input() -> String {
+    let stdin = io::stdin();
+    let mut stdout = io::stdout();
+
+    let mut buf = String::new();
+    // Current indentation level. Incremented when last character is '(' or '{'. Decremented when string contains ')' or '}'.
+    let mut indent: i32 = 0;
+    match stdin.read_line(&mut buf) {
+        Ok(_) => {}
+        Err(err) => {
+            eprintln!("Error while reading input: {}", err);
+        }
+    } // initial input
+
+    while !repl_input_is_finished(&buf) {
+        let mut tmp = String::new();
+
+        print!("{} ", ".".repeat((5 + (4 * indent)) as usize));
+        stdout.flush().unwrap();
+        match stdin.read_line(&mut tmp) {
+            Ok(_) => {}
+            Err(err) => {
+                eprintln!("Error while reading input: {}", err);
+            }
+        }
+
+        if tmp.find(|c| c == '(' || c == '{').is_some() {
+            indent += 1;
+        }
+        if tmp.find(|c| c == ')' || c == '}').is_some() {
+            indent -= std::cmp::max(1, 0); // at least 0
+        }
+
+        buf += tmp.as_str();
+    }
+
+    buf
+}
+
 fn repl_loop(matches: &ArgMatches) {
     unsafe {
         LLVMAddSymbol(c_str!("println"), println as *mut std::ffi::c_void);
         LLVMAddSymbol(c_str!("read_num"), read_num as *mut std::ffi::c_void);
 
-        let stdin = io::stdin();
         let mut stdout = io::stdout();
 
         let context = LLVMGetGlobalContext();
@@ -80,92 +141,81 @@ fn repl_loop(matches: &ArgMatches) {
         }
 
         loop {
-            let mut input = String::new();
             print!("{}", Style::default().dimmed().paint("> "));
             stdout.flush().unwrap();
 
-            let res = stdin.read_line(&mut input);
-            match res {
-                Ok(_) => {
-                    if input == ".quit\n" {
-                        // exit repl
-                        println!("Exiting repl.");
-                        break;
-                    }
+            let input = get_repl_input();
+            if input == ".quit\n" {
+                // exit repl
+                println!("Exiting repl.");
+                break;
+            }
 
-                    let source_file = Rc::new(SourceFile::new("<repl>", input.as_str()));
-                    let mut error_reporter = ErrorReporter::new(Rc::clone(&source_file));
-                    let mut lexer_error_reporter = ErrorReporter::new(Rc::clone(&source_file));
-                    let mut lexer =
-                        Lexer::with_source_file(&source_file, &mut lexer_error_reporter);
+            let source_file = Rc::new(SourceFile::new("<repl>", input.as_str()));
+            let mut error_reporter = ErrorReporter::new(Rc::clone(&source_file));
+            let mut lexer_error_reporter = ErrorReporter::new(Rc::clone(&source_file));
+            let mut lexer = Lexer::with_source_file(&source_file, &mut lexer_error_reporter);
 
-                    let ast = {
-                        let mut parser = Parser::new(&mut lexer, &mut error_reporter);
-                        let stmt = parser.parse_repl_input();
-                        if let None = stmt {
-                            continue; // empty repl input, prompt again
-                        }
-                        let stmt = stmt.unwrap();
-
-                        let mut resolver_visitor = ResolverVisitor::new(&mut error_reporter);
-                        // restore previous symbols
-                        resolver_visitor.symbols = symbol_table;
-
-                        resolver_visitor.visit_stmt(&stmt);
-
-                        // add resolved symbols to symbol_table
-                        symbol_table = resolver_visitor.symbols;
-                        stmt
-                    };
-
-                    error_reporter.merge_from(&mut lexer_error_reporter);
-
-                    if error_reporter.has_errors() {
-                        print!("{}", error_reporter);
-                        continue; // do not evaluate result
-                    }
-
-                    if matches.is_present("show-ast") {
-                        let serialize_res = serde_yaml::to_string(&ast).unwrap();
-                        println!("{}", serialize_res);
-                    }
-
-                    // True if repl should evaluate input.
-                    let evaluate_res = match ast.kind {
-                        StmtKind::ExprSemi { expr: _ } => true,
-                        _ => false,
-                    };
-
-                    codegen_visitor.handle_repl_input(ast);
-
-                    let last_func = LLVMGetLastFunction(module);
-                    LLVMVerifyFunction(
-                        last_func,
-                        LLVMVerifierFailureAction::LLVMPrintMessageAction,
-                    );
-                    // optimization passes
-                    let pm = LLVMCreatePassManager();
-                    LLVMAddPromoteMemoryToRegisterPass(pm);
-                    LLVMRunPassManager(pm, module);
-                    LLVMDisposePassManager(pm);
-
-                    if matches.is_present("dump-llvm") {
-                        LLVMDumpValue(last_func);
-                    }
-
-                    if evaluate_res {
-                        LLVMAddModule(engine, module);
-                        let mut args: Vec<LLVMGenericValueRef> = Vec::new(); // no arguments
-                        let res = LLVMRunFunction(engine, last_func, 0, args.as_mut_ptr());
-                        println!(
-                            "{}",
-                            Color::Yellow
-                                .paint(LLVMGenericValueToInt(res, true as i32).to_string())
-                        );
-                        LLVMRemoveModule(engine, module, &mut module, error);
-                    }
+            let ast = {
+                let mut parser = Parser::new(&mut lexer, &mut error_reporter);
+                let stmt = parser.parse_repl_input();
+                if let None = stmt {
+                    continue; // empty repl input, prompt again
                 }
-                Err(err) => println!("Error: {}", err),
+                let stmt = stmt.unwrap();
+
+                let mut resolver_visitor = ResolverVisitor::new(&mut error_reporter);
+                // restore previous symbols
+                resolver_visitor.symbols = symbol_table;
+
+                resolver_visitor.visit_stmt(&stmt);
+
+                // add resolved symbols to symbol_table
+                symbol_table = resolver_visitor.symbols;
+                stmt
+            };
+
+            error_reporter.merge_from(&mut lexer_error_reporter);
+
+            if error_reporter.has_errors() {
+                print!("{}", error_reporter);
+                continue; // do not evaluate result
+            }
+
+            if matches.is_present("show-ast") {
+                let serialize_res = serde_yaml::to_string(&ast).unwrap();
+                println!("{}", serialize_res);
+            }
+
+            // True if repl should evaluate input.
+            let evaluate_res = match ast.kind {
+                StmtKind::ExprSemi { expr: _ } => true,
+                _ => false,
+            };
+
+            codegen_visitor.handle_repl_input(ast);
+
+            let last_func = LLVMGetLastFunction(module);
+            LLVMVerifyFunction(last_func, LLVMVerifierFailureAction::LLVMPrintMessageAction);
+            // optimization passes
+            let pm = LLVMCreatePassManager();
+            LLVMAddPromoteMemoryToRegisterPass(pm);
+            LLVMRunPassManager(pm, module);
+            LLVMDisposePassManager(pm);
+
+            if matches.is_present("dump-llvm") {
+                LLVMDumpValue(last_func);
+            }
+
+            if evaluate_res {
+                LLVMAddModule(engine, module);
+                let mut args: Vec<LLVMGenericValueRef> = Vec::new(); // no arguments
+                let res = LLVMRunFunction(engine, last_func, 0, args.as_mut_ptr());
+                println!(
+                    "{}",
+                    Color::Yellow.paint(LLVMGenericValueToInt(res, true as i32).to_string())
+                );
+                LLVMRemoveModule(engine, module, &mut module, error);
             }
         }
 
