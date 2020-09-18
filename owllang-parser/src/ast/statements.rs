@@ -79,6 +79,18 @@ pub enum StmtKind {
         body: Block,
     },
     For,
+    /// Represents an if and else statement. The else block is optional.
+    /// # Grammar
+    /// ```ebnf
+    /// if = "if", expression, block, [ else ];
+    /// else = "else", block;
+    /// ```
+    IfElse {
+        if_condition: Expr,
+        if_body: Block,
+        /// Else block is option.
+        else_body: Option<Block>,
+    },
     Let {
         iden: String,
         initializer: Expr,

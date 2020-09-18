@@ -142,6 +142,10 @@ impl<'a> Parser<'a> {
                 let while_stmt = self.parse_while_stmt();
                 while_stmt
             }
+            TokenKind::KeywordIf => {
+                let if_else_stmt = self.parse_if_else_stmt();
+                if_else_stmt
+            }
             TokenKind::PuncOpenBrace => {
                 let block = self.parse_block_statement();
                 Stmt::new(StmtKind::Block(block))
@@ -366,5 +370,25 @@ impl<'a> Parser<'a> {
         let body = self.parse_block_statement();
 
         Stmt::new(StmtKind::While { condition, body })
+    }
+
+    fn parse_if_else_stmt(&mut self) -> Stmt {
+        self.expect_and_eat_tok(TokenKind::KeywordIf);
+        let if_condition = self.parse_expression();
+        let if_body = self.parse_block_statement();
+
+        let else_body = if self.current_token.kind == TokenKind::KeywordElse {
+            self.expect_and_eat_tok(TokenKind::KeywordElse);
+            let else_body = self.parse_block_statement();
+            Some(else_body)
+        } else {
+            None
+        };
+
+        Stmt::new(StmtKind::IfElse {
+            if_condition,
+            if_body,
+            else_body,
+        })
     }
 }

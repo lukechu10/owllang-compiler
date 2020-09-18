@@ -355,7 +355,9 @@ impl AstVisitor for LlvmCodeGenVisitor {
             //     // while_inner.after (not while_outer.body)
             // }
             // // while_outer.after
-            if LLVMGetBasicBlockTerminator(LLVMGetLastBasicBlock(self.current_function.unwrap())).is_null() {
+            if LLVMGetBasicBlockTerminator(LLVMGetLastBasicBlock(self.current_function.unwrap()))
+                .is_null()
+            {
                 // codegen condition after body in while_bb
                 self.visit_expr(condition);
                 let condition_llvm = self.value_stack.pop().unwrap();
@@ -371,6 +373,63 @@ impl AstVisitor for LlvmCodeGenVisitor {
             }
 
             LLVMPositionBuilderAtEnd(self.builder, after_bb);
+        }
+    }
+
+    fn visit_if_else_stmt(
+        &mut self,
+        if_condition: &Expr,
+        if_body: &Block,
+        else_body: &Option<Block>,
+    ) {
+        unsafe {
+            // codegen if_condition
+            self.visit_expr(if_condition);
+            let if_condition_llvm = self.value_stack.pop().unwrap();
+
+            // cast condition to i1
+            let if_condition_llvm = LLVMBuildIntCast(
+                self.builder,
+                if_condition_llvm,
+                LLVMInt1Type(),
+                c_str!("bool_tmp"),
+            );
+
+            let if_then_bb =
+                LLVMAppendBasicBlock(self.current_function.unwrap(), c_str!("if.then"));
+            let if_else_bb =
+                LLVMAppendBasicBlock(self.current_function.unwrap(), c_str!("if.else"));
+            let if_after_bb =
+                LLVMAppendBasicBlock(self.current_function.unwrap(), c_str!("if.after"));
+            // `true` if if_then_bb or if_else_bb does not have a terminator
+            let mut build_after = false;
+
+            // initial branch condition.
+            LLVMBuildCondBr(self.builder, if_condition_llvm, if_then_bb, if_else_bb);
+
+            // build if_then_bb
+            LLVMPositionBuilderAtEnd(self.builder, if_then_bb);
+            self.visit_block(if_body);
+            if LLVMGetBasicBlockTerminator(if_then_bb).is_null() {
+                LLVMBuildBr(self.builder, if_after_bb);
+                build_after = true;
+            }
+
+            // build if_else_bb
+            LLVMPositionBuilderAtEnd(self.builder, if_else_bb);
+            if let Some(else_body) = else_body {
+                self.visit_block(else_body);
+            }
+            if LLVMGetBasicBlockTerminator(if_else_bb).is_null() {
+                LLVMBuildBr(self.builder, if_after_bb);
+                build_after = true;
+            }
+
+            if build_after {
+                LLVMPositionBuilderAtEnd(self.builder, if_after_bb);
+            } else {
+                LLVMRemoveBasicBlockFromParent(if_after_bb);
+            }
         }
     }
 

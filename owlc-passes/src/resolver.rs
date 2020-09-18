@@ -228,6 +228,11 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
                 self.visit_block(body);
             }
             StmtKind::For => {}
+            StmtKind::IfElse {
+                if_condition,
+                if_body,
+                else_body,
+            } => self.visit_if_else_stmt(if_condition, if_body, else_body),
             StmtKind::Let {
                 iden,
                 initializer: _,

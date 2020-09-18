@@ -3,7 +3,7 @@ use clap::{App, Arg, ArgMatches};
 use llvm_sys::support::*;
 use llvm_sys::{
     analysis::*, bit_writer::*, core::*, execution_engine::*, target::*, target_machine::*,
-    transforms::util::*,
+    transforms, transforms::util::*,
 };
 use owlc_error::ErrorReporter;
 use owlc_passes::resolver::ResolverVisitor;
@@ -200,6 +200,11 @@ fn repl_loop(matches: &ArgMatches) {
             // optimization passes
             let pm = LLVMCreatePassManager();
             LLVMAddPromoteMemoryToRegisterPass(pm);
+            transforms::scalar::LLVMAddTailCallEliminationPass(pm);
+            transforms::instcombine::LLVMAddInstructionCombiningPass(pm);
+            transforms::scalar::LLVMAddReassociatePass(pm);
+            transforms::scalar::LLVMAddGVNPass(pm);
+            transforms::scalar::LLVMAddCFGSimplificationPass(pm);
             LLVMRunPassManager(pm, module);
             LLVMDisposePassManager(pm);
 
@@ -301,6 +306,10 @@ fn compile_file(matches: ArgMatches) {
         // optimization passes
         let pass_manager = LLVMCreatePassManager();
         LLVMAddPromoteMemoryToRegisterPass(pass_manager);
+        transforms::instcombine::LLVMAddInstructionCombiningPass(pass_manager);
+        transforms::scalar::LLVMAddReassociatePass(pass_manager);
+        transforms::scalar::LLVMAddGVNPass(pass_manager);
+        transforms::scalar::LLVMAddCFGSimplificationPass(pass_manager);
         LLVMRunPassManager(pass_manager, module);
 
         if matches.is_present("output") {

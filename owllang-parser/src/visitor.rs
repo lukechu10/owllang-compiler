@@ -32,11 +32,13 @@ pub trait AstVisitor {
         match &stmt.kind {
             StmtKind::Block(block) => self.visit_block(block),
             StmtKind::Fn { proto, body } => self.visit_fn_stmt(proto, body),
-            StmtKind::While {
-                condition,
-                body,
-            } => self.visit_while_stmt(condition, body),
+            StmtKind::While { condition, body } => self.visit_while_stmt(condition, body),
             StmtKind::For => self.visit_for_stmt(),
+            StmtKind::IfElse {
+                if_condition,
+                if_body,
+                else_body,
+            } => self.visit_if_else_stmt(if_condition, if_body, else_body),
             StmtKind::Let { iden, initializer } => self.visit_let_stmt(iden, initializer),
             StmtKind::Return { value } => self.visit_return_stmt(value),
             StmtKind::ExprSemi { expr } => self.visit_expr_semi_stmt(expr),
@@ -72,8 +74,22 @@ pub trait AstVisitor {
         self.visit_expr(condition);
         self.visit_block(body);
     }
+
     fn visit_for_stmt(&mut self) {
         unimplemented!();
+    }
+
+    fn visit_if_else_stmt(
+        &mut self,
+        if_condition: &Expr,
+        if_body: &Block,
+        else_body: &Option<Block>,
+    ) {
+        self.visit_expr(if_condition);
+        self.visit_block(if_body);
+        if let Some(else_body) = else_body {
+            self.visit_block(else_body);
+        }
     }
 
     fn visit_let_stmt(&mut self, _iden: &String, initializer: &Expr) {
