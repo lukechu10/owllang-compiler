@@ -377,10 +377,6 @@ impl AstVisitor for LlvmCodeGenVisitor {
     fn visit_let_stmt(&mut self, ident: &String, initializer: &Expr) {
         assert!(self.current_function.is_some());
 
-        if self.named_values.contains_key(ident) {
-            panic!("Variable {} already exists.", ident);
-        }
-
         unsafe {
             let alloca_ptr = self.build_entry_bb_alloca(ident);
             // codegen initializer expr

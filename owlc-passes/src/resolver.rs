@@ -223,10 +223,7 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
                 self.visit_block(block);
             }
             StmtKind::Fn { proto, body } => self.visit_fn_stmt(proto, body),
-            StmtKind::While {
-                condition,
-                body,
-            } => {
+            StmtKind::While { condition, body } => {
                 self.visit_expr(condition);
                 self.visit_block(body);
             }
@@ -235,10 +232,18 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
                 iden,
                 initializer: _,
             } => {
-                let let_scope = Scope::Let(Symbol::Let {
-                    ident: iden.clone(),
-                });
-                self.symbols.push_scope(let_scope);
+                if self.symbols.lookup(&iden).is_some() {
+                    self.errors.report(Error::new(
+                        "repl".to_string(),
+                        BytePos(0).to(BytePos(0)),
+                        format!("Variable {} is already declared.", iden),
+                    ));
+                } else {
+                    let let_scope = Scope::Let(Symbol::Let {
+                        ident: iden.clone(),
+                    });
+                    self.symbols.push_scope(let_scope);
+                }
             }
             StmtKind::Return { value } => {
                 self.visit_expr(value);
