@@ -310,6 +310,7 @@ fn compile_file(matches: ArgMatches) {
         transforms::scalar::LLVMAddReassociatePass(pass_manager);
         transforms::scalar::LLVMAddGVNPass(pass_manager);
         transforms::scalar::LLVMAddCFGSimplificationPass(pass_manager);
+        transforms::scalar::LLVMAddTailCallEliminationPass(pass_manager);
         LLVMRunPassManager(pass_manager, module);
 
         if matches.is_present("output") {

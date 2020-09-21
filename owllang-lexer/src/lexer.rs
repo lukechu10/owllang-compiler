@@ -107,7 +107,20 @@ impl<'a> Iterator for Lexer<'a> {
             '+' => Some(self.create_token(TokenKind::OpPlus, 1)),
             '-' => Some(self.create_token(TokenKind::OpMinus, 1)),
             '*' => Some(self.create_token(TokenKind::OpAsterisk, 1)),
-            '/' => Some(self.create_token(TokenKind::OpSlash, 1)),
+            '/' => {
+                match self.peek_char() {
+                    Some('/') => {
+                        // line comment, read to end of line and discard
+                        let mut tmp_char = self.next_char();
+                        while !(tmp_char == None || tmp_char.unwrap() == '\n') {
+                            tmp_char = self.next_char();
+                        }
+                        self.next_char(); // eat '\n'
+                        self.next() // recursively read next token
+                    }
+                    _ => Some(self.create_token(TokenKind::OpSlash, 1)),
+                }
+            }
             '%' => Some(self.create_token(TokenKind::OpPercent, 1)),
             '=' => {
                 match self.peek_char() {

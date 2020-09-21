@@ -40,3 +40,29 @@ fn lex_fn_definition() {
         ]
     );
 }
+
+#[test]
+fn lex_comments() {
+    let code = r#"
+        let x = 1; // this is a comment.
+        // this is also a comment.
+        // the following line should not be lexed.
+        // let y = 1;
+    "#;
+    let source_file = Rc::new(SourceFile::new("<tmp>", code));
+    let mut errors = ErrorReporter::new(Rc::clone(&source_file));
+    let lexer = Lexer::with_source_file(&source_file, &mut errors);
+
+    let tokens: Vec<TokenKind> = lexer.map(|token| token.kind).collect();
+    assert!(!errors.has_errors());
+    assert_eq!(
+        tokens,
+        vec![
+            TokenKind::KeywordLet,
+            TokenKind::Identifier("x".to_string()),
+            TokenKind::OpEquals,
+            TokenKind::LiteralInt(1),
+            TokenKind::PuncSemi,
+        ]
+    );
+}
