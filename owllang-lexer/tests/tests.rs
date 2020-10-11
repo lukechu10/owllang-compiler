@@ -44,10 +44,13 @@ fn lex_fn_definition() {
 #[test]
 fn lex_comments() {
     let code = r#"
+        // this is a a comment.
         let x = 1; // this is a comment.
         // this is also a comment.
         // the following line should not be lexed.
         // let y = 1;
+        // empty comment:
+        //
     "#;
     let source_file = Rc::new(SourceFile::new("<tmp>", code));
     let mut errors = ErrorReporter::new(Rc::clone(&source_file));

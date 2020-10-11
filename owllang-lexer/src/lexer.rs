@@ -115,7 +115,7 @@ impl<'a> Iterator for Lexer<'a> {
                         while !(tmp_char == None || tmp_char.unwrap() == '\n') {
                             tmp_char = self.next_char();
                         }
-                        self.next_char(); // eat '\n'
+                        debug_assert!(self.peek_char() != Some('\n')); // next char should not be '\n'
                         self.next() // recursively read next token
                     }
                     _ => Some(self.create_token(TokenKind::OpSlash, 1)),
