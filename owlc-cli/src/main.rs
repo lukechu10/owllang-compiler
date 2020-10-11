@@ -317,9 +317,33 @@ fn compile_file(matches: ArgMatches) {
             // dump to file
             let out_file = matches.value_of("output").unwrap();
             LLVMWriteBitcodeToFile(module, c_str!(out_file));
-        } else {
+        } else if matches.is_present("dump-llvm") {
             // dump llvm ir to stdout
             LLVMDumpModule(module);
+        } else {
+            // run in jit
+            LLVMLinkInMCJIT();
+            LLVM_InitializeNativeTarget();
+            LLVM_InitializeNativeAsmPrinter();
+
+            let mut engine: LLVMExecutionEngineRef = std::ptr::null_mut();
+            let error: *mut *mut i8 = std::ptr::null_mut();
+            LLVMCreateExecutionEngineForModule(&mut engine, module, error);
+
+            let target_machine = LLVMGetExecutionEngineTargetMachine(engine);
+            let target_data_layout = LLVMCreateTargetDataLayout(target_machine);
+            LLVMSetModuleDataLayout(module, target_data_layout);
+
+            LLVMAddSymbol(c_str!("println"), println as *mut std::ffi::c_void);
+            LLVMAddSymbol(c_str!("read_num"), read_num as *mut std::ffi::c_void);
+
+            LLVMAddModule(engine, module);
+
+            // Get main function
+            let main_func = LLVMGetNamedFunction(module, c_str!("main"));
+
+            let mut args: Vec<LLVMGenericValueRef> = Vec::new(); // no arguments
+            LLVMRunFunction(engine, main_func, 0, args.as_mut_ptr());
         }
 
         LLVMDisposeModule(module);
@@ -349,8 +373,7 @@ fn main() {
         .arg(
             Arg::with_name("dump-llvm")
                 .long("dump-llvm")
-                .help("Dumps generated LLVM IR to stdout in repl mode")
-                .conflicts_with("input")
+                .help("Dumps generated LLVM IR to stdout in repl mode. If compiling a file, will dump LLVM IR instead of executing it in JIT.")
                 .takes_value(false),
         )
         .arg(

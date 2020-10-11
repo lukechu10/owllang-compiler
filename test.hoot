@@ -26,7 +26,7 @@ fn fib_iter(x) {
 // main is the entry point to the program.
 fn main() {
     let i = 0;
-    while i < 50 {
+    while i < 40 {
         let recurse = fib(i); // this is a comment.
         let iter = fib_iter(i);
 
