@@ -1,6 +1,6 @@
 use owlc_error::ErrorReporter;
-use owlc_span::SourceFile;
 use owlc_lexer::{Lexer, TokenKind};
+use owlc_span::SourceFile;
 use std::rc::Rc;
 
 #[test]

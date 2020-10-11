@@ -9,8 +9,8 @@ version = "0.1.0"
 [dependencies]
 bencher = "0.1.5"
 owlc-error = {path = "../owlc-error"}
-owlc-span = {path = "../owlc-span"}
 owlc-lexer = {path = "../owlc-lexer"}
+owlc-span = {path = "../owlc-span"}
 serde = {version = "1.0", features = ["derive"]}
 
 [[bench]]

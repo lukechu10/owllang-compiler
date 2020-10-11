@@ -6,11 +6,11 @@ use llvm_sys::{
     transforms, transforms::util::*,
 };
 use owlc_error::ErrorReporter;
-use owlc_passes::resolver::ResolverVisitor;
-use owlc_span::SourceFile;
 use owlc_lexer::Lexer;
 use owlc_llvm::{c_str, LlvmCodeGenVisitor};
 use owlc_parser::{ast::statements::StmtKind, parser::Parser, visitor::AstVisitor};
+use owlc_passes::resolver::ResolverVisitor;
+use owlc_span::SourceFile;
 use serde_yaml;
 use std::rc::Rc;
 use std::{fs, io, io::prelude::*};

@@ -1,7 +1,7 @@
 use owlc_error::ErrorReporter;
-use owlc_span::SourceFile;
 use owlc_lexer::Lexer;
 use owlc_parser::parser::Parser;
+use owlc_span::SourceFile;
 use std::rc::Rc;
 
 #[test]

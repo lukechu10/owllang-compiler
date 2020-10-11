@@ -1,6 +1,6 @@
 use owlc_span::Span;
+use serde::{Deserialize, Serialize};
 use std::fmt;
-use serde::{Serialize, Deserialize};
 
 /// Represents a single token.
 #[derive(Debug, Clone, PartialEq)]

@@ -90,7 +90,13 @@ impl fmt::Display for ErrorReporter {
             )?;
 
             if let Some(help_hint) = &err.help_hint {
-                writeln!(f, "{} {}: {}", Blue.paint("   -->"), Blue.bold().paint("help"), help_hint)?;
+                writeln!(
+                    f,
+                    "{} {}: {}",
+                    Blue.paint("   -->"),
+                    Blue.bold().paint("help"),
+                    help_hint
+                )?;
             }
         }
         Ok(())
