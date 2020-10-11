@@ -1,8 +1,8 @@
 //! Resolving logic for symbols in the generated abstract syntax tree.
 use owlc_error::{Error, ErrorReporter};
 use owlc_span::BytePos;
-use owllang_parser::ast::{expressions::*, statements::*};
-use owllang_parser::visitor::AstVisitor;
+use owlc_parser::ast::{expressions::*, statements::*};
+use owlc_parser::visitor::AstVisitor;
 
 /// Represents a resolved symbol (can be either variable type or function type).
 #[derive(Debug, PartialEq, Eq, Hash)]

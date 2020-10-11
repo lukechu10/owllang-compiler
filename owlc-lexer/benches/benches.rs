@@ -1,5 +1,5 @@
 use bencher::{benchmark_group, benchmark_main, Bencher};
-use owllang_lexer::{Lexer, Token};
+use owlc_lexer::{Lexer, Token};
 use owlc_error::ErrorReporter;
 use owlc_span::SourceFile;
 use std::rc::Rc;

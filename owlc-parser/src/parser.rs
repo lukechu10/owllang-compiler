@@ -3,7 +3,7 @@
 use crate::ast::{expressions::*, statements::*};
 use owlc_error::{Error, ErrorReporter};
 use owlc_span::{BytePos, SourceFile};
-use owllang_lexer::{Lexer, OpPrecedence, Token, TokenKind};
+use owlc_lexer::{Lexer, OpPrecedence, Token, TokenKind};
 use std::iter::Peekable;
 use std::rc::Rc;
 

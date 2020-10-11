@@ -3,10 +3,10 @@ mod macros;
 use llvm_sys::core::*;
 use llvm_sys::prelude::*;
 use llvm_sys::{LLVMIntPredicate, LLVMLinkage, LLVMTypeKind};
-use owllang_lexer::TokenKind;
-use owllang_parser::ast::expressions::*;
-use owllang_parser::ast::statements::*;
-use owllang_parser::visitor::AstVisitor;
+use owlc_lexer::TokenKind;
+use owlc_parser::ast::expressions::*;
+use owlc_parser::ast::statements::*;
+use owlc_parser::visitor::AstVisitor;
 use std::collections::HashMap;
 
 pub struct LlvmCodeGenVisitor {

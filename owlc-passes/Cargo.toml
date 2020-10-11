@@ -10,8 +10,8 @@ version = "0.1.0"
 bencher = "0.1.5"
 owlc-error = {path = "../owlc-error"}
 owlc-span = {path = "../owlc-span"}
-owllang-lexer = {path = "../owllang-lexer"}
-owllang-parser = {path = "../owllang-parser"}
+owlc-lexer = {path = "../owlc-lexer"}
+owlc-parser = {path = "../owlc-parser"}
 
 [[bench]]
 harness = false

@@ -1,4 +1,4 @@
-use owllang_lexer::TokenKind;
+use owlc_lexer::TokenKind;
 use serde::{Deserialize, Serialize};
 
 /// Internal representation for [`Expr`](struct.Expr.html).

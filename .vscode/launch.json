@@ -8,7 +8,7 @@
             "name": "(gdb) Launch Debug",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/target/debug/owllang-cli",
+            "program": "${workspaceFolder}/target/debug/owlc-cli",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

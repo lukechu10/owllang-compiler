@@ -2,7 +2,7 @@
 
 use crate::ast::expressions::{Expr, ExprKind};
 use crate::ast::statements::{Block, CompilationUnit, FnProto, Stmt, StmtKind};
-use owllang_lexer::TokenKind;
+use owlc_lexer::TokenKind;
 
 pub trait AstVisitor {
     // expressions

@@ -1,10 +1,10 @@
 [workspace]
 
 members = [
-  "owllang-cli",
-  "owllang-lexer",
-  "owllang-parser",
-  "owllang-llvm-codegen",
+  "owlc-cli",
+  "owlc-lexer",
+  "owlc-parser",
+  "owlc-llvm",
   "owlc-passes",
   "owlc-error",
   "owlc-span",

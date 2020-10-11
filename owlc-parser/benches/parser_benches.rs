@@ -1,8 +1,8 @@
 use bencher::{benchmark_group, benchmark_main, Bencher};
 use owlc_error::ErrorReporter;
 use owlc_span::SourceFile;
-use owllang_lexer::Lexer;
-use owllang_parser::parser::Parser;
+use owlc_lexer::Lexer;
+use owlc_parser::parser::Parser;
 use std::rc::Rc;
 
 fn parse_simple_fn(bench: &mut Bencher) {

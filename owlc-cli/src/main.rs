@@ -8,9 +8,9 @@ use llvm_sys::{
 use owlc_error::ErrorReporter;
 use owlc_passes::resolver::ResolverVisitor;
 use owlc_span::SourceFile;
-use owllang_lexer::Lexer;
-use owllang_llvm_codegen::{c_str, LlvmCodeGenVisitor};
-use owllang_parser::{ast::statements::StmtKind, parser::Parser, visitor::AstVisitor};
+use owlc_lexer::Lexer;
+use owlc_llvm::{c_str, LlvmCodeGenVisitor};
+use owlc_parser::{ast::statements::StmtKind, parser::Parser, visitor::AstVisitor};
 use serde_yaml;
 use std::rc::Rc;
 use std::{fs, io, io::prelude::*};
