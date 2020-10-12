@@ -7,7 +7,7 @@ use std::fmt;
 use std::rc::Rc;
 
 /// Represents a compile error.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Error {
     /// The name of the file the error occurred in.
     pub file_name: String,
@@ -65,8 +65,8 @@ impl ErrorReporter {
     }
 
     /// Consumes `error_reporter` and merges the errors into `self`.
-    pub fn merge_from(&mut self, error_reporter: &mut ErrorReporter) {
-        self.errs.append(&mut error_reporter.errs);
+    pub fn merge_from(&mut self, error_reporter: &ErrorReporter) {
+        self.errs.clone_from_slice(&error_reporter.errs);
     }
 }
 

@@ -265,6 +265,7 @@ impl<'a> Parser<'a> {
         let mut lhs = match prefix_bp {
             // not a prefix operator
             ((), -1) => self.parse_primary_expression(),
+            // prefix operator
             _ => {
                 let ((), right_bp) = prefix_bp;
                 let prefix_op = self.eat_token(); // eat prefix operator
@@ -403,5 +404,33 @@ impl<'a> Parser<'a> {
             if_body,
             else_body,
         })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use insta::assert_debug_snapshot;
+
+    /// Utility function for tests
+    fn parse_str_as_expr(s: &str) -> Expr {
+        let source = Rc::new(SourceFile::new("<test>", s));
+        let mut lexer_error_reporter = ErrorReporter::new(source.clone());
+        let mut lexer = Lexer::with_source_file(&source, &mut lexer_error_reporter);
+        let mut parser_error_reporter = ErrorReporter::new(source.clone());
+        let mut parser = Parser::new(&mut lexer, &mut parser_error_reporter);
+
+        let res = parser.parse_expression();
+
+        let mut errors = ErrorReporter::new(source.clone());
+        errors.merge_from(&lexer_error_reporter);
+        errors.merge_from(&parser_error_reporter);
+        assert!(!errors.has_errors());
+        res
+    }
+
+    #[test]
+    fn parse_math_expr() {
+        assert_debug_snapshot!(parse_str_as_expr("1 + 1"));
     }
 }
