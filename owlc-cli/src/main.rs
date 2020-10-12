@@ -9,7 +9,7 @@ use owlc_error::ErrorReporter;
 use owlc_lexer::Lexer;
 use owlc_llvm::{c_str, LlvmCodeGenVisitor};
 use owlc_parser::{ast::statements::StmtKind, parser::Parser, visitor::AstVisitor};
-use owlc_passes::resolver::ResolverVisitor;
+use owlc_passes::{resolver::ResolverVisitor, fn_main::MainFunctionVisitor};
 use owlc_span::SourceFile;
 use serde_yaml;
 use std::rc::Rc;
@@ -280,6 +280,9 @@ fn compile_file(matches: ArgMatches) {
             let mut resolver_visitor = ResolverVisitor::new(&mut error_reporter);
             resolver_visitor.symbols = symbol_table;
             resolver_visitor.visit_compilation_unit(&compilation_unit);
+
+            let mut fn_main_visitor = MainFunctionVisitor::new(&mut error_reporter);
+            fn_main_visitor.visit_compilation_unit(&compilation_unit);
 
             compilation_unit
         };
