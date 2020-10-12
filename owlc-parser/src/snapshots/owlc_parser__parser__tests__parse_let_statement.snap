@@ -1,0 +1,14 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_stmt(\"let x = 1;\")"
+---
+Stmt {
+    kind: Let {
+        iden: "x",
+        initializer: Expr {
+            kind: Literal(
+                1,
+            ),
+        },
+    },
+}

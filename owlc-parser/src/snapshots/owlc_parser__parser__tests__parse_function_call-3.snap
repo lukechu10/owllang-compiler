@@ -1,0 +1,36 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_expr(\"my_function(10, a_variable, 2 + 2)\")"
+---
+Expr {
+    kind: FuncCall {
+        callee: "my_function",
+        args: [
+            Expr {
+                kind: Literal(
+                    10,
+                ),
+            },
+            Expr {
+                kind: Identifier(
+                    "a_variable",
+                ),
+            },
+            Expr {
+                kind: BinaryExpr {
+                    lhs: Expr {
+                        kind: Literal(
+                            2,
+                        ),
+                    },
+                    rhs: Expr {
+                        kind: Literal(
+                            2,
+                        ),
+                    },
+                    op_type: OpPlus,
+                },
+            },
+        ],
+    },
+}

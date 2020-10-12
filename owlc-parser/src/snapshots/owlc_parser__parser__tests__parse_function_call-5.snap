@@ -1,0 +1,27 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_expr(\"func(nested_func()) + 2\")"
+---
+Expr {
+    kind: BinaryExpr {
+        lhs: Expr {
+            kind: FuncCall {
+                callee: "func",
+                args: [
+                    Expr {
+                        kind: FuncCall {
+                            callee: "nested_func",
+                            args: [],
+                        },
+                    },
+                ],
+            },
+        },
+        rhs: Expr {
+            kind: Literal(
+                2,
+            ),
+        },
+        op_type: OpPlus,
+    },
+}

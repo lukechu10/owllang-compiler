@@ -1,0 +1,39 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_expr(\"1 * 2 + 3 * 4\")"
+---
+Expr {
+    kind: BinaryExpr {
+        lhs: Expr {
+            kind: BinaryExpr {
+                lhs: Expr {
+                    kind: Literal(
+                        1,
+                    ),
+                },
+                rhs: Expr {
+                    kind: Literal(
+                        2,
+                    ),
+                },
+                op_type: OpAsterisk,
+            },
+        },
+        rhs: Expr {
+            kind: BinaryExpr {
+                lhs: Expr {
+                    kind: Literal(
+                        3,
+                    ),
+                },
+                rhs: Expr {
+                    kind: Literal(
+                        4,
+                    ),
+                },
+                op_type: OpAsterisk,
+            },
+        },
+        op_type: OpPlus,
+    },
+}

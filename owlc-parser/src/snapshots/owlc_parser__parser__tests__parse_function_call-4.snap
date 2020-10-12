@@ -1,0 +1,17 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_expr(\"func(nested_func())\")"
+---
+Expr {
+    kind: FuncCall {
+        callee: "func",
+        args: [
+            Expr {
+                kind: FuncCall {
+                    callee: "nested_func",
+                    args: [],
+                },
+            },
+        ],
+    },
+}

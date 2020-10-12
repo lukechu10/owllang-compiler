@@ -1,0 +1,29 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_expr(\"my.nested.field\")"
+---
+Expr {
+    kind: BinaryExpr {
+        lhs: Expr {
+            kind: Identifier(
+                "my",
+            ),
+        },
+        rhs: Expr {
+            kind: BinaryExpr {
+                lhs: Expr {
+                    kind: Identifier(
+                        "nested",
+                    ),
+                },
+                rhs: Expr {
+                    kind: Identifier(
+                        "field",
+                    ),
+                },
+                op_type: OpDot,
+            },
+        },
+        op_type: OpDot,
+    },
+}

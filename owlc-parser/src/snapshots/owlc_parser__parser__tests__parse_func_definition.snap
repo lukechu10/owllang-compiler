@@ -1,0 +1,32 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_unit(\"fn test() {\n            return 1;\n        }\")"
+---
+CompilationUnit {
+    entry_file_name: "<test>",
+    functions: [
+        Stmt {
+            kind: Fn {
+                proto: FnProto {
+                    args: [],
+                    iden: "test",
+                },
+                body: Some(
+                    Block {
+                        stmts: [
+                            Stmt {
+                                kind: Return {
+                                    value: Expr {
+                                        kind: Literal(
+                                            1,
+                                        ),
+                                    },
+                                },
+                            },
+                        ],
+                    },
+                ),
+            },
+        },
+    ],
+}

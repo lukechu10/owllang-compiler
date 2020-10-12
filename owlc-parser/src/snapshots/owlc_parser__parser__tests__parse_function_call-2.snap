@@ -1,0 +1,16 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_expr(\"my_function(10)\")"
+---
+Expr {
+    kind: FuncCall {
+        callee: "my_function",
+        args: [
+            Expr {
+                kind: Literal(
+                    10,
+                ),
+            },
+        ],
+    },
+}

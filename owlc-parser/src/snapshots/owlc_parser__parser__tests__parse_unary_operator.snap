@@ -1,0 +1,9 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_expr(\"+1\")"
+---
+Expr {
+    kind: Literal(
+        1,
+    ),
+}

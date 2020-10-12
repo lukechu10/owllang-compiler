@@ -408,7 +408,7 @@ impl<'a> Parser<'a> {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::*;
     use insta::assert_debug_snapshot;
 
@@ -429,8 +429,105 @@ mod test {
         res
     }
 
+    /// Utility function for tests
+    fn parse_str_as_stmt(s: &str) -> Stmt {
+        let source = Rc::new(SourceFile::new("<test>", s));
+        let mut lexer_error_reporter = ErrorReporter::new(source.clone());
+        let mut lexer = Lexer::with_source_file(&source, &mut lexer_error_reporter);
+        let mut parser_error_reporter = ErrorReporter::new(source.clone());
+        let mut parser = Parser::new(&mut lexer, &mut parser_error_reporter);
+
+        let res = parser.parse_statement();
+
+        let mut errors = ErrorReporter::new(source.clone());
+        errors.merge_from(&lexer_error_reporter);
+        errors.merge_from(&parser_error_reporter);
+        assert!(!errors.has_errors());
+        res
+    }
+
+    /// Utility function for tests
+    fn parse_str_as_unit(s: &str) -> CompilationUnit {
+        let source = Rc::new(SourceFile::new("<test>", s));
+        let mut lexer_error_reporter = ErrorReporter::new(source.clone());
+        let mut lexer = Lexer::with_source_file(&source, &mut lexer_error_reporter);
+        let mut parser_error_reporter = ErrorReporter::new(source.clone());
+        let mut parser = Parser::new(&mut lexer, &mut parser_error_reporter);
+
+        let res = parser.parse_compilation_unit();
+
+        let mut errors = ErrorReporter::new(source.clone());
+        errors.merge_from(&lexer_error_reporter);
+        errors.merge_from(&parser_error_reporter);
+        assert!(!errors.has_errors());
+        res
+    }
+
     #[test]
-    fn parse_math_expr() {
+    fn parse_basic_bin_op() {
         assert_debug_snapshot!(parse_str_as_expr("1 + 1"));
+    }
+
+    #[test]
+    fn parse_operator_precedence() {
+        assert_debug_snapshot!(parse_str_as_expr("1 + 2 * 3"));
+        assert_debug_snapshot!(parse_str_as_expr("1 * 2 + 3 * 4"));
+        assert_debug_snapshot!(parse_str_as_expr("my.field"));
+        assert_debug_snapshot!(parse_str_as_expr("my.nested.field")); // test right associativity
+    }
+
+    #[test]
+    fn parse_unary_operator() {
+        assert_debug_snapshot!(parse_str_as_expr("+1"));
+        assert_debug_snapshot!(parse_str_as_expr("-1"));
+        assert_debug_snapshot!(parse_str_as_expr("-1 + 2"));
+        assert_debug_snapshot!(parse_str_as_expr("1 + (-2)"));
+        assert_debug_snapshot!(parse_str_as_expr("1 + -2")); // also valid
+    }
+
+    #[test]
+    fn parse_function_call() {
+        assert_debug_snapshot!(parse_str_as_expr("my_function()"));
+        assert_debug_snapshot!(parse_str_as_expr("my_function(10)"));
+        assert_debug_snapshot!(parse_str_as_expr("my_function(10, a_variable, 2 + 2)"));
+        assert_debug_snapshot!(parse_str_as_expr("func(nested_func())"));
+        assert_debug_snapshot!(parse_str_as_expr("func(nested_func()) + 2"));
+    }
+
+    #[test]
+    fn parse_let_statement() {
+        assert_debug_snapshot!(parse_str_as_stmt("let x = 1;"));
+        assert_debug_snapshot!(parse_str_as_stmt("let x = 1 + 1;"));
+        assert_debug_snapshot!(parse_str_as_stmt("let x = func(2);"));
+    }
+
+    #[test]
+    fn parse_func_definition() {
+        assert_debug_snapshot!(parse_str_as_unit("fn test() {
+            return 1;
+        }"));
+        assert_debug_snapshot!(parse_str_as_unit("fn test() {
+            return 1 + 1;
+        }"));
+        assert_debug_snapshot!(parse_str_as_unit("fn recursion() {
+            return recursion();
+        }"));
+        assert_debug_snapshot!(parse_str_as_unit("fn test() {
+            let tmp = 1;
+            return tmp;
+        }"));
+        assert_debug_snapshot!(parse_str_as_unit("fn test() {
+            let i = 0;
+            while i < 10 {
+                println(i);
+                i = i + 1;
+            }
+            return i;
+        }"));
+        assert_debug_snapshot!(parse_str_as_unit("fn comments() {
+            // this is a comment
+            // return 0;
+            return 1;
+        }"));
     }
 }

@@ -1,0 +1,21 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_stmt(\"let x = func(2);\")"
+---
+Stmt {
+    kind: Let {
+        iden: "x",
+        initializer: Expr {
+            kind: FuncCall {
+                callee: "func",
+                args: [
+                    Expr {
+                        kind: Literal(
+                            2,
+                        ),
+                    },
+                ],
+            },
+        },
+    },
+}

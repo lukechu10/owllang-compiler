@@ -1,0 +1,110 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_unit(\"fn test() {\n            let i = 0;\n            while i < 10 {\n                println(i);\n                i = i + 1;\n            }\n            return i;\n        }\")"
+---
+CompilationUnit {
+    entry_file_name: "<test>",
+    functions: [
+        Stmt {
+            kind: Fn {
+                proto: FnProto {
+                    args: [],
+                    iden: "test",
+                },
+                body: Some(
+                    Block {
+                        stmts: [
+                            Stmt {
+                                kind: Let {
+                                    iden: "i",
+                                    initializer: Expr {
+                                        kind: Literal(
+                                            0,
+                                        ),
+                                    },
+                                },
+                            },
+                            Stmt {
+                                kind: While {
+                                    condition: Expr {
+                                        kind: BinaryExpr {
+                                            lhs: Expr {
+                                                kind: Identifier(
+                                                    "i",
+                                                ),
+                                            },
+                                            rhs: Expr {
+                                                kind: Literal(
+                                                    10,
+                                                ),
+                                            },
+                                            op_type: OpLessThan,
+                                        },
+                                    },
+                                    body: Block {
+                                        stmts: [
+                                            Stmt {
+                                                kind: ExprSemi {
+                                                    expr: Expr {
+                                                        kind: FuncCall {
+                                                            callee: "println",
+                                                            args: [
+                                                                Expr {
+                                                                    kind: Identifier(
+                                                                        "i",
+                                                                    ),
+                                                                },
+                                                            ],
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                            Stmt {
+                                                kind: ExprSemi {
+                                                    expr: Expr {
+                                                        kind: BinaryExpr {
+                                                            lhs: Expr {
+                                                                kind: Identifier(
+                                                                    "i",
+                                                                ),
+                                                            },
+                                                            rhs: Expr {
+                                                                kind: BinaryExpr {
+                                                                    lhs: Expr {
+                                                                        kind: Identifier(
+                                                                            "i",
+                                                                        ),
+                                                                    },
+                                                                    rhs: Expr {
+                                                                        kind: Literal(
+                                                                            1,
+                                                                        ),
+                                                                    },
+                                                                    op_type: OpPlus,
+                                                                },
+                                                            },
+                                                            op_type: OpEquals,
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        ],
+                                    },
+                                },
+                            },
+                            Stmt {
+                                kind: Return {
+                                    value: Expr {
+                                        kind: Identifier(
+                                            "i",
+                                        ),
+                                    },
+                                },
+                            },
+                        ],
+                    },
+                ),
+            },
+        },
+    ],
+}

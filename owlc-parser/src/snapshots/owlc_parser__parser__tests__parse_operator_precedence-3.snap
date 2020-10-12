@@ -1,0 +1,19 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_expr(\"my.field\")"
+---
+Expr {
+    kind: BinaryExpr {
+        lhs: Expr {
+            kind: Identifier(
+                "my",
+            ),
+        },
+        rhs: Expr {
+            kind: Identifier(
+                "field",
+            ),
+        },
+        op_type: OpDot,
+    },
+}
