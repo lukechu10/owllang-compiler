@@ -6,10 +6,10 @@ use llvm_sys::{
     transforms, transforms::util::*,
 };
 use owlc_error::ErrorReporter;
-use owlc_lexer::Lexer;
+use owlc_lexer::{Lexer, TokenKind};
 use owlc_llvm::{c_str, LlvmCodeGenVisitor};
 use owlc_parser::{ast::statements::StmtKind, parser::Parser, visitor::AstVisitor};
-use owlc_passes::{resolver::ResolverVisitor, fn_main::MainFunctionVisitor};
+use owlc_passes::{fn_main::MainFunctionVisitor, resolver::ResolverVisitor};
 use owlc_span::SourceFile;
 use serde_yaml;
 use std::rc::Rc;
@@ -156,6 +156,12 @@ fn repl_loop(matches: &ArgMatches) {
             let mut lexer_error_reporter = ErrorReporter::new(Rc::clone(&source_file));
             let mut lexer = Lexer::with_source_file(&source_file, &mut lexer_error_reporter);
 
+            if matches.is_present("show-lex") {
+                let tokens: Vec<TokenKind> = lexer.map(|token| token.kind).collect();
+                println!("{:?}", tokens);
+                continue; // end
+            }
+
             let ast = {
                 let mut parser = Parser::new(&mut lexer, &mut error_reporter);
                 let stmt = parser.parse_repl_input();
@@ -273,6 +279,12 @@ fn compile_file(matches: ArgMatches) {
         let mut lexer_error_reporter = ErrorReporter::new(Rc::clone(&source_file));
         let mut lexer = Lexer::with_source_file(&source_file, &mut lexer_error_reporter);
 
+        if matches.is_present("show-lex") {
+            let tokens: Vec<TokenKind> = lexer.map(|token| token.kind).collect();
+            println!("{:?}", tokens);
+            return; // end
+        }
+
         let ast = {
             let mut parser = Parser::new(&mut lexer, &mut error_reporter);
             let compilation_unit = parser.parse_compilation_unit();
@@ -384,6 +396,13 @@ fn main() {
                 .long("show-ast")
                 .help("Shows the generated abstract syntax tree")
                 .takes_value(false),
+        )
+        .arg(
+            Arg::with_name("show-lex")
+                .long("show-lex")
+                .help("Shows the lexer output. Note: this option will prevent the code from being parsed.")
+                .conflicts_with_all(&["show-ast", "dump-llvm", "output"])
+                .takes_value(false)
         )
         .get_matches();
 
