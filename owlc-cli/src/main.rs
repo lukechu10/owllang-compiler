@@ -45,7 +45,7 @@ fn repl_input_is_finished(buf: &String) -> bool {
         }
 
         if paren_count < 0 || brace_count < 0 {
-            return false; // paren_count and brace_count should be >= 0. Otherwise is error.
+            return true; // paren_count and brace_count should be >= 0. Otherwise is error.
         }
     }
 
