@@ -218,7 +218,7 @@ fn repl_loop(matches: &ArgMatches) {
                 let res = LLVMRunFunction(engine, last_func, 0, args.as_mut_ptr());
                 println!(
                     "{}",
-                    Color::Yellow.paint(LLVMGenericValueToInt(res, true as i32).to_string())
+                    Color::Yellow.paint((LLVMGenericValueToInt(res, 1) as i64).to_string())
                 );
                 LLVMRemoveModule(engine, module, &mut module, error);
             }
