@@ -18,10 +18,10 @@ impl<'a> MainFunctionVisitor<'a> {
     }
 }
 impl<'a> AstVisitor for MainFunctionVisitor<'a> {
-    fn visit_fn_proto(&mut self, ident: &String, args: &Vec<String>) {
+    fn visit_fn_proto(&mut self, ident: &str, args: &[String]) {
         if ident == "main" {
             // check if main function has correct signature
-            if args.len() > 0 {
+            if !args.is_empty() {
                 self.errors.report(
                     Error::new(
                         "<repl>".to_string(),

@@ -138,14 +138,8 @@ impl<'a> Parser<'a> {
                 self.expect_and_eat_tok(TokenKind::PuncSemi);
                 let_statement
             }
-            TokenKind::KeywordWhile => {
-                let while_stmt = self.parse_while_stmt();
-                while_stmt
-            }
-            TokenKind::KeywordIf => {
-                let if_else_stmt = self.parse_if_else_stmt();
-                if_else_stmt
-            }
+            TokenKind::KeywordWhile => self.parse_while_stmt(),
+            TokenKind::KeywordIf => self.parse_if_else_stmt(),
             TokenKind::PuncOpenBrace => {
                 let block = self.parse_block_statement();
                 Stmt::new(StmtKind::Block(block))
@@ -154,8 +148,7 @@ impl<'a> Parser<'a> {
                 // try to parse expression statement
                 let expr = self.parse_expression();
                 self.expect_and_eat_tok(TokenKind::PuncSemi);
-                let expr_statement = Stmt::new(StmtKind::ExprSemi { expr });
-                expr_statement
+                Stmt::new(StmtKind::ExprSemi { expr })
             }
         }
     }
@@ -190,10 +183,7 @@ impl<'a> Parser<'a> {
                 self.expect_and_eat_tok(TokenKind::PuncCloseParen);
                 expr_ast
             }
-            TokenKind::LiteralInt(_) => {
-                let literal_ast = self.parse_int_literal();
-                literal_ast
-            }
+            TokenKind::LiteralInt(_) => self.parse_int_literal(),
             TokenKind::Identifier(_) => self.parse_identifier_or_call_expr(),
             _ => {
                 self.emit_err_at_current_tok(format!(
@@ -503,31 +493,43 @@ mod tests {
 
     #[test]
     fn parse_func_definition() {
-        assert_debug_snapshot!(parse_str_as_unit("fn test() {
+        assert_debug_snapshot!(parse_str_as_unit(
+            "fn test() {
             return 1;
-        }"));
-        assert_debug_snapshot!(parse_str_as_unit("fn test() {
+        }"
+        ));
+        assert_debug_snapshot!(parse_str_as_unit(
+            "fn test() {
             return 1 + 1;
-        }"));
-        assert_debug_snapshot!(parse_str_as_unit("fn recursion() {
+        }"
+        ));
+        assert_debug_snapshot!(parse_str_as_unit(
+            "fn recursion() {
             return recursion();
-        }"));
-        assert_debug_snapshot!(parse_str_as_unit("fn test() {
+        }"
+        ));
+        assert_debug_snapshot!(parse_str_as_unit(
+            "fn test() {
             let tmp = 1;
             return tmp;
-        }"));
-        assert_debug_snapshot!(parse_str_as_unit("fn test() {
+        }"
+        ));
+        assert_debug_snapshot!(parse_str_as_unit(
+            "fn test() {
             let i = 0;
             while i < 10 {
                 println(i);
                 i = i + 1;
             }
             return i;
-        }"));
-        assert_debug_snapshot!(parse_str_as_unit("fn comments() {
+        }"
+        ));
+        assert_debug_snapshot!(parse_str_as_unit(
+            "fn comments() {
             // this is a comment
             // return 0;
             return 1;
-        }"));
+        }"
+        ));
     }
 }

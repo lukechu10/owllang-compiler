@@ -14,13 +14,13 @@ pub enum Symbol {
 }
 
 impl Symbol {
-    pub fn matches(&self, symbol_ident: &String) -> bool {
+    pub fn matches(&self, symbol_ident: &str) -> bool {
         match self {
-            Symbol::Let { ident } => symbol_ident.eq(ident),
+            Symbol::Let { ident } => symbol_ident == ident,
             Symbol::Fn {
                 ident,
                 args_count: _,
-            } => symbol_ident.eq(ident),
+            } => symbol_ident == ident,
         }
     }
 }
@@ -48,7 +48,7 @@ pub enum Scope {
 impl Scope {
     /// Returns `Some(symbol)` if current `Scope` contains a symbol with identifier `ident`.
     /// A return value of `None` does not necessarily mean that the symbol is inaccessible. The symbol can still be found in a previous `Scope`.
-    pub fn get_symbol(&self, symbol_ident: &String) -> Option<&Symbol> {
+    pub fn get_symbol(&self, symbol_ident: &str) -> Option<&Symbol> {
         match self {
             Scope::Block(symbols) => {
                 for symbol in symbols {
@@ -76,6 +76,12 @@ pub struct SymbolTable {
     scope_stack: Vec<Scope>,
 }
 
+impl Default for SymbolTable {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SymbolTable {
     pub fn new() -> Self {
         Self {
@@ -86,7 +92,7 @@ impl SymbolTable {
     /// Returns `Some(symbol)` if symbol with `ident` is found. Else returns `None`.
     /// # Params
     /// * `ident` - The identifier of the symbol to lookup.
-    pub fn lookup(&self, ident: &String) -> Option<&Symbol> {
+    pub fn lookup(&self, ident: &str) -> Option<&Symbol> {
         // look for symbol, starting from top of stack and going in reverse
         for scope in self.scope_stack.iter().rev() {
             if let Some(symbol) = scope.get_symbol(ident) {

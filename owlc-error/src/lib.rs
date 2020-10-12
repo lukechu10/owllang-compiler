@@ -61,7 +61,7 @@ impl ErrorReporter {
 
     /// Returns `true` if there are errors reported.
     pub fn has_errors(&self) -> bool {
-        self.errs.len() > 0
+        !self.errs.is_empty()
     }
 
     /// Consumes `error_reporter` and merges the errors into `self`.

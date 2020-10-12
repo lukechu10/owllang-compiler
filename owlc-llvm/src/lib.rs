@@ -37,7 +37,9 @@ impl LlvmCodeGenVisitor {
     }
 
     /// Creates an `alloca` instruction in the `entry` block of the current function. Returns the `LLVMValueRef` memory address of the allocated variable.
-    pub unsafe fn build_entry_bb_alloca(&mut self, name: &String) -> LLVMValueRef {
+    /// # Safety
+    /// `llvm-sys`.
+    pub unsafe fn build_entry_bb_alloca(&mut self, name: &str) -> LLVMValueRef {
         debug_assert!(self.current_function != None);
 
         let entry_bb = LLVMGetEntryBasicBlock(self.current_function.unwrap());
@@ -108,7 +110,7 @@ impl AstVisitor for LlvmCodeGenVisitor {
         }
     }
 
-    fn visit_identifier_expr(&mut self, ident: &String) {
+    fn visit_identifier_expr(&mut self, ident: &str) {
         unsafe {
             match self.named_values.get(ident) {
                 Some(addr) => {
@@ -126,7 +128,7 @@ impl AstVisitor for LlvmCodeGenVisitor {
         }
     }
 
-    fn visit_func_call(&mut self, callee: &String, args: &Vec<Expr>) {
+    fn visit_func_call(&mut self, callee: &str, args: &[Expr]) {
         unsafe {
             let arg_count = args.len();
             let func = LLVMGetNamedFunction(self.module, c_str!(callee));
@@ -156,7 +158,7 @@ impl AstVisitor for LlvmCodeGenVisitor {
         }
     }
 
-    fn visit_bin_expr(&mut self, lhs: &Box<Expr>, rhs: &Box<Expr>, op_type: &TokenKind) {
+    fn visit_bin_expr(&mut self, lhs: &Expr, rhs: &Expr, op_type: &TokenKind) {
         unsafe {
             let res: LLVMValueRef;
 
@@ -258,7 +260,7 @@ impl AstVisitor for LlvmCodeGenVisitor {
         }
     }
 
-    fn visit_fn_proto(&mut self, ident: &String, args: &Vec<String>) {
+    fn visit_fn_proto(&mut self, ident: &str, args: &[String]) {
         unsafe {
             let arg_count = args.len();
             let mut argv: Vec<LLVMTypeRef> = Vec::with_capacity(arg_count);
@@ -436,7 +438,7 @@ impl AstVisitor for LlvmCodeGenVisitor {
         }
     }
 
-    fn visit_let_stmt(&mut self, ident: &String, initializer: &Expr) {
+    fn visit_let_stmt(&mut self, ident: &str, initializer: &Expr) {
         assert!(self.current_function.is_some());
 
         unsafe {
@@ -447,7 +449,7 @@ impl AstVisitor for LlvmCodeGenVisitor {
             LLVMBuildStore(self.builder, self.value_stack.pop().unwrap(), alloca_ptr);
 
             // add variable to named_values
-            self.named_values.insert(ident.clone(), alloca_ptr);
+            self.named_values.insert(ident.to_string(), alloca_ptr);
         }
     }
 

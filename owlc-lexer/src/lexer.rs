@@ -88,11 +88,7 @@ impl<'a> Iterator for Lexer<'a> {
                 tmp_char = self.next_char(); // read next char
             }
 
-            if let None = tmp_char {
-                return None; // exit function
-            } else {
-                tmp_char.unwrap()
-            }
+            tmp_char?
         };
 
         match current_char {

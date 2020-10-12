@@ -18,9 +18,9 @@ pub trait AstVisitor {
         }
     }
     fn visit_literal_expr(&mut self, _val: &i64) {}
-    fn visit_identifier_expr(&mut self, _iden: &String) {}
-    fn visit_func_call(&mut self, _callee: &String, _args: &Vec<Expr>) {}
-    fn visit_bin_expr(&mut self, lhs: &Box<Expr>, rhs: &Box<Expr>, _op_type: &TokenKind) {
+    fn visit_identifier_expr(&mut self, _iden: &str) {}
+    fn visit_func_call(&mut self, _callee: &str, _args: &[Expr]) {}
+    fn visit_bin_expr(&mut self, lhs: &Expr, rhs: &Expr, _op_type: &TokenKind) {
         self.visit_expr(lhs);
         self.visit_expr(rhs);
     }
@@ -54,7 +54,7 @@ pub trait AstVisitor {
         }
     }
 
-    fn visit_fn_proto(&mut self, _iden: &String, _args: &Vec<String>) {}
+    fn visit_fn_proto(&mut self, _ident: &str, _args: &[String]) {}
     fn visit_block(&mut self, block: &Block) {
         for stmt in &block.stmts {
             self.visit_stmt(stmt);
@@ -92,7 +92,7 @@ pub trait AstVisitor {
         }
     }
 
-    fn visit_let_stmt(&mut self, _iden: &String, initializer: &Expr) {
+    fn visit_let_stmt(&mut self, _ident: &str, initializer: &Expr) {
         self.visit_expr(initializer);
     }
 

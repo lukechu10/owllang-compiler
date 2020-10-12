@@ -1,3 +1,7 @@
+//! Utility crate for storing syntax positions.
+
+#![allow(clippy::len_without_is_empty)]
+
 use std::borrow::Cow;
 use std::ops::Sub;
 use std::rc::Rc;
@@ -29,7 +33,7 @@ pub struct Span {
 impl Span {
     /// **Note**: This returns the length in *bytes*, not chars.
     pub fn len(&self) -> u32 {
-        return self.hi - self.lo;
+        self.hi - self.lo
     }
 }
 

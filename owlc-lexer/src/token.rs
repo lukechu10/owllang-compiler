@@ -140,7 +140,7 @@ impl TokenKind {
             TokenKind::EndOfFile => "end of file",
         };
 
-        return str.to_string();
+        str.to_string()
     }
 }
 

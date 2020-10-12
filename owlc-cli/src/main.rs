@@ -11,7 +11,6 @@ use owlc_llvm::{c_str, LlvmCodeGenVisitor};
 use owlc_parser::{ast::statements::StmtKind, parser::Parser, visitor::AstVisitor};
 use owlc_passes::{fn_main::MainFunctionVisitor, resolver::ResolverVisitor};
 use owlc_span::SourceFile;
-use serde_yaml;
 use std::rc::Rc;
 use std::{fs, io, io::prelude::*};
 
@@ -31,7 +30,7 @@ pub extern "C" fn read_num() -> i64 {
 }
 
 /// Returns `true` if the repl input is finished.
-fn repl_input_is_finished(buf: &String) -> bool {
+fn repl_input_is_finished(buf: &str) -> bool {
     let mut paren_count = 0;
     let mut brace_count = 0;
 
@@ -133,7 +132,7 @@ fn repl_loop(matches: &ArgMatches) {
         symbol_table = resolver_visitor.symbols;
 
         // merge error reporter
-        std_error_reporter.merge_from(&mut parser_error_reporter);
+        std_error_reporter.merge_from(&parser_error_reporter);
         if std_error_reporter.has_errors() {
             panic!("Errors in standard library. Aborting.");
         } else {
@@ -165,7 +164,7 @@ fn repl_loop(matches: &ArgMatches) {
             let ast = {
                 let mut parser = Parser::new(&mut lexer, &mut error_reporter);
                 let stmt = parser.parse_repl_input();
-                if let None = stmt {
+                if stmt.is_none() {
                     continue; // empty repl input, prompt again
                 }
                 let stmt = stmt.unwrap();
@@ -181,7 +180,7 @@ fn repl_loop(matches: &ArgMatches) {
                 stmt
             };
 
-            error_reporter.merge_from(&mut lexer_error_reporter);
+            error_reporter.merge_from(&lexer_error_reporter);
 
             if error_reporter.has_errors() {
                 print!("{}", error_reporter);
@@ -268,7 +267,7 @@ fn compile_file(matches: ArgMatches) {
         symbol_table = resolver_visitor.symbols;
 
         // merge error reporter
-        std_error_reporter.merge_from(&mut parser_error_reporter);
+        std_error_reporter.merge_from(&parser_error_reporter);
         if std_error_reporter.has_errors() {
             panic!("Errors in standard library. Aborting.");
         } else {
@@ -303,7 +302,7 @@ fn compile_file(matches: ArgMatches) {
             println!("{:#?}", ast);
         }
 
-        error_reporter.merge_from(&mut lexer_error_reporter);
+        error_reporter.merge_from(&lexer_error_reporter);
 
         if error_reporter.has_errors() {
             print!("{}", error_reporter);
@@ -315,7 +314,7 @@ fn compile_file(matches: ArgMatches) {
         LLVMVerifyModule(
             module,
             LLVMVerifierFailureAction::LLVMPrintMessageAction,
-            0 as *mut *mut i8,
+            std::ptr::null_mut::<*mut i8>(),
         );
 
         // optimization passes
