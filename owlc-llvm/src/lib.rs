@@ -212,6 +212,9 @@ impl AstVisitor for LlvmCodeGenVisitor {
                         TokenKind::OpPercent => {
                             LLVMBuildSRem(self.builder, lhs_llvm, rhs_llvm, c_str!("srem_tmp"))
                         }
+                        TokenKind::OpDot => {
+                            todo!();
+                        }
                         _ => {
                             // codegen relational operators
                             let cmp_predicate = match &op_type {

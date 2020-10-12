@@ -149,6 +149,7 @@ impl<'a> Iterator for Lexer<'a> {
                     _ => Some(self.create_token(TokenKind::OpLessThan, 1)),
                 }
             }
+            '.' => Some(self.create_token(TokenKind::OpDot, 1)),
             '0'..='9' => {
                 // lex int literal
                 // TODO: lex double literal

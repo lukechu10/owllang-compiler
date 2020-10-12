@@ -2,7 +2,7 @@
 
 use crate::ast::{expressions::*, statements::*};
 use owlc_error::{Error, ErrorReporter};
-use owlc_lexer::{Lexer, OpPrecedence, Token, TokenKind};
+use owlc_lexer::{Lexer, Token, TokenKind};
 use owlc_span::{BytePos, SourceFile};
 use std::iter::Peekable;
 use std::rc::Rc;
@@ -176,8 +176,8 @@ impl<'a> Parser<'a> {
 
     /// Parses any valid expression.
     fn parse_expression(&mut self) -> Expr {
-        let lhs = self.parse_primary_expression();
-        self.parse_binary_expr_rhs(lhs, OpPrecedence::Expression as i8)
+        // 0 binding power to accept any expression
+        self.parse_binary_expr_rhs(0)
     }
 
     /// Parses an atomic expression. Returns a `'0'` literal expression if bad match.
@@ -259,35 +259,48 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_binary_expr_rhs(&mut self, lhs: Expr, prev_precedence: i8) -> Expr {
-        let mut lhs_tmp = lhs;
+    fn parse_binary_expr_rhs(&mut self, min_bp: i8) -> Expr {
+        // handle prefix operators
+        let prefix_bp = self.current_token.kind.prefix_binding_power();
+        let mut lhs = match prefix_bp {
+            // not a prefix operator
+            ((), -1) => self.parse_primary_expression(),
+            _ => {
+                let ((), right_bp) = prefix_bp;
+                let prefix_op = self.eat_token(); // eat prefix operator
+                let rhs = self.parse_binary_expr_rhs(right_bp);
+                match prefix_op.kind {
+                    TokenKind::OpPlus => rhs,
+                    // build as 0 - x
+                    TokenKind::OpMinus => Expr::new(ExprKind::BinaryExpr {
+                        lhs: Box::new(Expr::new(ExprKind::Literal(0))),
+                        rhs: Box::new(rhs),
+                        op_type: TokenKind::OpMinus,
+                    }),
+                    _ => unreachable!("Invalid prefix operator."),
+                }
+            }
+        };
+
         loop {
-            let current_precedence = self.current_token.kind.precedence() as i8;
+            let (left_bp, right_bp) = self.current_token.kind.infix_binding_power();
 
-            // if this is a binary operator that binds at least as tightly as the current binary operator, consume it, otherwise we are done.
-            // Example: "1 * 2 + 3"
-            // current binary operator = '+'
-            // previous binary operator = '*'
-            // '+' does not bind as tight as '*' (has lower precedence)
-            if current_precedence < prev_precedence {
-                return lhs_tmp;
+            // stop parsing
+            if left_bp < min_bp {
+                break;
             }
+            let binop = self.eat_token(); // eat bin op
 
-            let binary_op_tok = self.eat_token(); // eat binary operator (precedence read into current_precedence)
-            let mut rhs = self.parse_primary_expression(); // parse expression on rhs on operator
+            let rhs = self.parse_binary_expr_rhs(right_bp);
 
-            // if binary operator binds less tightly with RHS than the operator after RHS, let the pending operator take RHS as its LHS.
-            let next_precedence = self.current_token.kind.precedence() as i8;
-            if current_precedence < next_precedence {
-                rhs = self.parse_binary_expr_rhs(rhs, prev_precedence + 1);
-            }
-
-            lhs_tmp = Expr::new(ExprKind::BinaryExpr {
-                lhs: Box::new(lhs_tmp),
+            lhs = Expr::new(ExprKind::BinaryExpr {
+                lhs: Box::new(lhs),
                 rhs: Box::new(rhs),
-                op_type: binary_op_tok.kind,
+                op_type: binop.kind,
             })
         }
+
+        lhs
     }
 
     fn parse_fn_prototype(&mut self) -> FnProto {

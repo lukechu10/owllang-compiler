@@ -11,25 +11,6 @@ pub struct Token {
     pub loc: Span,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
-#[repr(i8)]
-pub enum OpPrecedence {
-    /// `OpPrecedence` for non operator `TokenVal`s.
-    Error = -1,
-    /// Used to except all operator.
-    Expression = 0,
-    // `=`
-    Assignment,
-    // `==`
-    Equality,
-    // `>`, `>=`, `<` and `<=`
-    Relational,
-    /// `+`, and `-`
-    Additive,
-    /// `*`, `/` and `%`
-    Multiplicative,
-}
-
 /// Represents the value of a token.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[repr(u8)]
@@ -71,6 +52,9 @@ pub enum TokenKind {
     OpLessThan,
     /// `<=`
     OpEqualsLessThan,
+    /// `.` (for function composition)
+    OpDot,
+
     // keywords
     KeywordFn,
     KeywordExtern,
@@ -91,22 +75,33 @@ pub enum TokenKind {
 }
 
 impl TokenKind {
-    /// Returns the precedence of the current `TokenVal`. If the current `TokenVal` is not an operator, returns the `Error` variant of the `OPPrecedence` enum.
+    /// Returns the infix binding power for an operator. If invalid operator, returns `(-1, -1)`.
+    /// Refer to [https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html](https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html) for details on Pratt Parsing algorithm.
     /// # Panics
     /// This method cannot panic.
-    pub fn precedence(&self) -> OpPrecedence {
+    pub fn infix_binding_power(&self) -> (i8, i8) {
         match self {
-            TokenKind::OpEquals => OpPrecedence::Assignment,
-            TokenKind::OpEqualsEquals => OpPrecedence::Equality,
+            TokenKind::OpEquals => (1, 2),
+            TokenKind::OpEqualsEquals => (3, 4),
             TokenKind::OpGreaterThan
             | TokenKind::OpEqualsGreaterThan
             | TokenKind::OpLessThan
-            | TokenKind::OpEqualsLessThan => OpPrecedence::Relational,
-            TokenKind::OpPlus | TokenKind::OpMinus => OpPrecedence::Additive,
-            TokenKind::OpAsterisk | TokenKind::OpSlash | TokenKind::OpPercent => {
-                OpPrecedence::Multiplicative
-            }
-            _ => OpPrecedence::Error,
+            | TokenKind::OpEqualsLessThan => (5, 6),
+            TokenKind::OpPlus | TokenKind::OpMinus => (7, 8),
+            TokenKind::OpAsterisk | TokenKind::OpSlash | TokenKind::OpPercent => (9, 10),
+            TokenKind::OpDot => (14, 13), // right associative
+            _ => (-1, -1),
+        }
+    }
+
+    /// Returns the prefix binding power for an operator. If invalid operator, returns `((), -1)`.
+    /// Refer to [https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html](https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html) for details on Pratt Parsing algorithm.
+    /// # Panics
+    /// This method cannot panic.
+    pub fn prefix_binding_power(&self) -> ((), i8) {
+        match self {
+            TokenKind::OpPlus | TokenKind::OpMinus => ((), 11),
+            _ => ((), -1),
         }
     }
 
@@ -130,6 +125,7 @@ impl TokenKind {
             TokenKind::OpEqualsGreaterThan => "'>='",
             TokenKind::OpLessThan => "'<'",
             TokenKind::OpEqualsLessThan => "'<='",
+            TokenKind::OpDot => "'.'",
             TokenKind::KeywordFn => "'fn'",
             TokenKind::KeywordExtern => "'extern'",
             TokenKind::KeywordLet => "'let'",
