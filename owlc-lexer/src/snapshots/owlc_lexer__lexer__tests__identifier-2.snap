@@ -12,7 +12,7 @@ expression: "lex_str(\"_my_variable\")"
                 0,
             ),
             hi: BytePos(
-                11,
+                12,
             ),
         },
     },

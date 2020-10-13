@@ -11,7 +11,7 @@ use std::rc::Rc;
 pub struct BytePos(pub u32);
 
 impl BytePos {
-    /// Create a new `SpanData` from `self` to `hi`.
+    /// Create a new `SpanData` from `self` to `hi`. `lo` is inclusive and `hi` is exclusive.
     pub fn to(self, hi: BytePos) -> Span {
         Span { lo: self, hi }
     }

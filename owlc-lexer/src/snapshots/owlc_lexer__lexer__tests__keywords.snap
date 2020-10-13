@@ -10,7 +10,7 @@ expression: "lex_str(\"fn extern let if else while for return\")"
                 0,
             ),
             hi: BytePos(
-                1,
+                2,
             ),
         },
     },
@@ -21,7 +21,7 @@ expression: "lex_str(\"fn extern let if else while for return\")"
                 3,
             ),
             hi: BytePos(
-                8,
+                9,
             ),
         },
     },
@@ -32,7 +32,7 @@ expression: "lex_str(\"fn extern let if else while for return\")"
                 10,
             ),
             hi: BytePos(
-                12,
+                13,
             ),
         },
     },
@@ -43,7 +43,7 @@ expression: "lex_str(\"fn extern let if else while for return\")"
                 14,
             ),
             hi: BytePos(
-                15,
+                16,
             ),
         },
     },
@@ -54,7 +54,7 @@ expression: "lex_str(\"fn extern let if else while for return\")"
                 17,
             ),
             hi: BytePos(
-                20,
+                21,
             ),
         },
     },
@@ -65,7 +65,7 @@ expression: "lex_str(\"fn extern let if else while for return\")"
                 22,
             ),
             hi: BytePos(
-                26,
+                27,
             ),
         },
     },
@@ -76,7 +76,7 @@ expression: "lex_str(\"fn extern let if else while for return\")"
                 28,
             ),
             hi: BytePos(
-                30,
+                31,
             ),
         },
     },
@@ -87,7 +87,7 @@ expression: "lex_str(\"fn extern let if else while for return\")"
                 32,
             ),
             hi: BytePos(
-                37,
+                38,
             ),
         },
     },

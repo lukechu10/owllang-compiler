@@ -12,7 +12,7 @@ expression: "lex_str(\"1120323489\")"
                 0,
             ),
             hi: BytePos(
-                9,
+                10,
             ),
         },
     },

@@ -10,7 +10,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } , ;\")"
                 0,
             ),
             hi: BytePos(
-                0,
+                1,
             ),
         },
     },
@@ -21,7 +21,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } , ;\")"
                 2,
             ),
             hi: BytePos(
-                2,
+                3,
             ),
         },
     },
@@ -32,7 +32,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } , ;\")"
                 4,
             ),
             hi: BytePos(
-                4,
+                5,
             ),
         },
     },
@@ -43,7 +43,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } , ;\")"
                 6,
             ),
             hi: BytePos(
-                6,
+                7,
             ),
         },
     },
@@ -54,7 +54,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } , ;\")"
                 8,
             ),
             hi: BytePos(
-                8,
+                9,
             ),
         },
     },
@@ -65,7 +65,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } , ;\")"
                 10,
             ),
             hi: BytePos(
-                10,
+                11,
             ),
         },
     },
@@ -76,7 +76,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } , ;\")"
                 12,
             ),
             hi: BytePos(
-                12,
+                13,
             ),
         },
     },
@@ -87,7 +87,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } , ;\")"
                 14,
             ),
             hi: BytePos(
-                14,
+                15,
             ),
         },
     },
@@ -98,7 +98,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } , ;\")"
                 16,
             ),
             hi: BytePos(
-                16,
+                17,
             ),
         },
     },
@@ -109,7 +109,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } , ;\")"
                 18,
             ),
             hi: BytePos(
-                18,
+                19,
             ),
         },
     },
@@ -120,7 +120,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } , ;\")"
                 20,
             ),
             hi: BytePos(
-                20,
+                21,
             ),
         },
     },
@@ -131,7 +131,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } , ;\")"
                 22,
             ),
             hi: BytePos(
-                22,
+                23,
             ),
         },
     },

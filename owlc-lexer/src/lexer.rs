@@ -67,7 +67,7 @@ impl<'a> Lexer<'a> {
 
     /// Utility factory function to create new tokens with current position.
     fn create_token(&self, value: TokenKind, len: u32) -> Token {
-        let span = BytePos(self.current_byte_pos + 1 - len).to(BytePos(self.current_byte_pos));
+        let span = BytePos(self.current_byte_pos + 1 - len).to(BytePos(self.current_byte_pos + 1));
         Token {
             kind: value,
             loc: span,

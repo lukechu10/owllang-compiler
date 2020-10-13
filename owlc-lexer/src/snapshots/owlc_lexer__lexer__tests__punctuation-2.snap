@@ -10,7 +10,7 @@ expression: "lex_str(\"== <= >= < >\")"
                 0,
             ),
             hi: BytePos(
-                1,
+                2,
             ),
         },
     },
@@ -21,7 +21,7 @@ expression: "lex_str(\"== <= >= < >\")"
                 3,
             ),
             hi: BytePos(
-                4,
+                5,
             ),
         },
     },
@@ -32,7 +32,7 @@ expression: "lex_str(\"== <= >= < >\")"
                 6,
             ),
             hi: BytePos(
-                7,
+                8,
             ),
         },
     },
@@ -43,7 +43,7 @@ expression: "lex_str(\"== <= >= < >\")"
                 9,
             ),
             hi: BytePos(
-                9,
+                10,
             ),
         },
     },
@@ -54,7 +54,7 @@ expression: "lex_str(\"== <= >= < >\")"
                 11,
             ),
             hi: BytePos(
-                11,
+                12,
             ),
         },
     },

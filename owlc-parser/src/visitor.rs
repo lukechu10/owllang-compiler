@@ -1,4 +1,4 @@
-//! Abstract syntax tree walking tools.
+//! Utilities for walking the abstract syntax tree.
 
 use crate::ast::expressions::{Expr, ExprKind};
 use crate::ast::statements::{Block, CompilationUnit, FnProto, Stmt, StmtKind};
