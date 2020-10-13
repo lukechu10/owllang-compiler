@@ -403,6 +403,23 @@ mod tests {
     use insta::assert_debug_snapshot;
 
     /// Utility function for tests
+    fn parse_str_as_repl(s: &str) -> Option<Stmt> {
+        let source = Rc::new(SourceFile::new("<test>", s));
+        let mut lexer_error_reporter = ErrorReporter::new(source.clone());
+        let mut lexer = Lexer::with_source_file(&source, &mut lexer_error_reporter);
+        let mut parser_error_reporter = ErrorReporter::new(source.clone());
+        let mut parser = Parser::new(&mut lexer, &mut parser_error_reporter);
+
+        let res = parser.parse_repl_input();
+
+        let mut errors = ErrorReporter::new(source.clone());
+        errors.merge_from(&lexer_error_reporter);
+        errors.merge_from(&parser_error_reporter);
+        assert!(!errors.has_errors());
+        res
+    }
+
+    /// Utility function for tests
     fn parse_str_as_expr(s: &str) -> Expr {
         let source = Rc::new(SourceFile::new("<test>", s));
         let mut lexer_error_reporter = ErrorReporter::new(source.clone());
@@ -456,6 +473,16 @@ mod tests {
     #[test]
     fn parse_basic_bin_op() {
         assert_debug_snapshot!(parse_str_as_expr("1 + 1"));
+        assert_debug_snapshot!(parse_str_as_expr("a + b"));
+    }
+
+    #[test]
+    #[should_panic]
+    #[ignore]
+    fn parse_bad_bin_op() {
+        // FIXME: should be bad syntax
+        parse_str_as_expr("1 ++ 1");
+        parse_str_as_expr("1 -- 1");
     }
 
     #[test]
@@ -464,6 +491,15 @@ mod tests {
         assert_debug_snapshot!(parse_str_as_expr("1 * 2 + 3 * 4"));
         assert_debug_snapshot!(parse_str_as_expr("my.field"));
         assert_debug_snapshot!(parse_str_as_expr("my.nested.field")); // test right associativity
+
+        assert_debug_snapshot!(parse_str_as_expr("foo = 1")); // assignment operator
+        assert_debug_snapshot!(parse_str_as_expr("foo = foo + 1"));
+
+        assert_debug_snapshot!(parse_str_as_expr("foo == 1"));
+        assert_debug_snapshot!(parse_str_as_expr("foo < 1"));
+        assert_debug_snapshot!(parse_str_as_expr("foo > 1"));
+        assert_debug_snapshot!(parse_str_as_expr("foo <= 1"));
+        assert_debug_snapshot!(parse_str_as_expr("foo >= 1"));
     }
 
     #[test]
@@ -473,6 +509,7 @@ mod tests {
         assert_debug_snapshot!(parse_str_as_expr("-1 + 2"));
         assert_debug_snapshot!(parse_str_as_expr("1 + (-2)"));
         assert_debug_snapshot!(parse_str_as_expr("1 + -2")); // also valid
+        assert_debug_snapshot!(parse_str_as_expr("-my_var"));
     }
 
     #[test]
@@ -492,44 +529,68 @@ mod tests {
     }
 
     #[test]
-    fn parse_func_definition() {
+    fn parse_while_statement() {
+        assert_debug_snapshot!(parse_str_as_stmt("while x < 10 { println(x); x = x + 1; }"));
+        assert_debug_snapshot!(parse_str_as_stmt("while x < 10 { }")); // empty body
+    }
+
+    #[test]
+    fn parse_fn_definition() {
         assert_debug_snapshot!(parse_str_as_unit(
             "fn test() {
-            return 1;
-        }"
+                return 1;
+            }"
         ));
         assert_debug_snapshot!(parse_str_as_unit(
             "fn test() {
-            return 1 + 1;
-        }"
+                return 1 + 1;
+            }"
         ));
         assert_debug_snapshot!(parse_str_as_unit(
             "fn recursion() {
-            return recursion();
-        }"
+                return recursion();
+            }"
         ));
         assert_debug_snapshot!(parse_str_as_unit(
             "fn test() {
-            let tmp = 1;
-            return tmp;
-        }"
+                let tmp = 1;
+                return tmp;
+            }"
         ));
         assert_debug_snapshot!(parse_str_as_unit(
             "fn test() {
-            let i = 0;
-            while i < 10 {
-                println(i);
-                i = i + 1;
-            }
-            return i;
-        }"
+                let i = 0;
+                while i < 10 {
+                    println(i);
+                    i = i + 1;
+                }
+                return i;
+            }"
         ));
         assert_debug_snapshot!(parse_str_as_unit(
             "fn comments() {
-            // this is a comment
-            // return 0;
-            return 1;
-        }"
+                // this is a comment
+                // return 0;
+                return 1;
+            }"
         ));
+    }
+
+    #[test]
+    #[should_panic]
+    fn parse_fn_with_missing_paren() {
+        parse_str_as_unit(
+            "fn no_paren {
+                return 0;
+            }"
+        );
+    }
+
+    #[test]
+    fn parse_repl_input() {
+        assert_debug_snapshot!(parse_str_as_repl("1 + 1;")); // accepts expressions (expression statement)
+        assert_debug_snapshot!(parse_str_as_repl("1 + 1")); // semi colon is optional
+        assert_debug_snapshot!(parse_str_as_repl("fn func() { return 1; }")); // function declarations / definition
+        assert_debug_snapshot!(parse_str_as_repl("func()")); // function call
     }
 }

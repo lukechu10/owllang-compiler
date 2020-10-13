@@ -1,0 +1,29 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_expr(\"foo = foo + 1\")"
+---
+Expr {
+    kind: BinaryExpr {
+        lhs: Expr {
+            kind: Identifier(
+                "foo",
+            ),
+        },
+        rhs: Expr {
+            kind: BinaryExpr {
+                lhs: Expr {
+                    kind: Identifier(
+                        "foo",
+                    ),
+                },
+                rhs: Expr {
+                    kind: Literal(
+                        1,
+                    ),
+                },
+                op_type: OpPlus,
+            },
+        },
+        op_type: OpEquals,
+    },
+}

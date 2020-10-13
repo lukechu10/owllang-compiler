@@ -1,0 +1,19 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_expr(\"a + b\")"
+---
+Expr {
+    kind: BinaryExpr {
+        lhs: Expr {
+            kind: Identifier(
+                "a",
+            ),
+        },
+        rhs: Expr {
+            kind: Identifier(
+                "b",
+            ),
+        },
+        op_type: OpPlus,
+    },
+}

@@ -1,0 +1,25 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_repl(\"1 + 1\")"
+---
+Some(
+    Stmt {
+        kind: ExprSemi {
+            expr: Expr {
+                kind: BinaryExpr {
+                    lhs: Expr {
+                        kind: Literal(
+                            1,
+                        ),
+                    },
+                    rhs: Expr {
+                        kind: Literal(
+                            1,
+                        ),
+                    },
+                    op_type: OpPlus,
+                },
+            },
+        },
+    },
+)

@@ -1,6 +1,6 @@
 ---
 source: owlc-parser/src/parser.rs
-expression: "parse_str_as_unit(\"fn test() {\n            let i = 0;\n            while i < 10 {\n                println(i);\n                i = i + 1;\n            }\n            return i;\n        }\")"
+expression: "parse_str_as_unit(\"fn test() {\n                let i = 0;\n                while i < 10 {\n                    println(i);\n                    i = i + 1;\n                }\n                return i;\n            }\")"
 ---
 CompilationUnit {
     entry_file_name: "<test>",

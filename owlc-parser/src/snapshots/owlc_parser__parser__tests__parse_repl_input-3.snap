@@ -1,0 +1,29 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_repl(\"fn func() { return 1; }\")"
+---
+Some(
+    Stmt {
+        kind: Fn {
+            proto: FnProto {
+                args: [],
+                iden: "func",
+            },
+            body: Some(
+                Block {
+                    stmts: [
+                        Stmt {
+                            kind: Return {
+                                value: Expr {
+                                    kind: Literal(
+                                        1,
+                                    ),
+                                },
+                            },
+                        },
+                    ],
+                },
+            ),
+        },
+    },
+)

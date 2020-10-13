@@ -1,6 +1,6 @@
 ---
 source: owlc-parser/src/parser.rs
-expression: "parse_str_as_unit(\"fn test() {\n            return 1 + 1;\n        }\")"
+expression: "parse_str_as_unit(\"fn test() {\n                return 1 + 1;\n            }\")"
 ---
 CompilationUnit {
     entry_file_name: "<test>",

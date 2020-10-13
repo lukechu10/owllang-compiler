@@ -1,0 +1,26 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_stmt(\"while x < 10 { }\")"
+---
+Stmt {
+    kind: While {
+        condition: Expr {
+            kind: BinaryExpr {
+                lhs: Expr {
+                    kind: Identifier(
+                        "x",
+                    ),
+                },
+                rhs: Expr {
+                    kind: Literal(
+                        10,
+                    ),
+                },
+                op_type: OpLessThan,
+            },
+        },
+        body: Block {
+            stmts: [],
+        },
+    },
+}

@@ -66,7 +66,10 @@ impl ErrorReporter {
 
     /// Consumes `error_reporter` and merges the errors into `self`.
     pub fn merge_from(&mut self, error_reporter: &ErrorReporter) {
-        self.errs.clone_from_slice(&error_reporter.errs);
+        // self.errs.clone_from_slice(&error_reporter.errs);
+        for err in &error_reporter.errs {
+            self.errs.push(err.clone());
+        }
     }
 }
 

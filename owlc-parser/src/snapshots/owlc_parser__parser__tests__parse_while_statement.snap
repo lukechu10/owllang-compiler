@@ -1,0 +1,72 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_stmt(\"while x < 10 { println(x); x = x + 1; }\")"
+---
+Stmt {
+    kind: While {
+        condition: Expr {
+            kind: BinaryExpr {
+                lhs: Expr {
+                    kind: Identifier(
+                        "x",
+                    ),
+                },
+                rhs: Expr {
+                    kind: Literal(
+                        10,
+                    ),
+                },
+                op_type: OpLessThan,
+            },
+        },
+        body: Block {
+            stmts: [
+                Stmt {
+                    kind: ExprSemi {
+                        expr: Expr {
+                            kind: FuncCall {
+                                callee: "println",
+                                args: [
+                                    Expr {
+                                        kind: Identifier(
+                                            "x",
+                                        ),
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+                Stmt {
+                    kind: ExprSemi {
+                        expr: Expr {
+                            kind: BinaryExpr {
+                                lhs: Expr {
+                                    kind: Identifier(
+                                        "x",
+                                    ),
+                                },
+                                rhs: Expr {
+                                    kind: BinaryExpr {
+                                        lhs: Expr {
+                                            kind: Identifier(
+                                                "x",
+                                            ),
+                                        },
+                                        rhs: Expr {
+                                            kind: Literal(
+                                                1,
+                                            ),
+                                        },
+                                        op_type: OpPlus,
+                                    },
+                                },
+                                op_type: OpEquals,
+                            },
+                        },
+                    },
+                },
+            ],
+        },
+    },
+}

@@ -1,6 +1,6 @@
 ---
 source: owlc-parser/src/parser.rs
-expression: "parse_str_as_unit(\"fn test() {\n            return 1;\n        }\")"
+expression: "parse_str_as_unit(\"fn test() {\n                let tmp = 1;\n                return tmp;\n            }\")"
 ---
 CompilationUnit {
     entry_file_name: "<test>",
@@ -15,10 +15,20 @@ CompilationUnit {
                     Block {
                         stmts: [
                             Stmt {
-                                kind: Return {
-                                    value: Expr {
+                                kind: Let {
+                                    iden: "tmp",
+                                    initializer: Expr {
                                         kind: Literal(
                                             1,
+                                        ),
+                                    },
+                                },
+                            },
+                            Stmt {
+                                kind: Return {
+                                    value: Expr {
+                                        kind: Identifier(
+                                            "tmp",
                                         ),
                                     },
                                 },

@@ -1,6 +1,6 @@
 ---
 source: owlc-parser/src/parser.rs
-expression: "parse_str_as_unit(\"fn recursion() {\n            return recursion();\n        }\")"
+expression: "parse_str_as_unit(\"fn recursion() {\n                return recursion();\n            }\")"
 ---
 CompilationUnit {
     entry_file_name: "<test>",

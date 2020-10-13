@@ -1,0 +1,19 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_expr(\"-my_var\")"
+---
+Expr {
+    kind: BinaryExpr {
+        lhs: Expr {
+            kind: Literal(
+                0,
+            ),
+        },
+        rhs: Expr {
+            kind: Identifier(
+                "my_var",
+            ),
+        },
+        op_type: OpMinus,
+    },
+}
