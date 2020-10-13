@@ -1,0 +1,19 @@
+---
+source: owlc-lexer/src/lexer.rs
+expression: "lex_str(\"1\")"
+---
+[
+    Token {
+        kind: LiteralInt(
+            1,
+        ),
+        loc: Span {
+            lo: BytePos(
+                0,
+            ),
+            hi: BytePos(
+                0,
+            ),
+        },
+    },
+]

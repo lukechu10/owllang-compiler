@@ -1,0 +1,19 @@
+---
+source: owlc-lexer/src/lexer.rs
+expression: "lex_str(\"_my_variable\")"
+---
+[
+    Token {
+        kind: Identifier(
+            "_my_variable",
+        ),
+        loc: Span {
+            lo: BytePos(
+                0,
+            ),
+            hi: BytePos(
+                11,
+            ),
+        },
+    },
+]

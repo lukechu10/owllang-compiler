@@ -205,3 +205,50 @@ impl<'a> Iterator for Lexer<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use insta::assert_debug_snapshot;
+
+    /// Utility function
+    fn lex_str(s: &str) -> Vec<Token> {
+        let source = Rc::new(SourceFile::new("<test>", s));
+        let mut error_reporter = ErrorReporter::new(source.clone());
+
+        let lexer = Lexer::with_source_file(&source, &mut error_reporter);
+        let tokens = lexer.collect();
+        
+        assert!(!error_reporter.has_errors());
+        tokens
+    }
+
+    #[test]
+    fn punctuation() {
+        assert_debug_snapshot!(lex_str("+ - * / % . ( ) { } , ;"));
+        assert_debug_snapshot!(lex_str("== <= >= < >"));
+    }
+
+    #[test]
+    fn keywords() {
+        assert_debug_snapshot!(lex_str("fn extern let if else while for return"));
+    }
+
+    #[test]
+    fn int_literal() {
+        assert_debug_snapshot!(lex_str("1"));
+        assert_debug_snapshot!(lex_str("1120323489"));
+    }
+
+    #[test]
+    fn identifier() {
+        assert_debug_snapshot!(lex_str("my_variable"));
+        assert_debug_snapshot!(lex_str("_my_variable")); // can start with '_'
+    }
+
+    #[test]
+    #[should_panic]
+    fn bad_tok() {
+        lex_str("?"); // invalid char
+    }
+}

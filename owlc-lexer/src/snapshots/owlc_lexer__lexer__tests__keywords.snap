@@ -1,0 +1,94 @@
+---
+source: owlc-lexer/src/lexer.rs
+expression: "lex_str(\"fn extern let if else while for return\")"
+---
+[
+    Token {
+        kind: KeywordFn,
+        loc: Span {
+            lo: BytePos(
+                0,
+            ),
+            hi: BytePos(
+                1,
+            ),
+        },
+    },
+    Token {
+        kind: KeywordExtern,
+        loc: Span {
+            lo: BytePos(
+                3,
+            ),
+            hi: BytePos(
+                8,
+            ),
+        },
+    },
+    Token {
+        kind: KeywordLet,
+        loc: Span {
+            lo: BytePos(
+                10,
+            ),
+            hi: BytePos(
+                12,
+            ),
+        },
+    },
+    Token {
+        kind: KeywordIf,
+        loc: Span {
+            lo: BytePos(
+                14,
+            ),
+            hi: BytePos(
+                15,
+            ),
+        },
+    },
+    Token {
+        kind: KeywordElse,
+        loc: Span {
+            lo: BytePos(
+                17,
+            ),
+            hi: BytePos(
+                20,
+            ),
+        },
+    },
+    Token {
+        kind: KeywordWhile,
+        loc: Span {
+            lo: BytePos(
+                22,
+            ),
+            hi: BytePos(
+                26,
+            ),
+        },
+    },
+    Token {
+        kind: KeywordFor,
+        loc: Span {
+            lo: BytePos(
+                28,
+            ),
+            hi: BytePos(
+                30,
+            ),
+        },
+    },
+    Token {
+        kind: KeywordReturn,
+        loc: Span {
+            lo: BytePos(
+                32,
+            ),
+            hi: BytePos(
+                37,
+            ),
+        },
+    },
+]

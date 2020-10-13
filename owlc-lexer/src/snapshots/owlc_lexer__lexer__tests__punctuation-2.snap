@@ -1,0 +1,61 @@
+---
+source: owlc-lexer/src/lexer.rs
+expression: "lex_str(\"== <= >= < >\")"
+---
+[
+    Token {
+        kind: OpEqualsEquals,
+        loc: Span {
+            lo: BytePos(
+                0,
+            ),
+            hi: BytePos(
+                1,
+            ),
+        },
+    },
+    Token {
+        kind: OpEqualsLessThan,
+        loc: Span {
+            lo: BytePos(
+                3,
+            ),
+            hi: BytePos(
+                4,
+            ),
+        },
+    },
+    Token {
+        kind: OpEqualsGreaterThan,
+        loc: Span {
+            lo: BytePos(
+                6,
+            ),
+            hi: BytePos(
+                7,
+            ),
+        },
+    },
+    Token {
+        kind: OpLessThan,
+        loc: Span {
+            lo: BytePos(
+                9,
+            ),
+            hi: BytePos(
+                9,
+            ),
+        },
+    },
+    Token {
+        kind: OpGreaterThan,
+        loc: Span {
+            lo: BytePos(
+                11,
+            ),
+            hi: BytePos(
+                11,
+            ),
+        },
+    },
+]
