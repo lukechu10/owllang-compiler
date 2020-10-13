@@ -39,6 +39,7 @@ impl Error {
 
 /// Handles all errors for a compilation unit.
 /// Use `format!("{}", err_reporter);` to retrieve list of errors.
+#[derive(Debug)]
 pub struct ErrorReporter {
     src: Rc<SourceFile>,
     /// A list of reported errors

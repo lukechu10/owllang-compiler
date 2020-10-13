@@ -97,7 +97,8 @@ impl LlvmCodeGenVisitor {
                     self.visit_fn_stmt(&proto, &Some(body));
                 }
             }
-            _ => unreachable!(),
+            StmtKind::Noop => {}
+            _ => unreachable!(), // not possible in repl.
         }
     }
 }

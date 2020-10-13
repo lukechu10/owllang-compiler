@@ -1,0 +1,7 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_repl(\"\")"
+---
+Stmt {
+    kind: Noop,
+}

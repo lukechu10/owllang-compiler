@@ -42,6 +42,7 @@ pub trait AstVisitor {
             StmtKind::Let { iden, initializer } => self.visit_let_stmt(iden, initializer),
             StmtKind::Return { value } => self.visit_return_stmt(value),
             StmtKind::ExprSemi { expr } => self.visit_expr_semi_stmt(expr),
+            StmtKind::Noop => {}
         }
     }
 

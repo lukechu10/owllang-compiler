@@ -104,6 +104,8 @@ pub enum StmtKind {
         #[serde(flatten)]
         expr: Expr,
     },
+    /// No-op (used for empty REPL input).
+    Noop,
 }
 
 /// Represents a statement. Statements do not have any value unlike [`Expr`](../expressions/struct.Expr.html). Statements usually have side effects.

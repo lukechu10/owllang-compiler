@@ -5,6 +5,7 @@ use std::iter::{Iterator, Peekable};
 use std::rc::Rc;
 use std::str::CharIndices;
 
+#[derive(Debug)]
 pub struct Lexer<'a> {
     /// The string to read from.
     pub src: Rc<SourceFile>,
@@ -218,7 +219,7 @@ mod tests {
 
         let lexer = Lexer::with_source_file(&source, &mut error_reporter);
         let tokens = lexer.collect();
-        
+
         assert!(!error_reporter.has_errors());
         tokens
     }

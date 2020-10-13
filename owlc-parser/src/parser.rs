@@ -7,6 +7,7 @@ use owlc_span::{BytePos, SourceFile};
 use std::iter::Peekable;
 use std::rc::Rc;
 
+#[derive(Debug)]
 pub struct Parser<'a> {
     src: Rc<SourceFile>,
     lexer: Peekable<&'a mut Lexer<'a>>,
@@ -90,13 +91,10 @@ impl<'a> Parser<'a> {
 
 impl<'a> Parser<'a> {
     /// User can input both fn definitions and statements / expressions in the repl prompt.
-    pub fn parse_repl_input(&mut self) -> Option<Stmt> {
+    pub fn parse_repl_input(&mut self) -> Stmt {
         match self.current_token.kind {
-            TokenKind::EndOfFile => None,
-            TokenKind::KeywordFn | TokenKind::KeywordExtern => {
-                let func = self.parse_fn_declaration();
-                Some(func)
-            }
+            TokenKind::EndOfFile => Stmt::new(StmtKind::Noop),
+            TokenKind::KeywordFn | TokenKind::KeywordExtern => self.parse_fn_declaration(),
             // TokenKind::KeywordLet => {
             //     let let_statement = self.parse_let_statement();
             //     if self.current_token.kind == TokenKind::PuncSemi {
@@ -111,8 +109,7 @@ impl<'a> Parser<'a> {
                 if self.current_token.kind == TokenKind::PuncSemi {
                     self.expect_and_eat_tok(TokenKind::PuncSemi);
                 }
-                let expr_statement = Stmt::new(StmtKind::ExprSemi { expr });
-                Some(expr_statement)
+                Stmt::new(StmtKind::ExprSemi { expr })
             }
         }
     }
@@ -403,7 +400,7 @@ mod tests {
     use insta::assert_debug_snapshot;
 
     /// Utility function for tests
-    fn parse_str_as_repl(s: &str) -> Option<Stmt> {
+    fn parse_str_as_repl(s: &str) -> Stmt {
         let source = Rc::new(SourceFile::new("<test>", s));
         let mut lexer_error_reporter = ErrorReporter::new(source.clone());
         let mut lexer = Lexer::with_source_file(&source, &mut lexer_error_reporter);
@@ -582,7 +579,7 @@ mod tests {
         parse_str_as_unit(
             "fn no_paren {
                 return 0;
-            }"
+            }",
         );
     }
 
@@ -592,5 +589,7 @@ mod tests {
         assert_debug_snapshot!(parse_str_as_repl("1 + 1")); // semi colon is optional
         assert_debug_snapshot!(parse_str_as_repl("fn func() { return 1; }")); // function declarations / definition
         assert_debug_snapshot!(parse_str_as_repl("func()")); // function call
+
+        assert_debug_snapshot!(parse_str_as_repl("")); // should be StmtKind::Noop
     }
 }

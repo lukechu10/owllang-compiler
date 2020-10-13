@@ -164,10 +164,6 @@ fn repl_loop(matches: &ArgMatches) {
             let ast = {
                 let mut parser = Parser::new(&mut lexer, &mut error_reporter);
                 let stmt = parser.parse_repl_input();
-                if stmt.is_none() {
-                    continue; // empty repl input, prompt again
-                }
-                let stmt = stmt.unwrap();
 
                 let mut resolver_visitor = ResolverVisitor::new(&mut error_reporter);
                 // restore previous symbols

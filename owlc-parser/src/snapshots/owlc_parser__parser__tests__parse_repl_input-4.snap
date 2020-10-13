@@ -2,15 +2,13 @@
 source: owlc-parser/src/parser.rs
 expression: "parse_str_as_repl(\"func()\")"
 ---
-Some(
-    Stmt {
-        kind: ExprSemi {
-            expr: Expr {
-                kind: FuncCall {
-                    callee: "func",
-                    args: [],
-                },
+Stmt {
+    kind: ExprSemi {
+        expr: Expr {
+            kind: FuncCall {
+                callee: "func",
+                args: [],
             },
         },
     },
-)
+}

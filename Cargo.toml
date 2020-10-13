@@ -1,10 +1,11 @@
 [workspace]
 members = [
   "owlc-cli",
-  "owlc-lexer",
-  "owlc-parser",
-  "owlc-llvm",
-  "owlc-passes",
   "owlc-error",
+  "owlc-lexer",
+  "owlc-llvm",
+  "owlc-parser",
+  "owlc-passes",
+  "owlc-source",
   "owlc-span",
 ]

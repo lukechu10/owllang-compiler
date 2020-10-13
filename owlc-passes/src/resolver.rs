@@ -262,6 +262,7 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
             StmtKind::ExprSemi { expr } => {
                 self.visit_expr(expr);
             }
+            StmtKind::Noop => {}
         }
     }
 
