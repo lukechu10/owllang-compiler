@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "owlc-cli",
+  "owlc-driver",
   "owlc-error",
   "owlc-lexer",
   "owlc-llvm",

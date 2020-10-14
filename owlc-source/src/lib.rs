@@ -137,6 +137,7 @@ impl SourceFile {
         let mut resolver_errors = ErrorReporter::new(source_span.clone());
         let mut resolver = ResolverVisitor::new(&mut resolver_errors);
         self.run_pass(&mut resolver);
+        self.errors.merge_from(&resolver_errors);
     }
 
     /// Runs passes specific for a file. This does not call `run_semantic_passes()`. You will need to call that manually.
@@ -149,6 +150,7 @@ impl SourceFile {
         let mut fn_main_errors = ErrorReporter::new(source_span.clone());
         let mut fn_main = MainFunctionVisitor::new(&mut fn_main_errors);
         self.run_pass(&mut fn_main);
+        self.errors.merge_from(&fn_main_errors);
     }
 
     /// Runs passes specific for REPL input. This does not call `run_semantic_passes()`. You will need to call that manually.
@@ -183,7 +185,7 @@ mod tests {
 
         source_file.run_semantic_passes();
         source_file.run_repl_passes();
-        
+
         assert!(!source_file.errors.has_errors());
     }
 }
