@@ -1,6 +1,6 @@
 ---
 source: owlc-lexer/src/lexer.rs
-expression: "lex_str(\"fn extern let if else while for return\")"
+expression: "lex_str(\"fn extern let if else while for in return\")"
 ---
 [
     Token {
@@ -81,13 +81,24 @@ expression: "lex_str(\"fn extern let if else while for return\")"
         },
     },
     Token {
-        kind: KeywordReturn,
+        kind: KeywordIn,
         loc: Span {
             lo: BytePos(
                 32,
             ),
             hi: BytePos(
-                38,
+                34,
+            ),
+        },
+    },
+    Token {
+        kind: KeywordReturn,
+        loc: Span {
+            lo: BytePos(
+                35,
+            ),
+            hi: BytePos(
+                41,
             ),
         },
     },

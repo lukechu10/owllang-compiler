@@ -24,6 +24,10 @@ pub enum TokenKind {
     PuncOpenBrace,
     /// `}`
     PuncCloseBrace,
+    /// `[`
+    PuncOpenSquare,
+    /// `]`
+    PuncCloseSquare,
     /// `,`
     PuncComma,
     /// `;`
@@ -63,6 +67,7 @@ pub enum TokenKind {
     KeywordElse,
     KeywordWhile,
     KeywordFor,
+    KeywordIn,
     KeywordReturn,
     // identifiers
     Identifier(String),
@@ -112,6 +117,8 @@ impl TokenKind {
             TokenKind::PuncCloseParen => "')'",
             TokenKind::PuncOpenBrace => "'{'",
             TokenKind::PuncCloseBrace => "'}'",
+            TokenKind::PuncOpenSquare => "'['",
+            TokenKind::PuncCloseSquare => "']'",
             TokenKind::PuncComma => "','",
             TokenKind::PuncSemi => "';'",
             TokenKind::OpPlus => "'+'",
@@ -133,6 +140,7 @@ impl TokenKind {
             TokenKind::KeywordElse => "'else'",
             TokenKind::KeywordWhile => "'while'",
             TokenKind::KeywordFor => "'for'",
+            TokenKind::KeywordIn => "'in'",
             TokenKind::KeywordReturn => "'return'",
             TokenKind::Identifier(_) => "identifier",
             TokenKind::LiteralInt(_) => "integer literal",

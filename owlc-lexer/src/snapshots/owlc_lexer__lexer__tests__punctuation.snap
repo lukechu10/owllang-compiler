@@ -1,6 +1,6 @@
 ---
 source: owlc-lexer/src/lexer.rs
-expression: "lex_str(\"+ - * / % . ( ) { } , ;\")"
+expression: "lex_str(\"+ - * / % . ( ) { } [ ] , ;\")"
 ---
 [
     Token {
@@ -114,7 +114,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } , ;\")"
         },
     },
     Token {
-        kind: PuncComma,
+        kind: PuncOpenSquare,
         loc: Span {
             lo: BytePos(
                 20,
@@ -125,13 +125,35 @@ expression: "lex_str(\"+ - * / % . ( ) { } , ;\")"
         },
     },
     Token {
-        kind: PuncSemi,
+        kind: PuncCloseSquare,
         loc: Span {
             lo: BytePos(
                 22,
             ),
             hi: BytePos(
                 23,
+            ),
+        },
+    },
+    Token {
+        kind: PuncComma,
+        loc: Span {
+            lo: BytePos(
+                24,
+            ),
+            hi: BytePos(
+                25,
+            ),
+        },
+    },
+    Token {
+        kind: PuncSemi,
+        loc: Span {
+            lo: BytePos(
+                26,
+            ),
+            hi: BytePos(
+                27,
             ),
         },
     },

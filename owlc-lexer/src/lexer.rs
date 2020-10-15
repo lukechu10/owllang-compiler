@@ -98,6 +98,8 @@ impl<'a> Iterator for Lexer<'a> {
             ')' => Some(self.create_token(TokenKind::PuncCloseParen, 1)),
             '{' => Some(self.create_token(TokenKind::PuncOpenBrace, 1)),
             '}' => Some(self.create_token(TokenKind::PuncCloseBrace, 1)),
+            '[' => Some(self.create_token(TokenKind::PuncOpenSquare, 1)),
+            ']' => Some(self.create_token(TokenKind::PuncCloseSquare, 1)),
             ',' => Some(self.create_token(TokenKind::PuncComma, 1)),
             ';' => Some(self.create_token(TokenKind::PuncSemi, 1)),
             // operators
@@ -188,6 +190,7 @@ impl<'a> Iterator for Lexer<'a> {
                         Some(self.create_token(TokenKind::KeywordWhile, iden_str_len))
                     }
                     s if s == "for" => Some(self.create_token(TokenKind::KeywordFor, iden_str_len)),
+                    s if s == "in" => Some(self.create_token(TokenKind::KeywordIn, iden_str_len)),
                     s if s == "return" => {
                         Some(self.create_token(TokenKind::KeywordReturn, iden_str_len))
                     }
@@ -226,13 +229,13 @@ mod tests {
 
     #[test]
     fn punctuation() {
-        assert_debug_snapshot!(lex_str("+ - * / % . ( ) { } , ;"));
+        assert_debug_snapshot!(lex_str("+ - * / % . ( ) { } [ ] , ;"));
         assert_debug_snapshot!(lex_str("== <= >= < >"));
     }
 
     #[test]
     fn keywords() {
-        assert_debug_snapshot!(lex_str("fn extern let if else while for return"));
+        assert_debug_snapshot!(lex_str("fn extern let if else while for in return"));
     }
 
     #[test]
