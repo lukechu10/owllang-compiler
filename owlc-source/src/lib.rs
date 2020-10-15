@@ -9,7 +9,7 @@ use owlc_passes::{fn_main::MainFunctionVisitor, resolver::ResolverVisitor};
 use owlc_span::SourceFile as SourceSpan;
 use std::rc::Rc;
 
-/// `CompilationUnit` (for file) or `Stmt` for REPL.
+/// `CompilationUnit` for file or `Stmt` for REPL.
 #[derive(Debug)]
 enum Ast {
     CompilationUnit(CompilationUnit),
