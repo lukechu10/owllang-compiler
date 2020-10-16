@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 ansi_term = "0.12.0"
 clap = "2"
-llvm-sys = "100"
+llvm-sys = "110"
 owlc-error = {path = "../owlc-error"}
 owlc-lexer = {path = "../owlc-lexer"}
 owlc-llvm = {path = "../owlc-llvm"}
