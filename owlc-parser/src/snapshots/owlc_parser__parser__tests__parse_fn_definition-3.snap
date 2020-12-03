@@ -21,11 +21,35 @@ CompilationUnit {
                                             callee: "recursion",
                                             args: [],
                                         },
+                                        span: Span {
+                                            lo: BytePos(
+                                                40,
+                                            ),
+                                            hi: BytePos(
+                                                51,
+                                            ),
+                                        },
                                     },
+                                },
+                                span: Span {
+                                    lo: BytePos(
+                                        33,
+                                    ),
+                                    hi: BytePos(
+                                        51,
+                                    ),
                                 },
                             },
                         ],
                     },
+                ),
+            },
+            span: Span {
+                lo: BytePos(
+                    0,
+                ),
+                hi: BytePos(
+                    66,
                 ),
             },
         },

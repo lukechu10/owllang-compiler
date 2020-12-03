@@ -5,7 +5,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } [ ] , ;\")"
 [
     Token {
         kind: OpPlus,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 0,
             ),
@@ -16,7 +16,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } [ ] , ;\")"
     },
     Token {
         kind: OpMinus,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 2,
             ),
@@ -27,7 +27,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } [ ] , ;\")"
     },
     Token {
         kind: OpAsterisk,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 4,
             ),
@@ -38,7 +38,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } [ ] , ;\")"
     },
     Token {
         kind: OpSlash,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 6,
             ),
@@ -49,7 +49,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } [ ] , ;\")"
     },
     Token {
         kind: OpPercent,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 8,
             ),
@@ -60,7 +60,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } [ ] , ;\")"
     },
     Token {
         kind: OpDot,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 10,
             ),
@@ -71,7 +71,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } [ ] , ;\")"
     },
     Token {
         kind: PuncOpenParen,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 12,
             ),
@@ -82,7 +82,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } [ ] , ;\")"
     },
     Token {
         kind: PuncCloseParen,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 14,
             ),
@@ -93,7 +93,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } [ ] , ;\")"
     },
     Token {
         kind: PuncOpenBrace,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 16,
             ),
@@ -104,7 +104,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } [ ] , ;\")"
     },
     Token {
         kind: PuncCloseBrace,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 18,
             ),
@@ -115,7 +115,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } [ ] , ;\")"
     },
     Token {
         kind: PuncOpenSquare,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 20,
             ),
@@ -126,7 +126,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } [ ] , ;\")"
     },
     Token {
         kind: PuncCloseSquare,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 22,
             ),
@@ -137,7 +137,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } [ ] , ;\")"
     },
     Token {
         kind: PuncComma,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 24,
             ),
@@ -148,7 +148,7 @@ expression: "lex_str(\"+ - * / % . ( ) { } [ ] , ;\")"
     },
     Token {
         kind: PuncSemi,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 26,
             ),

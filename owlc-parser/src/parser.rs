@@ -20,7 +20,7 @@ impl<'a> Parser<'a> {
     pub fn new(lexer: &'a mut Lexer<'a>, error_reporter: &'a mut ErrorReporter) -> Self {
         let first_token = lexer.next().unwrap_or(Token {
             kind: TokenKind::EndOfFile,
-            loc: BytePos(0).to(BytePos(1)),
+            span: BytePos(0).to(BytePos(1)),
         });
 
         Self {
@@ -33,7 +33,7 @@ impl<'a> Parser<'a> {
 
     /// Creates a new syntax error at the current token and adds it to the `ErrorReporter`.
     fn emit_err_at_current_tok(&mut self, message: String) {
-        let err = Error::new(self.src.name.to_string(), self.current_token.loc, message);
+        let err = Error::new(self.src.name.to_string(), self.current_token.span, message);
 
         self.errs.report(err);
     }
@@ -46,7 +46,7 @@ impl<'a> Parser<'a> {
             None => {
                 self.current_token = Token {
                     kind: TokenKind::EndOfFile,
-                    loc: self.current_token.loc,
+                    span: self.current_token.span.hi.zero_width_span(),
                 }
             }
         }
@@ -65,7 +65,7 @@ impl<'a> Parser<'a> {
 
             Token {
                 kind: expected,
-                loc: self.current_token.loc,
+                span: self.current_token.span,
             }
         } else {
             actual
@@ -87,13 +87,20 @@ impl<'a> Parser<'a> {
             "0_err_iden".to_string()
         }
     }
+
+    pub fn record_current_pos(&self) -> BytePos {
+        self.current_token.span.lo
+    }
 }
 
 impl<'a> Parser<'a> {
     /// User can input both fn definitions and statements / expressions in the repl prompt.
     pub fn parse_repl_input(&mut self) -> Stmt {
         match self.current_token.kind {
-            TokenKind::EndOfFile => Stmt::new(StmtKind::Noop),
+            TokenKind::EndOfFile => Stmt {
+                kind: StmtKind::Noop,
+                span: self.record_current_pos().zero_width_span(),
+            },
             TokenKind::KeywordFn | TokenKind::KeywordExtern => self.parse_fn_declaration(),
             // TokenKind::KeywordLet => {
             //     let let_statement = self.parse_let_statement();
@@ -109,7 +116,10 @@ impl<'a> Parser<'a> {
                 if self.current_token.kind == TokenKind::PuncSemi {
                     self.expect_and_eat_tok(TokenKind::PuncSemi);
                 }
-                Stmt::new(StmtKind::ExprSemi { expr })
+                Stmt {
+                    span: expr.span.lo.to(self.record_current_pos()),
+                    kind: StmtKind::ExprSemi { expr },
+                }
             }
         }
     }
@@ -138,30 +148,48 @@ impl<'a> Parser<'a> {
             TokenKind::KeywordWhile => self.parse_while_stmt(),
             TokenKind::KeywordIf => self.parse_if_else_stmt(),
             TokenKind::PuncOpenBrace => {
+                let lo = self.record_current_pos();
                 let block = self.parse_block_statement();
-                Stmt::new(StmtKind::Block(block))
+                let hi = self.record_current_pos();
+                Stmt {
+                    kind: StmtKind::Block(block),
+                    span: lo.to(hi),
+                }
             }
             _ => {
                 // try to parse expression statement
                 let expr = self.parse_expression();
                 self.expect_and_eat_tok(TokenKind::PuncSemi);
-                Stmt::new(StmtKind::ExprSemi { expr })
+                Stmt {
+                    span: expr.span.lo.to(self.record_current_pos()),
+                    kind: StmtKind::ExprSemi { expr },
+                }
             }
         }
     }
 
     fn parse_return_statement(&mut self) -> Stmt {
+        let lo = self.record_current_pos();
         self.expect_and_eat_tok(TokenKind::KeywordReturn);
         let value = self.parse_expression();
-        Stmt::new(StmtKind::Return { value })
+        let hi = self.record_current_pos();
+        Stmt {
+            kind: StmtKind::Return { value },
+            span: lo.to(hi),
+        }
     }
 
     fn parse_let_statement(&mut self) -> Stmt {
+        let lo = self.record_current_pos();
         self.expect_and_eat_tok(TokenKind::KeywordLet);
         let iden = self.expect_and_eat_iden_tok();
         self.expect_and_eat_tok(TokenKind::OpEquals);
         let initializer = self.parse_expression();
-        Stmt::new(StmtKind::Let { iden, initializer })
+        let hi = self.record_current_pos();
+        Stmt {
+            kind: StmtKind::Let { iden, initializer },
+            span: lo.to(hi),
+        }
     }
 
     /// Parses any valid expression.
@@ -187,28 +215,40 @@ impl<'a> Parser<'a> {
                     "Expected an expression but found {} token.",
                     self.current_token.kind
                 ));
-                Expr::new(ExprKind::Literal(0))
+                Expr {
+                    kind: ExprKind::Literal(0),
+                    span: self.record_current_pos().zero_width_span(),
+                }
             }
         }
     }
 
     /// Returns the parsed `IntLiteral` token or `0` if bad match.
     fn parse_int_literal(&mut self) -> Expr {
+        let lo = self.record_current_pos();
         if let TokenKind::LiteralInt(num) = self.current_token.kind {
             self.eat_token(); // eat int literal token
-            Expr::new(ExprKind::Literal(num))
+            let hi = self.record_current_pos();
+            Expr {
+                kind: ExprKind::Literal(num),
+                span: lo.to(hi),
+            }
         } else {
             self.emit_err_at_current_tok(format!(
                 "Expected {} token but found {} token.",
                 self.current_token.kind,
                 TokenKind::LiteralInt(0) // dummy value for generating message
             ));
-            Expr::new(ExprKind::Literal(0))
+            Expr {
+                kind: ExprKind::Literal(0),
+                span: lo.zero_width_span(),
+            }
         }
     }
 
     /// Returns a `IdentifierExprAST` or `CallExprAST`, depending on the scenario.
     fn parse_identifier_or_call_expr(&mut self) -> Expr {
+        let lo = self.record_current_pos();
         let identifier = self.expect_and_eat_iden_tok();
 
         if self.current_token.kind == TokenKind::PuncOpenParen {
@@ -237,12 +277,20 @@ impl<'a> Parser<'a> {
                     break;
                 }
             }
-            Expr::new(ExprKind::FuncCall {
-                callee: identifier,
-                args,
-            })
+            let hi = self.record_current_pos();
+            Expr {
+                kind: ExprKind::FuncCall {
+                    callee: identifier,
+                    args,
+                },
+                span: lo.to(hi),
+            }
         } else {
-            Expr::new(ExprKind::Identifier(identifier))
+            let hi = self.record_current_pos();
+            Expr {
+                kind: ExprKind::Identifier(identifier),
+                span: lo.to(hi),
+            }
         }
     }
 
@@ -254,17 +302,27 @@ impl<'a> Parser<'a> {
             ((), -1) => self.parse_primary_expression(),
             // prefix operator
             _ => {
+                let lo = self.record_current_pos();
+
                 let ((), right_bp) = prefix_bp;
                 let prefix_op = self.eat_token(); // eat prefix operator
                 let rhs = self.parse_binary_expr_rhs(right_bp);
+
+                let hi = self.record_current_pos();
                 match prefix_op.kind {
                     TokenKind::OpPlus => rhs,
                     // build as 0 - x
-                    TokenKind::OpMinus => Expr::new(ExprKind::BinaryExpr {
-                        lhs: Box::new(Expr::new(ExprKind::Literal(0))),
-                        rhs: Box::new(rhs),
-                        op_type: TokenKind::OpMinus,
-                    }),
+                    TokenKind::OpMinus => Expr {
+                        kind: ExprKind::BinaryExpr {
+                            lhs: Box::new(Expr {
+                                kind: ExprKind::Literal(0),
+                                span: lo.zero_width_span(), // not an error but 0 does not actually appear in source.
+                            }),
+                            rhs: Box::new(rhs),
+                            op_type: TokenKind::OpMinus,
+                        },
+                        span: lo.to(hi),
+                    },
                     _ => unreachable!("Invalid prefix operator."),
                 }
             }
@@ -281,11 +339,22 @@ impl<'a> Parser<'a> {
 
             let rhs = self.parse_binary_expr_rhs(right_bp);
 
-            lhs = Expr::new(ExprKind::BinaryExpr {
-                lhs: Box::new(lhs),
-                rhs: Box::new(rhs),
-                op_type: binop.kind,
-            })
+            /*
+            Record positions for diagnostics
+                  lhs              hi
+            lhs.lo   lhs.hi   hi.lo  hi.hi
+            */
+            let lo = lhs.span.lo;
+            let hi = rhs.span.hi;
+
+            lhs = Expr {
+                kind: ExprKind::BinaryExpr {
+                    lhs: Box::new(lhs),
+                    rhs: Box::new(rhs),
+                    op_type: binop.kind,
+                },
+                span: lo.to(hi),
+            }
         }
 
         lhs
@@ -324,6 +393,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_fn_declaration(&mut self) -> Stmt {
+        let lo = self.record_current_pos();
         let is_extern = {
             if self.current_token.kind == TokenKind::KeywordExtern {
                 self.eat_token(); // eat 'extern' keyword
@@ -337,13 +407,21 @@ impl<'a> Parser<'a> {
 
         if !is_extern {
             let body = self.parse_block_statement();
-            Stmt::new(StmtKind::Fn {
-                proto,
-                body: Some(body),
-            })
+            let hi = self.record_current_pos();
+            Stmt {
+                kind: StmtKind::Fn {
+                    proto,
+                    body: Some(body),
+                },
+                span: lo.to(hi),
+            }
         } else {
             self.expect_and_eat_tok(TokenKind::PuncSemi);
-            Stmt::new(StmtKind::Fn { proto, body: None })
+            let hi = self.record_current_pos();
+            Stmt {
+                kind: StmtKind::Fn { proto, body: None },
+                span: lo.to(hi),
+            }
         }
     }
 
@@ -366,14 +444,20 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_while_stmt(&mut self) -> Stmt {
+        let lo = self.record_current_pos();
         self.expect_and_eat_tok(TokenKind::KeywordWhile);
         let condition = self.parse_expression();
         let body = self.parse_block_statement();
+        let hi = self.record_current_pos();
 
-        Stmt::new(StmtKind::While { condition, body })
+        Stmt {
+            kind: StmtKind::While { condition, body },
+            span: lo.to(hi),
+        }
     }
 
     fn parse_if_else_stmt(&mut self) -> Stmt {
+        let lo = self.record_current_pos();
         self.expect_and_eat_tok(TokenKind::KeywordIf);
         let if_condition = self.parse_expression();
         let if_body = self.parse_block_statement();
@@ -385,12 +469,16 @@ impl<'a> Parser<'a> {
         } else {
             None
         };
+        let hi = self.record_current_pos();
 
-        Stmt::new(StmtKind::IfElse {
-            if_condition,
-            if_body,
-            else_body,
-        })
+        Stmt {
+            kind: StmtKind::IfElse {
+                if_condition,
+                if_body,
+                else_body,
+            },
+            span: lo.to(hi),
+        }
     }
 }
 
@@ -474,10 +562,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
-    #[ignore]
     fn parse_bad_bin_op() {
-        // FIXME: should be bad syntax
         parse_str_as_expr("1 ++ 1");
         parse_str_as_expr("1 -- 1");
     }
@@ -523,6 +608,34 @@ mod tests {
         assert_debug_snapshot!(parse_str_as_stmt("let x = 1;"));
         assert_debug_snapshot!(parse_str_as_stmt("let x = 1 + 1;"));
         assert_debug_snapshot!(parse_str_as_stmt("let x = func(2);"));
+    }
+
+    #[test]
+    fn parse_if_else_statement() {
+        assert_debug_snapshot!(parse_str_as_stmt(
+            "if x {
+                println(1);
+                // do something
+            }"
+        )); // no else block
+        assert_debug_snapshot!(parse_str_as_stmt(
+            "if x {
+                // do something
+            } else {
+                // do something else
+            }"
+        ));
+    }
+
+    #[test]
+    #[should_panic]
+    fn parse_alone_else_block() {
+        parse_str_as_stmt(
+            "// no if block
+            else {
+                // do something else
+            }",
+        );
     }
 
     #[test]

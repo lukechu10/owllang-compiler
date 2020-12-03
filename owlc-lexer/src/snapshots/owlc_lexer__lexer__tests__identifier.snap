@@ -7,7 +7,7 @@ expression: "lex_str(\"my_variable\")"
         kind: Identifier(
             "my_variable",
         ),
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 0,
             ),

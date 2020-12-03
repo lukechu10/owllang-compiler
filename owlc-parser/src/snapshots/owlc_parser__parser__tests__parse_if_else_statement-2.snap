@@ -1,0 +1,37 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_stmt(\"if x {\n                // do something\n            } else {\n                // do something else\n            }\")"
+---
+Stmt {
+    kind: IfElse {
+        if_condition: Expr {
+            kind: Identifier(
+                "x",
+            ),
+            span: Span {
+                lo: BytePos(
+                    3,
+                ),
+                hi: BytePos(
+                    5,
+                ),
+            },
+        },
+        if_body: Block {
+            stmts: [],
+        },
+        else_body: Some(
+            Block {
+                stmts: [],
+            },
+        ),
+    },
+    span: Span {
+        lo: BytePos(
+            0,
+        ),
+        hi: BytePos(
+            110,
+        ),
+    },
+}

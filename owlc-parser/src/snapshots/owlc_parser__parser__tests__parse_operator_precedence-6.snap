@@ -8,6 +8,14 @@ Expr {
             kind: Identifier(
                 "foo",
             ),
+            span: Span {
+                lo: BytePos(
+                    0,
+                ),
+                hi: BytePos(
+                    4,
+                ),
+            },
         },
         rhs: Expr {
             kind: BinaryExpr {
@@ -15,15 +23,47 @@ Expr {
                     kind: Identifier(
                         "foo",
                     ),
+                    span: Span {
+                        lo: BytePos(
+                            6,
+                        ),
+                        hi: BytePos(
+                            10,
+                        ),
+                    },
                 },
                 rhs: Expr {
                     kind: Literal(
                         1,
                     ),
+                    span: Span {
+                        lo: BytePos(
+                            12,
+                        ),
+                        hi: BytePos(
+                            13,
+                        ),
+                    },
                 },
                 op_type: OpPlus,
             },
+            span: Span {
+                lo: BytePos(
+                    6,
+                ),
+                hi: BytePos(
+                    13,
+                ),
+            },
         },
         op_type: OpEquals,
+    },
+    span: Span {
+        lo: BytePos(
+            0,
+        ),
+        hi: BytePos(
+            13,
+        ),
     },
 }

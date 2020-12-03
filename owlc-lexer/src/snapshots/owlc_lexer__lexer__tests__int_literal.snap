@@ -7,7 +7,7 @@ expression: "lex_str(\"1\")"
         kind: LiteralInt(
             1,
         ),
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 0,
             ),

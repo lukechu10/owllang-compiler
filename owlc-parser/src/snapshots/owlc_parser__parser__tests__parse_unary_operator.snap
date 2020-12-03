@@ -6,4 +6,12 @@ Expr {
     kind: Literal(
         1,
     ),
+    span: Span {
+        lo: BytePos(
+            1,
+        ),
+        hi: BytePos(
+            2,
+        ),
+    },
 }

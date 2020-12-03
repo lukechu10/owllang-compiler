@@ -71,7 +71,7 @@ impl<'a> Lexer<'a> {
         let span = BytePos(self.current_byte_pos + 1 - len).to(BytePos(self.current_byte_pos + 1));
         Token {
             kind: value,
-            loc: span,
+            span,
         }
     }
 }

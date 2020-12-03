@@ -2,7 +2,6 @@
 use owlc_error::{Error, ErrorReporter};
 use owlc_parser::ast::{expressions::*, statements::*};
 use owlc_parser::visitor::AstVisitor;
-use owlc_span::BytePos;
 
 /// Represents a resolved symbol (can be either variable type or function type).
 #[derive(Debug, PartialEq, Eq, Hash)]
@@ -163,7 +162,7 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
                     } => self.errors.report(
                         Error::new(
                             "repl".to_string(),
-                            BytePos(0).to(BytePos(0)),
+                            expr.span,
                             format!("Symbol {} is not a variable.", ident),
                         )
                         .with_help_hint(format!("A function exists with the same name. Call this function using '{}()'.", ident)),
@@ -172,7 +171,7 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
                 },
                 None => self.errors.report(Error::new(
                     "repl".to_string(),
-                    BytePos(0).to(BytePos(0)),
+                    expr.span,
                     format!("Identifier {} does not exist in current scope.", ident),
                 )),
             },
@@ -188,7 +187,7 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
                         Symbol::Let { ident: _ } => {
                             self.errors.report(Error::new(
                                 "repl".to_string(),
-                                BytePos(0).to(BytePos(0)),
+                                expr.span,
                                 format!("Symbol {} is not a function.", callee),
                             ));
                         }
@@ -199,7 +198,7 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
                             if args.len() as u32 != *args_count {
                                 self.errors.report(Error::new(
                                         "repl".to_string(),
-                                        BytePos(0).to(BytePos(0)),
+                                        expr.span,
                                         format!("Function {} expected {} argument(s) but found {} argument(s).", callee, args_count, args.len()),
                                     ));
                             }
@@ -207,7 +206,7 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
                     },
                     None => self.errors.report(Error::new(
                         "repl".to_string(),
-                        BytePos(0).to(BytePos(0)),
+                        expr.span,
                         format!("Function {} does not exist in current scope.", callee),
                     )),
                 }
@@ -246,7 +245,7 @@ impl<'a> AstVisitor for ResolverVisitor<'a> {
                 if self.symbols.lookup(&iden).is_some() {
                     self.errors.report(Error::new(
                         "repl".to_string(),
-                        BytePos(0).to(BytePos(0)),
+                        stmt.span,
                         format!("Variable {} is already declared.", iden),
                     ));
                 } else {

@@ -4,4 +4,12 @@ expression: "parse_str_as_repl(\"\")"
 ---
 Stmt {
     kind: Noop,
+    span: Span {
+        lo: BytePos(
+            0,
+        ),
+        hi: BytePos(
+            0,
+        ),
+    },
 }

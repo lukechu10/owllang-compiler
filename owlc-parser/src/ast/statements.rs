@@ -1,10 +1,11 @@
 use crate::ast::expressions::Expr;
-use serde::{Deserialize, Serialize};
+use owlc_span::Span;
+use serde::Serialize;
 
 /// Represents a collection of functions that are included in the compilation unit.
 /// # Note
 /// Future implementations might change this into a list of files included for compilation.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct CompilationUnit {
     /// The name of the entry point file.
     pub entry_file_name: String,
@@ -32,7 +33,7 @@ impl CompilationUnit {
 /// ```ebnf
 /// block = "{", statements, "}";
 /// ```
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct Block {
     /// The statements inside the `Block`.
     pub stmts: Vec<Stmt>,
@@ -45,7 +46,7 @@ pub struct Block {
 /// fn proto = "fn", identifier, "(", fn proto param list, ")";
 /// fn proto extern = "extern fn", identifier, "(", fn proto param list, ")";
 /// ```
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct FnProto {
     /// The name of the arguments as declared in the function prototype.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -55,7 +56,7 @@ pub struct FnProto {
 }
 
 /// Internal representation for [`Stmt`](struct.Stmt.html).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 pub enum StmtKind {
     /// Wrapper around `Block`.
     Block(Block),
@@ -111,13 +112,10 @@ pub enum StmtKind {
 /// Represents a statement. Statements do not have any value unlike [`Expr`](../expressions/struct.Expr.html). Statements usually have side effects.
 /// # TODO
 /// Eventually change all variants of this type to [`Expr`](../expressions/struct.Expr.html) to make the language more functional.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct Stmt {
     #[serde(flatten)]
     pub kind: StmtKind,
-}
-impl Stmt {
-    pub fn new(kind: StmtKind) -> Self {
-        Self { kind }
-    }
+    #[serde(skip_serializing)]
+    pub span: Span,
 }

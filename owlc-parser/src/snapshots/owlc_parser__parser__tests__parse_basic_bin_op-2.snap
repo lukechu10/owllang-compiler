@@ -8,12 +8,36 @@ Expr {
             kind: Identifier(
                 "a",
             ),
+            span: Span {
+                lo: BytePos(
+                    0,
+                ),
+                hi: BytePos(
+                    2,
+                ),
+            },
         },
         rhs: Expr {
             kind: Identifier(
                 "b",
             ),
+            span: Span {
+                lo: BytePos(
+                    4,
+                ),
+                hi: BytePos(
+                    5,
+                ),
+            },
         },
         op_type: OpPlus,
+    },
+    span: Span {
+        lo: BytePos(
+            0,
+        ),
+        hi: BytePos(
+            5,
+        ),
     },
 }

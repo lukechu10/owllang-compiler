@@ -1,4 +1,5 @@
 //! Driver code for owlc-cli
+
 use ansi_term::{Color, Style};
 use clap::{App, Arg, ArgMatches};
 use llvm_sys::support::*;
@@ -173,6 +174,7 @@ fn repl_loop(matches: &ArgMatches) {
                 resolver_visitor.visit_stmt(&stmt);
 
                 // add resolved symbols to symbol_table
+                // TODO: do not add if errors
                 symbol_table = resolver_visitor.symbols;
                 stmt
             };

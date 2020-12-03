@@ -5,7 +5,7 @@ expression: "lex_str(\"fn extern let if else while for in return\")"
 [
     Token {
         kind: KeywordFn,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 0,
             ),
@@ -16,7 +16,7 @@ expression: "lex_str(\"fn extern let if else while for in return\")"
     },
     Token {
         kind: KeywordExtern,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 3,
             ),
@@ -27,7 +27,7 @@ expression: "lex_str(\"fn extern let if else while for in return\")"
     },
     Token {
         kind: KeywordLet,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 10,
             ),
@@ -38,7 +38,7 @@ expression: "lex_str(\"fn extern let if else while for in return\")"
     },
     Token {
         kind: KeywordIf,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 14,
             ),
@@ -49,7 +49,7 @@ expression: "lex_str(\"fn extern let if else while for in return\")"
     },
     Token {
         kind: KeywordElse,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 17,
             ),
@@ -60,7 +60,7 @@ expression: "lex_str(\"fn extern let if else while for in return\")"
     },
     Token {
         kind: KeywordWhile,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 22,
             ),
@@ -71,7 +71,7 @@ expression: "lex_str(\"fn extern let if else while for in return\")"
     },
     Token {
         kind: KeywordFor,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 28,
             ),
@@ -82,7 +82,7 @@ expression: "lex_str(\"fn extern let if else while for in return\")"
     },
     Token {
         kind: KeywordIn,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 32,
             ),
@@ -93,7 +93,7 @@ expression: "lex_str(\"fn extern let if else while for in return\")"
     },
     Token {
         kind: KeywordReturn,
-        loc: Span {
+        span: Span {
             lo: BytePos(
                 35,
             ),

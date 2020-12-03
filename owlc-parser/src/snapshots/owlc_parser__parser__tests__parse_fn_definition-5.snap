@@ -21,7 +21,23 @@ CompilationUnit {
                                         kind: Literal(
                                             0,
                                         ),
+                                        span: Span {
+                                            lo: BytePos(
+                                                36,
+                                            ),
+                                            hi: BytePos(
+                                                37,
+                                            ),
+                                        },
                                     },
+                                },
+                                span: Span {
+                                    lo: BytePos(
+                                        28,
+                                    ),
+                                    hi: BytePos(
+                                        37,
+                                    ),
                                 },
                             },
                             Stmt {
@@ -32,13 +48,37 @@ CompilationUnit {
                                                 kind: Identifier(
                                                     "i",
                                                 ),
+                                                span: Span {
+                                                    lo: BytePos(
+                                                        61,
+                                                    ),
+                                                    hi: BytePos(
+                                                        63,
+                                                    ),
+                                                },
                                             },
                                             rhs: Expr {
                                                 kind: Literal(
                                                     10,
                                                 ),
+                                                span: Span {
+                                                    lo: BytePos(
+                                                        65,
+                                                    ),
+                                                    hi: BytePos(
+                                                        68,
+                                                    ),
+                                                },
                                             },
                                             op_type: OpLessThan,
+                                        },
+                                        span: Span {
+                                            lo: BytePos(
+                                                61,
+                                            ),
+                                            hi: BytePos(
+                                                68,
+                                            ),
                                         },
                                     },
                                     body: Block {
@@ -53,10 +93,34 @@ CompilationUnit {
                                                                     kind: Identifier(
                                                                         "i",
                                                                     ),
+                                                                    span: Span {
+                                                                        lo: BytePos(
+                                                                            98,
+                                                                        ),
+                                                                        hi: BytePos(
+                                                                            99,
+                                                                        ),
+                                                                    },
                                                                 },
                                                             ],
                                                         },
+                                                        span: Span {
+                                                            lo: BytePos(
+                                                                90,
+                                                            ),
+                                                            hi: BytePos(
+                                                                100,
+                                                            ),
+                                                        },
                                                     },
+                                                },
+                                                span: Span {
+                                                    lo: BytePos(
+                                                        90,
+                                                    ),
+                                                    hi: BytePos(
+                                                        122,
+                                                    ),
                                                 },
                                             },
                                             Stmt {
@@ -67,6 +131,14 @@ CompilationUnit {
                                                                 kind: Identifier(
                                                                     "i",
                                                                 ),
+                                                                span: Span {
+                                                                    lo: BytePos(
+                                                                        122,
+                                                                    ),
+                                                                    hi: BytePos(
+                                                                        124,
+                                                                    ),
+                                                                },
                                                             },
                                                             rhs: Expr {
                                                                 kind: BinaryExpr {
@@ -74,22 +146,70 @@ CompilationUnit {
                                                                         kind: Identifier(
                                                                             "i",
                                                                         ),
+                                                                        span: Span {
+                                                                            lo: BytePos(
+                                                                                126,
+                                                                            ),
+                                                                            hi: BytePos(
+                                                                                128,
+                                                                            ),
+                                                                        },
                                                                     },
                                                                     rhs: Expr {
                                                                         kind: Literal(
                                                                             1,
                                                                         ),
+                                                                        span: Span {
+                                                                            lo: BytePos(
+                                                                                130,
+                                                                            ),
+                                                                            hi: BytePos(
+                                                                                131,
+                                                                            ),
+                                                                        },
                                                                     },
                                                                     op_type: OpPlus,
+                                                                },
+                                                                span: Span {
+                                                                    lo: BytePos(
+                                                                        126,
+                                                                    ),
+                                                                    hi: BytePos(
+                                                                        131,
+                                                                    ),
                                                                 },
                                                             },
                                                             op_type: OpEquals,
                                                         },
+                                                        span: Span {
+                                                            lo: BytePos(
+                                                                122,
+                                                            ),
+                                                            hi: BytePos(
+                                                                131,
+                                                            ),
+                                                        },
                                                     },
+                                                },
+                                                span: Span {
+                                                    lo: BytePos(
+                                                        122,
+                                                    ),
+                                                    hi: BytePos(
+                                                        149,
+                                                    ),
                                                 },
                                             },
                                         ],
                                     },
+                                },
+                                span: Span {
+                                    lo: BytePos(
+                                        55,
+                                    ),
+                                    hi: BytePos(
+                                        167,
+                                    ),
                                 },
                             },
                             Stmt {
@@ -98,11 +218,35 @@ CompilationUnit {
                                         kind: Identifier(
                                             "i",
                                         ),
+                                        span: Span {
+                                            lo: BytePos(
+                                                174,
+                                            ),
+                                            hi: BytePos(
+                                                175,
+                                            ),
+                                        },
                                     },
+                                },
+                                span: Span {
+                                    lo: BytePos(
+                                        167,
+                                    ),
+                                    hi: BytePos(
+                                        175,
+                                    ),
                                 },
                             },
                         ],
                     },
+                ),
+            },
+            span: Span {
+                lo: BytePos(
+                    0,
+                ),
+                hi: BytePos(
+                    190,
                 ),
             },
         },

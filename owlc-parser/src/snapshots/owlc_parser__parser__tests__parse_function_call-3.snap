@@ -10,11 +10,27 @@ Expr {
                 kind: Literal(
                     10,
                 ),
+                span: Span {
+                    lo: BytePos(
+                        12,
+                    ),
+                    hi: BytePos(
+                        14,
+                    ),
+                },
             },
             Expr {
                 kind: Identifier(
                     "a_variable",
                 ),
+                span: Span {
+                    lo: BytePos(
+                        16,
+                    ),
+                    hi: BytePos(
+                        26,
+                    ),
+                },
             },
             Expr {
                 kind: BinaryExpr {
@@ -22,15 +38,47 @@ Expr {
                         kind: Literal(
                             2,
                         ),
+                        span: Span {
+                            lo: BytePos(
+                                28,
+                            ),
+                            hi: BytePos(
+                                30,
+                            ),
+                        },
                     },
                     rhs: Expr {
                         kind: Literal(
                             2,
                         ),
+                        span: Span {
+                            lo: BytePos(
+                                32,
+                            ),
+                            hi: BytePos(
+                                33,
+                            ),
+                        },
                     },
                     op_type: OpPlus,
                 },
+                span: Span {
+                    lo: BytePos(
+                        28,
+                    ),
+                    hi: BytePos(
+                        33,
+                    ),
+                },
             },
         ],
+    },
+    span: Span {
+        lo: BytePos(
+            0,
+        ),
+        hi: BytePos(
+            34,
+        ),
     },
 }

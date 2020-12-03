@@ -1,2 +1,5 @@
+// compiler implemented
 extern fn println(x);
+
+// compiler implemented
 extern fn read_num();

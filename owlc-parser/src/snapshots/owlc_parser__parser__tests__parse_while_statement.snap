@@ -10,13 +10,37 @@ Stmt {
                     kind: Identifier(
                         "x",
                     ),
+                    span: Span {
+                        lo: BytePos(
+                            6,
+                        ),
+                        hi: BytePos(
+                            8,
+                        ),
+                    },
                 },
                 rhs: Expr {
                     kind: Literal(
                         10,
                     ),
+                    span: Span {
+                        lo: BytePos(
+                            10,
+                        ),
+                        hi: BytePos(
+                            13,
+                        ),
+                    },
                 },
                 op_type: OpLessThan,
+            },
+            span: Span {
+                lo: BytePos(
+                    6,
+                ),
+                hi: BytePos(
+                    13,
+                ),
             },
         },
         body: Block {
@@ -31,10 +55,34 @@ Stmt {
                                         kind: Identifier(
                                             "x",
                                         ),
+                                        span: Span {
+                                            lo: BytePos(
+                                                23,
+                                            ),
+                                            hi: BytePos(
+                                                24,
+                                            ),
+                                        },
                                     },
                                 ],
                             },
+                            span: Span {
+                                lo: BytePos(
+                                    15,
+                                ),
+                                hi: BytePos(
+                                    25,
+                                ),
+                            },
                         },
+                    },
+                    span: Span {
+                        lo: BytePos(
+                            15,
+                        ),
+                        hi: BytePos(
+                            27,
+                        ),
                     },
                 },
                 Stmt {
@@ -45,6 +93,14 @@ Stmt {
                                     kind: Identifier(
                                         "x",
                                     ),
+                                    span: Span {
+                                        lo: BytePos(
+                                            27,
+                                        ),
+                                        hi: BytePos(
+                                            29,
+                                        ),
+                                    },
                                 },
                                 rhs: Expr {
                                     kind: BinaryExpr {
@@ -52,21 +108,69 @@ Stmt {
                                             kind: Identifier(
                                                 "x",
                                             ),
+                                            span: Span {
+                                                lo: BytePos(
+                                                    31,
+                                                ),
+                                                hi: BytePos(
+                                                    33,
+                                                ),
+                                            },
                                         },
                                         rhs: Expr {
                                             kind: Literal(
                                                 1,
                                             ),
+                                            span: Span {
+                                                lo: BytePos(
+                                                    35,
+                                                ),
+                                                hi: BytePos(
+                                                    36,
+                                                ),
+                                            },
                                         },
                                         op_type: OpPlus,
+                                    },
+                                    span: Span {
+                                        lo: BytePos(
+                                            31,
+                                        ),
+                                        hi: BytePos(
+                                            36,
+                                        ),
                                     },
                                 },
                                 op_type: OpEquals,
                             },
+                            span: Span {
+                                lo: BytePos(
+                                    27,
+                                ),
+                                hi: BytePos(
+                                    36,
+                                ),
+                            },
                         },
+                    },
+                    span: Span {
+                        lo: BytePos(
+                            27,
+                        ),
+                        hi: BytePos(
+                            38,
+                        ),
                     },
                 },
             ],
         },
+    },
+    span: Span {
+        lo: BytePos(
+            0,
+        ),
+        hi: BytePos(
+            39,
+        ),
     },
 }

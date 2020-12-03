@@ -1,6 +1,7 @@
 //! Utility crate for storing syntax positions.
 
 #![allow(clippy::len_without_is_empty)]
+#![forbid(unsafe_code)]
 
 use std::borrow::Cow;
 use std::ops::Sub;
@@ -14,6 +15,11 @@ impl BytePos {
     /// Create a new `SpanData` from `self` to `hi`. `lo` is inclusive and `hi` is exclusive.
     pub fn to(self, hi: BytePos) -> Span {
         Span { lo: self, hi }
+    }
+
+    /// Creates a '0 width' span. Usefull for missing AST nodes.
+    pub fn zero_width_span(self) -> Span {
+        Span { lo: self, hi: self }
     }
 }
 impl Sub for BytePos {

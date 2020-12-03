@@ -20,11 +20,35 @@ CompilationUnit {
                                         kind: Literal(
                                             1,
                                         ),
+                                        span: Span {
+                                            lo: BytePos(
+                                                35,
+                                            ),
+                                            hi: BytePos(
+                                                36,
+                                            ),
+                                        },
                                     },
+                                },
+                                span: Span {
+                                    lo: BytePos(
+                                        28,
+                                    ),
+                                    hi: BytePos(
+                                        36,
+                                    ),
                                 },
                             },
                         ],
                     },
+                ),
+            },
+            span: Span {
+                lo: BytePos(
+                    0,
+                ),
+                hi: BytePos(
+                    51,
                 ),
             },
         },

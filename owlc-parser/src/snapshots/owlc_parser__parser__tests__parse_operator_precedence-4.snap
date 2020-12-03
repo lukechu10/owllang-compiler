@@ -8,6 +8,14 @@ Expr {
             kind: Identifier(
                 "my",
             ),
+            span: Span {
+                lo: BytePos(
+                    0,
+                ),
+                hi: BytePos(
+                    2,
+                ),
+            },
         },
         rhs: Expr {
             kind: BinaryExpr {
@@ -15,15 +23,47 @@ Expr {
                     kind: Identifier(
                         "nested",
                     ),
+                    span: Span {
+                        lo: BytePos(
+                            3,
+                        ),
+                        hi: BytePos(
+                            9,
+                        ),
+                    },
                 },
                 rhs: Expr {
                     kind: Identifier(
                         "field",
                     ),
+                    span: Span {
+                        lo: BytePos(
+                            10,
+                        ),
+                        hi: BytePos(
+                            15,
+                        ),
+                    },
                 },
                 op_type: OpDot,
             },
+            span: Span {
+                lo: BytePos(
+                    3,
+                ),
+                hi: BytePos(
+                    15,
+                ),
+            },
         },
         op_type: OpDot,
+    },
+    span: Span {
+        lo: BytePos(
+            0,
+        ),
+        hi: BytePos(
+            15,
+        ),
     },
 }

@@ -13,9 +13,33 @@ Stmt {
                         kind: Literal(
                             2,
                         ),
+                        span: Span {
+                            lo: BytePos(
+                                13,
+                            ),
+                            hi: BytePos(
+                                14,
+                            ),
+                        },
                     },
                 ],
             },
+            span: Span {
+                lo: BytePos(
+                    8,
+                ),
+                hi: BytePos(
+                    15,
+                ),
+            },
         },
+    },
+    span: Span {
+        lo: BytePos(
+            0,
+        ),
+        hi: BytePos(
+            15,
+        ),
     },
 }

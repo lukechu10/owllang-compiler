@@ -9,6 +9,22 @@ Stmt {
                 callee: "func",
                 args: [],
             },
+            span: Span {
+                lo: BytePos(
+                    0,
+                ),
+                hi: BytePos(
+                    6,
+                ),
+            },
         },
+    },
+    span: Span {
+        lo: BytePos(
+            0,
+        ),
+        hi: BytePos(
+            6,
+        ),
     },
 }

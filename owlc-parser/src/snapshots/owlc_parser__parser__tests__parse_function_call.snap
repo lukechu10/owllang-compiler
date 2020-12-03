@@ -7,4 +7,12 @@ Expr {
         callee: "my_function",
         args: [],
     },
+    span: Span {
+        lo: BytePos(
+            0,
+        ),
+        hi: BytePos(
+            13,
+        ),
+    },
 }

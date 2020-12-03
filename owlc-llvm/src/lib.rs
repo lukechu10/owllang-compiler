@@ -8,6 +8,7 @@ use owlc_parser::ast::expressions::*;
 use owlc_parser::ast::statements::*;
 use owlc_parser::visitor::AstVisitor;
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicI32, Ordering};
 
 pub struct LlvmCodeGenVisitor {
     pub module: LLVMModuleRef,
@@ -67,11 +68,11 @@ impl Drop for LlvmCodeGenVisitor {
 /// Codegen functions for `Expr` variants
 impl LlvmCodeGenVisitor {}
 
+static ANON_FN_COUNTER: AtomicI32 = AtomicI32::new(0);
+
 impl LlvmCodeGenVisitor {
     /// Custom codegen function for repl.
     pub fn handle_repl_input(&mut self, stmt: Stmt) {
-        static mut ANON_FN_COUNTER: u64 = 0;
-
         match stmt.kind {
             StmtKind::Fn {
                 ref proto,
@@ -84,18 +85,21 @@ impl LlvmCodeGenVisitor {
             StmtKind::ExprSemi { expr } => {
                 // codegen anonymous function that returns value
                 // create fake return stmt.
-                unsafe {
-                    let ret_stmt = Stmt::new(StmtKind::Return { value: expr });
-                    let proto = FnProto {
-                        iden: format!("0.repl.{}", ANON_FN_COUNTER), // start with '0' to prevent conflict with user defined functions
-                        args: Vec::new(),
-                    };
-                    ANON_FN_COUNTER += 1;
-                    let body = Block {
-                        stmts: vec![ret_stmt],
-                    };
-                    self.visit_fn_stmt(&proto, &Some(body));
-                }
+                let ret_stmt = Stmt {
+                    span: expr.span,
+                    kind: StmtKind::Return { value: expr },
+                };
+                let current_fn_counter = ANON_FN_COUNTER.load(Ordering::Relaxed);
+                let proto = FnProto {
+                    iden: format!("0.repl.{}", current_fn_counter), // start with '0' to prevent conflict with user defined functions
+                    args: Vec::new(),
+                };
+                ANON_FN_COUNTER.store(current_fn_counter + 1, Ordering::Relaxed); // increment ANON_FN_COUNTER for next time
+
+                let body = Block {
+                    stmts: vec![ret_stmt],
+                };
+                self.visit_fn_stmt(&proto, &Some(body));
             }
             StmtKind::Noop => {}
             _ => unreachable!(), // not possible in repl.

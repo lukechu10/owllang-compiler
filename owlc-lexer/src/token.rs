@@ -8,10 +8,10 @@ pub struct Token {
     /// The internal data of the token.
     pub kind: TokenKind,
     /// The position of the `Token` in the `SourceFile`.
-    pub loc: Span,
+    pub span: Span,
 }
 
-/// Represents the value of a token.
+/// Represents the value of a [`Token`].
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[repr(u8)]
 pub enum TokenKind {

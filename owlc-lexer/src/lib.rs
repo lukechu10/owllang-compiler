@@ -1,3 +1,7 @@
+//! Owllang lexer implementation.
+
+#![forbid(unsafe_code)]
+
 mod lexer;
 mod token;
 

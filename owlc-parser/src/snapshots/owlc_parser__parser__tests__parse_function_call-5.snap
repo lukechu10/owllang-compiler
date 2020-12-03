@@ -13,15 +13,47 @@ Expr {
                             callee: "nested_func",
                             args: [],
                         },
+                        span: Span {
+                            lo: BytePos(
+                                5,
+                            ),
+                            hi: BytePos(
+                                18,
+                            ),
+                        },
                     },
                 ],
+            },
+            span: Span {
+                lo: BytePos(
+                    0,
+                ),
+                hi: BytePos(
+                    20,
+                ),
             },
         },
         rhs: Expr {
             kind: Literal(
                 2,
             ),
+            span: Span {
+                lo: BytePos(
+                    22,
+                ),
+                hi: BytePos(
+                    23,
+                ),
+            },
         },
         op_type: OpPlus,
+    },
+    span: Span {
+        lo: BytePos(
+            0,
+        ),
+        hi: BytePos(
+            23,
+        ),
     },
 }

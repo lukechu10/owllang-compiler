@@ -1,0 +1,74 @@
+---
+source: owlc-parser/src/parser.rs
+expression: "parse_str_as_stmt(\"if x {\n                println(1);\n                // do something\n            }\")"
+---
+Stmt {
+    kind: IfElse {
+        if_condition: Expr {
+            kind: Identifier(
+                "x",
+            ),
+            span: Span {
+                lo: BytePos(
+                    3,
+                ),
+                hi: BytePos(
+                    5,
+                ),
+            },
+        },
+        if_body: Block {
+            stmts: [
+                Stmt {
+                    kind: ExprSemi {
+                        expr: Expr {
+                            kind: FuncCall {
+                                callee: "println",
+                                args: [
+                                    Expr {
+                                        kind: Literal(
+                                            1,
+                                        ),
+                                        span: Span {
+                                            lo: BytePos(
+                                                31,
+                                            ),
+                                            hi: BytePos(
+                                                32,
+                                            ),
+                                        },
+                                    },
+                                ],
+                            },
+                            span: Span {
+                                lo: BytePos(
+                                    23,
+                                ),
+                                hi: BytePos(
+                                    33,
+                                ),
+                            },
+                        },
+                    },
+                    span: Span {
+                        lo: BytePos(
+                            23,
+                        ),
+                        hi: BytePos(
+                            79,
+                        ),
+                    },
+                },
+            ],
+        },
+        else_body: None,
+    },
+    span: Span {
+        lo: BytePos(
+            0,
+        ),
+        hi: BytePos(
+            80,
+        ),
+    },
+}

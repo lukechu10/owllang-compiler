@@ -11,7 +11,23 @@ Expr {
                     callee: "nested_func",
                     args: [],
                 },
+                span: Span {
+                    lo: BytePos(
+                        5,
+                    ),
+                    hi: BytePos(
+                        18,
+                    ),
+                },
             },
         ],
+    },
+    span: Span {
+        lo: BytePos(
+            0,
+        ),
+        hi: BytePos(
+            19,
+        ),
     },
 }

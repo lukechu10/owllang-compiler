@@ -1,8 +1,9 @@
 use owlc_lexer::TokenKind;
-use serde::{Deserialize, Serialize};
+use owlc_span::Span;
+use serde::Serialize;
 
 /// Internal representation for [`Expr`](struct.Expr.html).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 pub enum ExprKind {
     /// Represents an int literal (internally represented using `i64`).
     Literal(i64),
@@ -18,19 +19,16 @@ pub enum ExprKind {
     },
 }
 
-#[derive(Serialize, Deserialize, Debug)]
 /// Represents an expression. Expressions may or may not have a side effect.
 /// # Example
 /// ```owllang
 /// 1 + 1 // no side effect here
 /// println(3) // side effect (printing to stdout)
 /// ```
+#[derive(Serialize, Debug)]
 pub struct Expr {
     #[serde(flatten)]
     pub kind: ExprKind,
-}
-impl Expr {
-    pub fn new(kind: ExprKind) -> Self {
-        Self { kind }
-    }
+    #[serde(skip_serializing)]
+    pub span: Span,
 }

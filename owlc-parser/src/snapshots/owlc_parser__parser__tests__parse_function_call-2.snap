@@ -10,7 +10,23 @@ Expr {
                 kind: Literal(
                     10,
                 ),
+                span: Span {
+                    lo: BytePos(
+                        12,
+                    ),
+                    hi: BytePos(
+                        14,
+                    ),
+                },
             },
         ],
+    },
+    span: Span {
+        lo: BytePos(
+            0,
+        ),
+        hi: BytePos(
+            15,
+        ),
     },
 }

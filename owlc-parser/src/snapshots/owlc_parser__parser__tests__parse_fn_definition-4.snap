@@ -21,7 +21,23 @@ CompilationUnit {
                                         kind: Literal(
                                             1,
                                         ),
+                                        span: Span {
+                                            lo: BytePos(
+                                                38,
+                                            ),
+                                            hi: BytePos(
+                                                39,
+                                            ),
+                                        },
                                     },
+                                },
+                                span: Span {
+                                    lo: BytePos(
+                                        28,
+                                    ),
+                                    hi: BytePos(
+                                        39,
+                                    ),
                                 },
                             },
                             Stmt {
@@ -30,11 +46,35 @@ CompilationUnit {
                                         kind: Identifier(
                                             "tmp",
                                         ),
+                                        span: Span {
+                                            lo: BytePos(
+                                                64,
+                                            ),
+                                            hi: BytePos(
+                                                67,
+                                            ),
+                                        },
                                     },
+                                },
+                                span: Span {
+                                    lo: BytePos(
+                                        57,
+                                    ),
+                                    hi: BytePos(
+                                        67,
+                                    ),
                                 },
                             },
                         ],
                     },
+                ),
+            },
+            span: Span {
+                lo: BytePos(
+                    0,
+                ),
+                hi: BytePos(
+                    82,
                 ),
             },
         },

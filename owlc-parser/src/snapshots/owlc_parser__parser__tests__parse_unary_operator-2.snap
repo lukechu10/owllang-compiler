@@ -8,12 +8,36 @@ Expr {
             kind: Literal(
                 0,
             ),
+            span: Span {
+                lo: BytePos(
+                    0,
+                ),
+                hi: BytePos(
+                    0,
+                ),
+            },
         },
         rhs: Expr {
             kind: Literal(
                 1,
             ),
+            span: Span {
+                lo: BytePos(
+                    1,
+                ),
+                hi: BytePos(
+                    2,
+                ),
+            },
         },
         op_type: OpMinus,
+    },
+    span: Span {
+        lo: BytePos(
+            0,
+        ),
+        hi: BytePos(
+            2,
+        ),
     },
 }
