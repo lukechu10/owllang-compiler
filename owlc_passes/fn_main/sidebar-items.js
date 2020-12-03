@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["MainFunctionVisitor","Makes sure main function has following signature: fn main(). Emits an error on any other signature. This visitor should only be used when compiling a file and not when in REPL mode."]]});

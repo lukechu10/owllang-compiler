@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["TokenKind","Represents the value of a [`Token`]."]],"struct":[["Lexer",""],["Token","Represents a single token."]]});

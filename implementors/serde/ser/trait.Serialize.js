@@ -1,0 +1,4 @@
+(function() {var implementors = {};
+implementors["owlc_lexer"] = [{"text":"impl Serialize for TokenKind","synthetic":false,"types":[]}];
+implementors["owlc_parser"] = [{"text":"impl Serialize for ExprKind","synthetic":false,"types":[]},{"text":"impl Serialize for Expr","synthetic":false,"types":[]},{"text":"impl Serialize for CompilationUnit","synthetic":false,"types":[]},{"text":"impl Serialize for Block","synthetic":false,"types":[]},{"text":"impl Serialize for FnProto","synthetic":false,"types":[]},{"text":"impl Serialize for StmtKind","synthetic":false,"types":[]},{"text":"impl Serialize for Stmt","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["fn_main","Makes sure main function has following signature: fn main(). Emits an error on any other signature. This visitor should only be used when compiling a file and not when in REPL mode."],["resolver","Resolving logic for symbols in the generated abstract syntax tree."]]});

@@ -1,0 +1,8 @@
+(function() {var implementors = {};
+implementors["owlc_error"] = [{"text":"impl Debug for Error","synthetic":false,"types":[]},{"text":"impl Debug for ErrorReporter","synthetic":false,"types":[]}];
+implementors["owlc_lexer"] = [{"text":"impl&lt;'a&gt; Debug for Lexer&lt;'a&gt;","synthetic":false,"types":[]},{"text":"impl Debug for Token","synthetic":false,"types":[]},{"text":"impl Debug for TokenKind","synthetic":false,"types":[]}];
+implementors["owlc_parser"] = [{"text":"impl Debug for ExprKind","synthetic":false,"types":[]},{"text":"impl Debug for Expr","synthetic":false,"types":[]},{"text":"impl Debug for CompilationUnit","synthetic":false,"types":[]},{"text":"impl Debug for Block","synthetic":false,"types":[]},{"text":"impl Debug for FnProto","synthetic":false,"types":[]},{"text":"impl Debug for StmtKind","synthetic":false,"types":[]},{"text":"impl Debug for Stmt","synthetic":false,"types":[]},{"text":"impl&lt;'a&gt; Debug for Parser&lt;'a&gt;","synthetic":false,"types":[]}];
+implementors["owlc_passes"] = [{"text":"impl Debug for Symbol","synthetic":false,"types":[]},{"text":"impl Debug for Scope","synthetic":false,"types":[]},{"text":"impl Debug for SymbolTable","synthetic":false,"types":[]}];
+implementors["owlc_source"] = [{"text":"impl Debug for SourceFile","synthetic":false,"types":[]}];
+implementors["owlc_span"] = [{"text":"impl Debug for BytePos","synthetic":false,"types":[]},{"text":"impl Debug for Span","synthetic":false,"types":[]},{"text":"impl Debug for SourceFile","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

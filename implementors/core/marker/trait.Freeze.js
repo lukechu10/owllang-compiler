@@ -1,0 +1,9 @@
+(function() {var implementors = {};
+implementors["owlc_error"] = [{"text":"impl Freeze for Error","synthetic":true,"types":[]},{"text":"impl Freeze for ErrorReporter","synthetic":true,"types":[]}];
+implementors["owlc_lexer"] = [{"text":"impl&lt;'a&gt; Freeze for Lexer&lt;'a&gt;","synthetic":true,"types":[]},{"text":"impl Freeze for Token","synthetic":true,"types":[]},{"text":"impl Freeze for TokenKind","synthetic":true,"types":[]}];
+implementors["owlc_llvm"] = [{"text":"impl Freeze for LlvmCodeGenVisitor","synthetic":true,"types":[]}];
+implementors["owlc_parser"] = [{"text":"impl Freeze for Expr","synthetic":true,"types":[]},{"text":"impl Freeze for ExprKind","synthetic":true,"types":[]},{"text":"impl Freeze for CompilationUnit","synthetic":true,"types":[]},{"text":"impl Freeze for Block","synthetic":true,"types":[]},{"text":"impl Freeze for FnProto","synthetic":true,"types":[]},{"text":"impl Freeze for Stmt","synthetic":true,"types":[]},{"text":"impl Freeze for StmtKind","synthetic":true,"types":[]},{"text":"impl&lt;'a&gt; Freeze for Parser&lt;'a&gt;","synthetic":true,"types":[]}];
+implementors["owlc_passes"] = [{"text":"impl&lt;'a&gt; Freeze for MainFunctionVisitor&lt;'a&gt;","synthetic":true,"types":[]},{"text":"impl Freeze for SymbolTable","synthetic":true,"types":[]},{"text":"impl&lt;'a&gt; Freeze for ResolverVisitor&lt;'a&gt;","synthetic":true,"types":[]},{"text":"impl Freeze for Symbol","synthetic":true,"types":[]},{"text":"impl Freeze for Scope","synthetic":true,"types":[]}];
+implementors["owlc_source"] = [{"text":"impl Freeze for SourceFile","synthetic":true,"types":[]}];
+implementors["owlc_span"] = [{"text":"impl Freeze for BytePos","synthetic":true,"types":[]},{"text":"impl Freeze for Span","synthetic":true,"types":[]},{"text":"impl Freeze for SourceFile","synthetic":true,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

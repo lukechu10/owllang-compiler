@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["ast","Syntax representation for owllang source code. Includes all the abstract syntax tree nodes used in other crates."],["parser","Parsing logic. Transforms `Token`s into abstract syntax tree nodes."],["visitor","Utilities for walking the abstract syntax tree."]]});
